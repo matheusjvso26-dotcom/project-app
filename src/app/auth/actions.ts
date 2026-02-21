@@ -7,7 +7,7 @@ export async function login(formData: FormData) {
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -30,7 +30,7 @@ export async function register(formData: FormData) {
     const name = formData.get('name') as string
     const company = formData.get('company') as string
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // 1. Create the user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({

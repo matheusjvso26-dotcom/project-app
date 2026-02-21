@@ -5,7 +5,7 @@ import { Building2, Mail, Lock, User as UserIcon, Zap } from 'lucide-react'
 import { register } from '@/app/auth/actions'
 
 export default async function RegisterPage() {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (user) {

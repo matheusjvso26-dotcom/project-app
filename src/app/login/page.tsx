@@ -5,7 +5,7 @@ import { Mail, Lock, Zap } from 'lucide-react'
 import { login } from '@/app/auth/actions'
 
 export default async function LoginPage() {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (user) {
