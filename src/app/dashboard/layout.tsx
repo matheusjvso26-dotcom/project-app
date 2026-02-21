@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, Users, MessageSquareText, GitMerge, Settings, LogOut, Zap, Bot, FileText } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({
     children,
 }: {
