@@ -1,0 +1,181 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------
+// Multi-Tenant Core Architecture
+// ---------------------------------------------------------
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  planTier  String   @default("FREE") // FREE, PRO, ENTERPRISE
+  wabaId    String?  // WhatsApp Business Account ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  leads         Lead[]
+  contacts      Contact[]
+  companies     Company[]
+  pipelines     Pipeline[]
+  deals         Deal[]
+  conversations Conversation[]
+  automations   Automation[]
+}
+
+model User {
+  id             String       @id @default(uuid())
+  organizationId String
+  email          String       @unique
+  name           String
+  role           String       @default("SDR") // ADMIN, CLOSER, SDR
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dealsOwned     Deal[]
+  messagesSent   Message[]
+}
+
+// ---------------------------------------------------------
+// CRM Core (Leads, Contacts, Companies, Deals, Pipelines)
+// ---------------------------------------------------------
+
+model Lead {
+  id             String       @id @default(uuid())
+  organizationId String
+  phone          String       // Primary identifier for WhatsApp
+  email          String?
+  name           String?
+  lgpdConsent    Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversations  Conversation[]
+}
+
+model Company {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  domain         String?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts       Contact[]
+  deals          Deal[]
+}
+
+model Contact {
+  id             String       @id @default(uuid())
+  organizationId String
+  companyId      String?
+  name           String
+  email          String?
+  phone          String?
+  jobTitle       String?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+}
+
+model Pipeline {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String       // e.g. "Vendas Nacionais", "Onboarding"
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stages         Stage[]
+  deals          Deal[]
+}
+
+model Stage {
+  id         String   @id @default(uuid())
+  pipelineId String
+  name       String   // e.g. "Prospecção", "Apresentação", "Ganha"
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals      Deal[]
+}
+
+model Deal {
+  id             String       @id @default(uuid())
+  organizationId String
+  pipelineId     String
+  stageId        String
+  companyId      String?
+  ownerId        String?
+  title          String
+  value          Float        @default(0)
+  status         String       @default("OPEN") // OPEN, WON, LOST
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pipeline       Pipeline     @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  stage          Stage        @relation(fields: [stageId], references: [id])
+  company        Company?     @relation(fields: [companyId], references: [id])
+  owner          User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+}
+
+// ---------------------------------------------------------
+// WhatsApp Communication Module
+// ---------------------------------------------------------
+
+model Conversation {
+  id             String       @id @default(uuid())
+  organizationId String
+  leadId         String
+  status         String       @default("OPEN") // OPEN, CLOSED, BOT_HANDLING
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead           Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  messages       Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  senderId       String?      // Will be NULL if it is the Lead (Inbound) or Bot
+  type           String       @default("TEXT") // TEXT, MEDIA, TEMPLATE
+  direction      String       // INBOUND, OUTBOUND
+  content        String?      // Contains either text or JSON representation of templates/media
+  status         String       @default("SENT") // SENT, DELIVERED, READ, FAILED
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User?        @relation(fields: [senderId], references: [id], onDelete: SetNull)
+}
+
+// ---------------------------------------------------------
+// Automation Triggers (Workflows)
+// ---------------------------------------------------------
+
+model Automation {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  triggerType    String       // e.g., "DEAL_STAGE_CHANGED", "INBOUND_MESSAGE"
+  workflowJson   String       // Storing nodes and edges JSON (React Flow or similar)
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
