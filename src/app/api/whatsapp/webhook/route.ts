@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getWhatsAppProvider } from '@/lib/whatsapp/provider'
 import prisma from '@/lib/prisma'
+import { processBotFlow } from '@/lib/whatsapp/botEngine'
 
 /**
  * GET: Endpoint utilizado pela Meta (Facebook) no momento de vincular e verificar o Webhook
@@ -55,9 +56,10 @@ export async function POST(request: Request) {
                 const leadPhone = incomingMessage.from
                 const leadName = contactInfo?.profile?.name || "Desconhecido"
                 const textContent = incomingMessage.text?.body || ""
+                const msgType = incomingMessage.type || 'text'
                 const msgId = incomingMessage.id
 
-                console.log(`[API/WhatsApp] Nova Memagem Recebida de ${leadPhone}: ${textContent}`)
+                console.log(`[API/WhatsApp] Nova Memagem Recebida de ${leadPhone} | Tipo: ${msgType} | Texto: ${textContent}`)
 
                 // 1. Identificar a Organização dona deste WABA ID primeiro para evitar vazamento Multi-Tenant
                 const metaBusId = body.entry[0].id
@@ -128,28 +130,19 @@ export async function POST(request: Request) {
                     })
 
                     // ======================================
-                    // ROBÔ AUTOMADOR: Welcome Message
+                    // ROBÔ AUTOMADOR M2R CRED: STATELESS FLOW
                     // ======================================
-                    if (isNewLead && organization.welcomeMessage) {
-                        console.log(`[API/WhatsApp] Disparando Auto-Reply Welcome Message para ${leadPhone}...`)
 
-                        // Grava no banco a intenção de saída
-                        await prisma.message.create({
-                            data: {
-                                conversationId: conversation.id,
-                                direction: "OUTBOUND",
-                                type: "TEXT",
-                                content: organization.welcomeMessage,
-                                status: "DELIVERED",
-                                senderId: null // Robô
-                            }
+                    try {
+                        await processBotFlow({
+                            conversationId: conversation.id,
+                            leadPhone,
+                            incomingText: textContent,
+                            incomingType: msgType,
+                            isNewLead
                         })
-
-                        // Dispara fisicamente com a Meta
-                        await provider.sendMessage({
-                            to: leadPhone,
-                            text: organization.welcomeMessage
-                        })
+                    } catch (botErr) {
+                        console.error("[API/WhatsApp/BotEngine] Falha ao processar maquina de estado do robô:", botErr)
                     }
                 }
             }
