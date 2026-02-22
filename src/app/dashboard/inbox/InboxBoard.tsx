@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useState, useRef, useEffect } from 'react'
 import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
@@ -7,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
-import { sendMessage } from './actions'
+import { sendMessage, getConversations } from './actions'
 import { toast } from 'sonner'
 
 // --- Interfaces ---
@@ -46,6 +44,54 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [activeChatId, chats])
+
+    // --- REALTIME MOTOR (POLLING) --- 
+    // Usado como MVP simples para buscar os pushes novos do Webhook da Meta
+    useEffect(() => {
+        const fetchMessages = async () => {
+            if (isSending) return // pausa a varredura caso eu esteja prestes a dar o push
+            try {
+                const refreshedChats = await getConversations()
+
+                setChats((prevChats) => {
+                    let hasNewAlert = false
+
+                    // Verifica se algo novo "INBOUND" das nuvens chegou (webhook salvou e a gente pegou no pool)
+                    refreshedChats.forEach(newChat => {
+                        const oldChat = prevChats.find(c => c.id === newChat.id)
+                        if (oldChat) {
+                            // Se a thread cresceu, pegar a ultima da ponta e ver se é do cliente
+                            if (newChat.messages.length > oldChat.messages.length) {
+                                const lastTipMessage = newChat.messages[newChat.messages.length - 1]
+                                if (lastTipMessage?.sender === 'client') hasNewAlert = true
+                            }
+                        } else if (newChat.messages.length > 0) {
+                            // Chat inédito parindo na base (Lead recém chegado e engatilhou boas-vindas)
+                            // Mesmo que a utima msg seja do bot respondendo, apitamos pro dono que tem lead novo na loja
+                            hasNewAlert = true
+                        }
+                    })
+
+                    // Se a constou NOVIDADE DE FORA... PLIM!
+                    if (hasNewAlert) {
+                        try {
+                            // Toca arquivo mp3 de notificação limpo public-domain do mixkit
+                            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3')
+                            audio.volume = 0.6
+                            audio.play().catch(e => console.warn('Browser Safari/Chrome bloqueou Audio Autoplay sem interação', e))
+                        } catch (e) { }
+                    }
+
+                    return refreshedChats
+                })
+            } catch (error) {
+                console.error("[Polling] Erro ao sincronizar as conversas:", error)
+            }
+        }
+
+        const intervalId = setInterval(fetchMessages, 4000) // Polling Quente 4s
+        return () => clearInterval(intervalId)
+    }, [isSending])
 
     // Create Deal State
     const [isAddDealOpen, setIsAddDealOpen] = useState(false)

@@ -56,3 +56,29 @@ export async function updateAvatarUrl(publicUrl: string) {
         return { error: 'Ocorreu um erro ao vincular a foto de perfil.' }
     }
 }
+
+export async function updateOrganizationBotSettings(formData: FormData) {
+    try {
+        const user = await requireUser()
+
+        const welcomeMessage = formData.get('welcomeMessage') as string
+        const closureMessage = formData.get('closureMessage') as string
+        const closureMinutes = parseInt(formData.get('closureMinutes') as string) || 240
+
+        await prisma.organization.update({
+            where: { id: user.organizationId },
+            data: {
+                welcomeMessage: welcomeMessage.trim() || null,
+                closureMessage: closureMessage.trim() || null,
+                closureMinutes: closureMinutes
+            }
+        })
+
+        revalidatePath('/dashboard/settings')
+
+        return { success: true, message: 'Automações salvas com sucesso!' }
+    } catch (error) {
+        console.error('Erro ao atualizar as automações do robô:', error)
+        return { error: 'Ocorreu um erro ao salvar as automações.' }
+    }
+}

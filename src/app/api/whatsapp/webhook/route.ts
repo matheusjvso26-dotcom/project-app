@@ -74,6 +74,8 @@ export async function POST(request: Request) {
                     where: { wabaId: metaBusId }
                 })
 
+                let isNewLead = false
+
                 if (organization && !lead) {
                     // Lead totalmente novo caindo de paraquedas no WhatsApp da org
                     lead = await prisma.lead.create({
@@ -84,9 +86,10 @@ export async function POST(request: Request) {
                             lgpdConsent: true
                         }
                     })
+                    isNewLead = true
                 }
 
-                if (lead) {
+                if (lead && organization) {
                     // Tem conversa ativa pra esse cara?
                     let conversation = await prisma.conversation.findFirst({
                         where: { leadId: lead.id }
@@ -118,6 +121,31 @@ export async function POST(request: Request) {
                         where: { id: conversation.id },
                         data: { updatedAt: new Date() }
                     })
+
+                    // ======================================
+                    // ROBÔ AUTOMADOR: Welcome Message
+                    // ======================================
+                    if (isNewLead && organization.welcomeMessage) {
+                        console.log(`[API/WhatsApp] Disparando Auto-Reply Welcome Message para ${leadPhone}...`)
+
+                        // Grava no banco a intenção de saída
+                        await prisma.message.create({
+                            data: {
+                                conversationId: conversation.id,
+                                direction: "OUTBOUND",
+                                type: "TEXT",
+                                content: organization.welcomeMessage,
+                                status: "DELIVERED",
+                                senderId: null // Robô
+                            }
+                        })
+
+                        // Dispara fisicamente com a Meta
+                        await provider.sendMessage({
+                            to: leadPhone,
+                            text: organization.welcomeMessage
+                        })
+                    }
                 }
             }
         }

@@ -130,6 +130,50 @@ async function main() {
         }
     }
 
+    // 5. Generate Conversations and Messages (Inbox Mock Data)
+    console.log(`💬 Generating Mock Conversations and Messages for Inbox...`)
+
+    // Obter 5 contatos aleatórios para gerar chats
+    const randomContacts = await prisma.contact.findMany({ take: 5 })
+
+    for (const contact of randomContacts) {
+        // Primeiro, garantir que esse Contato seja também considerado um 'Lead' pelo Prisma (Tabela unificada futura, mas hoje dividida)
+        const lead = await prisma.lead.create({
+            data: {
+                organizationId: org.id,
+                phone: contact.phone || "+5511999999999",
+                name: contact.name,
+                lgpdConsent: true
+            }
+        })
+
+        const conversation = await prisma.conversation.create({
+            data: {
+                organizationId: org.id,
+                leadId: lead.id,
+                status: 'OPEN'
+            }
+        })
+
+        // Gerar 2 a 4 mensagens antigas
+        const messageCount = getRandomValue(2, 4)
+        for (let m = 0; m < messageCount; m++) {
+            const isBotOrAgent = m % 2 === 0
+
+            await prisma.message.create({
+                data: {
+                    conversationId: conversation.id,
+                    direction: isBotOrAgent ? 'OUTBOUND' : 'INBOUND',
+                    type: 'TEXT',
+                    content: isBotOrAgent ? `Olá ${lead.name}, como posso te ajudar hoje?` : `Gostaria de saber mais sobre os planos do CRM SaaS.`,
+                    senderId: isBotOrAgent ? user2.id : null,
+                    status: isBotOrAgent ? 'READ' : 'DELIVERED',
+                    createdAt: new Date(Date.now() - (messageCount - m) * 60000) // atraso de minutos
+                }
+            })
+        }
+    }
+
     console.log(`✅ Seeding finished successfully.`)
 }
 

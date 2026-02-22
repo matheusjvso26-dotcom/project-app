@@ -1,17 +1,18 @@
 'use client'
 
 import React, { useState } from 'react'
-import { User, Bell, Lock, Building, Zap, Save, Loader2 } from 'lucide-react'
+import { User, Bell, Lock, Building, Zap, Save, Loader2, Bot } from 'lucide-react'
 import { cn } from "@/lib/utils"
-import { User as PrismaUser } from '@prisma/client'
-import { updateUserProfile, updateAvatarUrl } from './actions'
+import { User as PrismaUser, Organization as PrismaOrganization } from '@prisma/client'
+import { updateUserProfile, updateAvatarUrl, updateOrganizationBotSettings } from './actions'
 import { AvatarUpload } from '@/components/avatar-upload'
 
 interface SettingsTabsProps {
     initialUser: PrismaUser
+    initialOrg: PrismaOrganization
 }
 
-export function SettingsTabs({ initialUser }: SettingsTabsProps) {
+export function SettingsTabs({ initialUser, initialOrg }: SettingsTabsProps) {
     const [activeTab, setActiveTab] = useState('profile')
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -59,6 +60,14 @@ export function SettingsTabs({ initialUser }: SettingsTabsProps) {
                             activeTab === 'notifications' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
                         )}>
                         <Bell className="w-4 h-4" /> Notificações
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('bots')}
+                        className={cn(
+                            "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                            activeTab === 'bots' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                        )}>
+                        <Bot className="w-4 h-4" /> WhatsApp Automaker
                     </button>
                     <button
                         onClick={() => setActiveTab('security')}
@@ -141,6 +150,55 @@ export function SettingsTabs({ initialUser }: SettingsTabsProps) {
                                         <option>Horário de Brasília (BRT) - UTC-3</option>
                                         <option>Horário do Amazonas (AMT) - UTC-4</option>
                                     </select>
+                                </div>
+                            </form>
+                        </div>
+                    </>
+                )}
+
+                {activeTab === 'bots' && (
+                    <>
+                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-bold text-white">Robôs e Automações WhatsApp</h2>
+                                <p className="text-sm text-zinc-400 mt-1">Defina mensagens automáticas para otimizar o atendimento de novos Leads e encerramentos.</p>
+                            </div>
+                            <button form="settings-bots-form" type="submit" disabled={isLoading} className="flex items-center gap-2 px-4 py-2 bg-[#ff7b00] text-white rounded-lg shadow-sm hover:bg-[#e66a00] transition-colors font-medium text-sm disabled:opacity-50">
+                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            {message && (
+                                <div className={cn(
+                                    "p-4 rounded-lg text-sm font-medium mb-6",
+                                    message.type === 'success' ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"
+                                )}>
+                                    {message.text}
+                                </div>
+                            )}
+
+                            <form id="settings-bots-form" action={async (formData) => {
+                                setIsLoading(true)
+                                setMessage(null)
+                                const result = await updateOrganizationBotSettings(formData)
+                                if (result?.error) setMessage({ type: 'error', text: result.error })
+                                else if (result?.success) setMessage({ type: 'success', text: result.message })
+                                setIsLoading(false)
+                            }} className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Mensagem de Recepção (First Contact)</label>
+                                    <textarea name="welcomeMessage" rows={3} className="w-full bg-[#151515] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors resize-none mb-1" placeholder="Ex: Olá! Seja muito bem-vindo ao nosso atendimento." defaultValue={initialOrg.welcomeMessage || ''} />
+                                    <p className="text-xs text-zinc-500">O funil responderá instantaneamente essa mensagem para Leads não cadastrados ao primeiro oi.</p>
+                                </div>
+                                <hr className="border-white/10" />
+                                <div>
+                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Mensagem de Encerramento Automático (Inatividade)</label>
+                                    <textarea name="closureMessage" rows={3} className="w-full bg-[#151515] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors resize-none mb-1" placeholder="Ex: Devido à falta de comunicação nas últimas horas, estamos encerrando esse chat." defaultValue={initialOrg.closureMessage || ''} />
+                                    <p className="text-xs text-zinc-500">Texto amigável disparado automaticamente quando o Lead sumir no meio do atendimento de longo prazo.</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Tempo Limite de Inatividade (Minutos Mínimo de 15)</label>
+                                    <input name="closureMinutes" type="number" min="15" className="w-full max-w-[200px] bg-[#151515] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors" defaultValue={initialOrg.closureMinutes} />
                                 </div>
                             </form>
                         </div>
