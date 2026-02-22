@@ -35,23 +35,11 @@ export class MockWhatsAppProvider implements IWhatsAppProvider {
     }
 }
 
-// Helper function to format Brazilian phone numbers correctly to the Meta Graph API.
-// Meta Cloud API has a strict (and often buggy) policy for BR numbers.
-// Most reliable approach: DDI (55) + DDD (2 digits) + 8-digits (drop the 9th digit).
+// Helper function to format phone numbers correctly to the Meta Graph API.
+// To ensure the Outbound message reaches the exact same thread that initiated the Inbound Webhook,
+// we must mirror the EXACT digits (including the Brazilian 9th digit if Meta provided it).
 function formatToWhatsAppJid(phone: string): string {
-    let clean = phone.replace(/\D/g, '')
-
-    // Se for Brasil (Começa com 55)
-    if (clean.startsWith('55')) {
-        // Se tiver 13 dígitos (55 + DDD + 9 + numero)
-        if (clean.length === 13 && clean.charAt(4) === '9') {
-            // Meta exige na Cloud API (na maioria dos casos) que o 9 seja REMOVIDO para envio outbound.
-            // Ex: 5521991525053 -> vira -> 552191525053
-            clean = clean.substring(0, 4) + clean.substring(5)
-        }
-    }
-
-    return clean
+    return phone.replace(/\D/g, '')
 }
 
 export class MetaCloudProvider implements IWhatsAppProvider {
