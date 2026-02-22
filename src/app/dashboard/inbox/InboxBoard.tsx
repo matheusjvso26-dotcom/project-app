@@ -91,7 +91,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             }
         }
 
-        const intervalId = setInterval(fetchMessages, 4000) // Polling Quente 4s
+        // Polling super agressivo de 1.5s para emular Realtime perfeitamente no MVP B2B.
+        const intervalId = setInterval(fetchMessages, 1500)
         return () => clearInterval(intervalId)
     }, [isSending])
 

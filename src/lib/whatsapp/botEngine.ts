@@ -160,11 +160,14 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
         } else {
             const botContext = lastBotMessage.content || ""
 
+            // SE O USUÁRIO FORÇAR UMA SAUDAÇÃO NO MEIO DO FLUXO, REINICIA A CONVERSA
+            if (['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start'].includes(userT)) {
+                responseText = MENU_TEXT
+            }
             // ----------------------------------------------------
             // STATE MACHINE RULES
             // ----------------------------------------------------
-
-            if (botContext.includes("Em qual dessas opções você se enquadra?")) {
+            else if (botContext.includes("Em qual dessas opções você se enquadra?") || botContext.includes("Desculpe, não entendi")) {
                 // ESTADO: MENU. Esperamos um numero de 1 a 6 ou texto.
                 if (userT === '1' || userT.includes('aposentado')) responseText = F1_M2
                 else if (userT === '2' || userT.includes('pensionista')) responseText = F2_M2
