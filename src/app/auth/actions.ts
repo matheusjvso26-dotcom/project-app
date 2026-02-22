@@ -44,11 +44,39 @@ export async function register(formData: FormData) {
     })
 
     if (authError || !authData.user) {
-        redirect('/register?message=Could not create user')
+        redirect(`/register?message=${authError?.message || 'Could not create user'}`)
     }
 
-    // Note: During the Real Database Phase, we will hook the organization creation into this Auth process
-    // using either Prisma here or via a Supabase Database Trigger.
+    const userId = authData.user.id
+    const userEmail = authData.user.email ?? email
+
+    // 2. Create the Organization and the first User (Owner/Admin) in Prisma
+    const prisma = (await import('@/lib/prisma')).default
+
+    try {
+        await prisma.$transaction(async (tx: any) => {
+            const org = await tx.organization.create({
+                data: {
+                    name: company,
+                    planTier: 'TRIAL',
+                }
+            })
+
+            await tx.user.create({
+                data: {
+                    id: userId, // Vínculo com UUID do Supabase
+                    email: userEmail,
+                    name: name,
+                    role: 'ADMIN',
+                    organizationId: org.id
+                }
+            })
+        })
+    } catch (err) {
+        console.error("Erro ao provisionar workspace:", err)
+        // Rollback strategy or alert admin in production
+        redirect('/register?message=Erro interno ao criar Workspace')
+    }
 
     revalidatePath('/', 'layout')
     redirect('/dashboard')

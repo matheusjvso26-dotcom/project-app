@@ -2,24 +2,51 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// --- Mock Helpers ---
+const firstNames = ['Matheus', 'Lucas', 'Ana', 'Beatriz', 'Carlos', 'Eduardo', 'Fernanda', 'Gabriela', 'Henrique', 'Isabela', 'João', 'Letícia', 'Marcos', 'Natália', 'Pedro']
+const lastNames = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Gomes', 'Costa', 'Ribeiro', 'Martins', 'Carvalho', 'Almeida']
+const companiesNames = ['Tech', 'Solutions', 'Corp', 'Enterprises', 'Group', 'Inovação', 'Digital', 'Systems', 'Consulting']
+const jobs = ['CEO', 'CTO', 'Gerente de Vendas', 'Diretor Comercial', 'Coordenador', 'Analista', 'Sócio', 'Fundador']
+
+const getRandomItem = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)]
+const getRandomValue = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
+
 async function main() {
-    console.log(`Start seeding ...`)
+    console.log(`🧹 Clearing database...`)
+    await prisma.deal.deleteMany()
+    await prisma.contact.deleteMany()
+    await prisma.company.deleteMany()
+    await prisma.stage.deleteMany()
+    await prisma.pipeline.deleteMany()
+    await prisma.user.deleteMany()
+    await prisma.organization.deleteMany()
+
+    console.log(`🚀 Start robust seeding...`)
 
     // 1. Create Organization
     const org = await prisma.organization.create({
         data: {
             name: 'Flow SaaS Demo Org',
-            planTier: 'PRO',
+            planTier: 'ENTERPRISE',
         },
     })
 
-    // 2. Create User
-    const user = await prisma.user.create({
+    // 2. Create Users
+    const user1 = await prisma.user.create({
         data: {
             organizationId: org.id,
-            email: 'matheus@flowcrm.com',
-            name: 'Matheus',
+            email: 'admin@flowcrm.com',
+            name: 'Admin Flow',
             role: 'ADMIN',
+        },
+    })
+
+    const user2 = await prisma.user.create({
+        data: {
+            organizationId: org.id,
+            email: 'sales@flowcrm.com',
+            name: 'Vendedor Flow',
+            role: 'CLOSER', // Enum might just be CLOSER/ADMIN etc based on schema
         },
     })
 
@@ -27,74 +54,85 @@ async function main() {
     const pipeline = await prisma.pipeline.create({
         data: {
             organizationId: org.id,
-            name: 'Vendas SaaS (B2B)',
+            name: 'Vendas SaaS (Enterprise)',
             stages: {
                 create: [
-                    { name: 'Leads Recentes (Bot)', order: 0 },
-                    { name: 'Qualificação Bot', order: 1 },
-                    { name: 'Follow-up Humano', order: 2 },
-                    { name: 'Apresentação/Demo', order: 3 },
-                    { name: 'Em Negociação', order: 4 },
+                    { name: 'Leads Recentes', order: 0 },
+                    { name: 'Em Triagem (Bot)', order: 1 },
+                    { name: 'Qualificados', order: 2 },
+                    { name: 'Apresentação Escopo', order: 3 },
+                    { name: 'Envio de Proposta', order: 4 },
+                    { name: 'Negociação Ativa', order: 5 },
                 ]
             }
         },
         include: { stages: true }
     })
 
-    // Get stage IDs for deals
-    const stageLeads = pipeline.stages.find(s => s.name === 'Leads Recentes (Bot)')!.id
-    const stageQualificacao = pipeline.stages.find(s => s.name === 'Qualificação Bot')!.id
-    const stageNegociacao = pipeline.stages.find(s => s.name === 'Em Negociação')!.id
+    // 4. Generate Mass Data (40 Leads/Companies)
+    console.log(`⚙️ Generating 40 Companies & Contacts...`)
 
-    // 4. Create Companies
-    const company1 = await prisma.company.create({ data: { organizationId: org.id, name: 'Acme Corp', domain: 'acmecorp.com' } })
-    const company2 = await prisma.company.create({ data: { organizationId: org.id, name: 'StartUp XYZ', domain: 'startupxyz.com' } })
+    for (let i = 0; i < 40; i++) {
+        const cName = `${firstNames[i % firstNames.length]} ${getRandomItem(companiesNames)}`
 
-    // 5. Create Contacts (which are linked to Leads concept in the CRM)
-    const contact1 = await prisma.contact.create({
-        data: { organizationId: org.id, companyId: company1.id, name: 'Carlos Mendes', email: 'carlos@acmecorp.com', phone: '+55 11 98888-7777', jobTitle: 'CEO' }
-    })
+        // Create Company
+        const company = await prisma.company.create({
+            data: {
+                organizationId: org.id,
+                name: cName,
+                domain: `${cName.toLowerCase().replace(/\s/g, '')}.com.br`
+            }
+        })
 
-    const contact2 = await prisma.contact.create({
-        data: { organizationId: org.id, companyId: company2.id, name: 'Ana Beatriz', email: 'ana.b@startupxyz.com', phone: '+55 21 97777-6666', jobTitle: 'CTO' }
-    })
-
-    // 6. Create Deals
-    await prisma.deal.create({
-        data: {
-            organizationId: org.id,
-            pipelineId: pipeline.id,
-            stageId: stageNegociacao,
-            companyId: company1.id,
-            ownerId: user.id,
-            title: 'Licenças Flow CRM - Acme',
-            value: 15000,
+        // Generate 1-2 Contacts per company
+        const numContacts = getRandomValue(1, 2)
+        for (let j = 0; j < numContacts; j++) {
+            const fName = getRandomItem(firstNames)
+            const lName = getRandomItem(lastNames)
+            await prisma.contact.create({
+                data: {
+                    organizationId: org.id,
+                    companyId: company.id,
+                    name: `${fName} ${lName}`,
+                    email: `${fName.toLowerCase()}.${lName.toLowerCase()}@${company.domain}`,
+                    phone: `+55${getRandomValue(11, 21)}9${getRandomValue(1000, 9999)}${getRandomValue(1000, 9999)}`,
+                    jobTitle: getRandomItem(jobs)
+                }
+            })
         }
-    })
 
-    await prisma.deal.create({
-        data: {
-            organizationId: org.id,
-            pipelineId: pipeline.id,
-            stageId: stageQualificacao,
-            companyId: company2.id,
-            ownerId: user.id,
-            title: 'Upgrade Plano PRO - StartUp XYZ',
-            value: 5000,
+        // Generate 0-2 Deals per company
+        const numDeals = getRandomValue(0, 2)
+        for (let k = 0; k < numDeals; k++) {
+            // Assign random stage and owner
+            const randomStage = getRandomItem(pipeline.stages)
+            const randomOwner = getRandomValue(1, 10) > 5 ? user1.id : user2.id
+            const dealValueCents = getRandomValue(1500, 50000) * 100 // saved in cents
+
+            // Simulate some LOST and WON randomly on final stages, most are OPEN
+            let status = 'OPEN'
+            if (randomStage.order > 3) {
+                const rand = getRandomValue(1, 100)
+                if (rand > 80) status = 'WON'
+                else if (rand > 60) status = 'LOST'
+            }
+
+            await prisma.deal.create({
+                data: {
+                    organizationId: org.id,
+                    pipelineId: pipeline.id,
+                    stageId: randomStage.id,
+                    companyId: company.id,
+                    ownerId: randomOwner,
+                    title: `Licenciamento SaaS - ${cName} [Q${getRandomValue(1, 4)}]`,
+                    value: dealValueCents,
+                    status: status as any
+                }
+            })
         }
-    })
+    }
 
-    await prisma.deal.create({
-        data: {
-            organizationId: org.id,
-            pipelineId: pipeline.id,
-            stageId: stageLeads,
-            title: 'Consultoria Implementação - Inbound',
-            value: 8000,
-        }
-    })
-
-    console.log(`Seeding finished.`)
+    console.log(`✅ Seeding finished successfully.`)
 }
 
 main()

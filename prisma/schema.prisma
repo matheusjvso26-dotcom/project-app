@@ -57,6 +57,7 @@ model Lead {
   phone          String       // Primary identifier for WhatsApp
   email          String?
   name           String?
+  tags           String[]     @default([])
   lgpdConsent    Boolean      @default(false)
   createdAt      DateTime     @default(now())
 
@@ -69,6 +70,7 @@ model Company {
   organizationId String
   name           String
   domain         String?
+  tags           String[]     @default([])
   createdAt      DateTime     @default(now())
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -84,6 +86,7 @@ model Contact {
   email          String?
   phone          String?
   jobTitle       String?
+  tags           String[]     @default([])
   createdAt      DateTime     @default(now())
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -122,6 +125,7 @@ model Deal {
   title          String
   value          Float        @default(0)
   status         String       @default("OPEN") // OPEN, WON, LOST
+  tags           String[]     @default([])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 

@@ -1,228 +1,234 @@
 'use client'
 
 import React from 'react'
-import { Activity, Users, DollarSign, TrendingUp, ArrowRight, MessageSquare, Bot, ArrowUpRight, ArrowDownRight, Zap } from 'lucide-react'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import {
+    CreditCard, Landmark, UserPlus, Coins,
+    Droplet, Globe, Lightbulb, ChevronDown
+} from 'lucide-react'
+import {
+    ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip
+} from 'recharts'
+import { cn } from '@/lib/utils'
 
-// --- Mock Data for Charts ---
-const revenueData = [
-    { name: 'Jan', total: 12000 },
-    { name: 'Fev', total: 19000 },
-    { name: 'Mar', total: 15000 },
-    { name: 'Abr', total: 28000 },
-    { name: 'Mai', total: 32000 },
-    { name: 'Jun', total: 45000 },
-    { name: 'Jul', total: 52000 },
-]
-
-const botResolutionData = [
-    { name: 'Seg', humano: 15, bot: 45 },
-    { name: 'Ter', humano: 20, bot: 52 },
-    { name: 'Qua', humano: 12, bot: 48 },
-    { name: 'Qui', humano: 18, bot: 60 },
-    { name: 'Sex', humano: 25, bot: 65 },
-    { name: 'Sáb', humano: 5, bot: 30 },
-    { name: 'Dom', humano: 8, bot: 25 },
+const chartData = [
+    { name: 'Mon', income: 10, outcome: 15 },
+    { name: 'Tue', income: 45, outcome: 38 },
+    { name: 'Wed', income: 30, outcome: 25 },
+    { name: 'Thu', income: 60, outcome: 45 },
+    { name: 'Fri', income: 40, outcome: 38 },
+    { name: 'Sat', income: 35, outcome: 28 },
+    { name: 'Sun', income: 75, outcome: 60 },
 ]
 
 export default function AnalyticsDashboard() {
     return (
-        <div className="p-8 max-w-7xl mx-auto flex flex-col h-full bg-slate-50/50">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Visão Geral</h1>
-                    <p className="text-sm text-slate-500 mt-1">Acompanhe as métricas do seu funil comercial e da operação do WhatsApp.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <select className="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium">
-                        <option>Últimos 30 dias</option>
-                        <option>Este Mês</option>
-                        <option>Mês Passado</option>
-                        <option>Este Ano</option>
-                    </select>
-                </div>
+        <div className="p-8 max-w-[1400px] mx-auto flex flex-col gap-6 h-full z-10 relative bg-[#151515] text-white">
+            {/* Top Action Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <ActionCard title="Transfer Via\nCard Number" icon={<CreditCard className="w-6 h-6 text-primary" strokeWidth={1.5} />} />
+                <ActionCard title="Transfer to\nAnother Bank" icon={<Landmark className="w-6 h-6 text-primary" strokeWidth={1.5} />} />
+                <ActionCard title="Transfer to\nSame Bank" icon={<UserPlus className="w-6 h-6 text-primary" strokeWidth={1.5} />} />
+                <ActionCard title="Transfer to\nInternational Bank" icon={<Coins className="w-6 h-6 text-primary" strokeWidth={1.5} />} />
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {/* KPI 1 */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-100 transition-colors">
-                            <DollarSign className="w-6 h-6" />
-                        </div>
-                        <span className="flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
-                            <ArrowUpRight className="w-3 h-3 mr-1" /> +24%
-                        </span>
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-sm font-medium text-slate-500 mb-1">Receita Gerada (Won)</p>
-                        <h3 className="text-2xl font-bold text-slate-900">R$ 152.000</h3>
-                    </div>
-                </div>
+            {/* Middle Section: Chart & Bills */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* KPI 2 */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-100 transition-colors">
-                            <Users className="w-6 h-6" />
-                        </div>
-                        <span className="flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
-                            <ArrowUpRight className="w-3 h-3 mr-1" /> +12%
-                        </span>
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-sm font-medium text-slate-500 mb-1">Novos Leads (WhatsApp)</p>
-                        <h3 className="text-2xl font-bold text-slate-900">845</h3>
-                    </div>
-                </div>
-
-                {/* KPI 3 */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
-                            <MessageSquare className="w-6 h-6" />
-                        </div>
-                        <span className="flex items-center text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-1 rounded">
-                            <ArrowDownRight className="w-3 h-3 mr-1" /> -2%
-                        </span>
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-sm font-medium text-slate-500 mb-1">Tempo de Rsp. (FRT)</p>
-                        <h3 className="text-2xl font-bold text-slate-900">4m 12s</h3>
-                    </div>
-                </div>
-
-                {/* KPI 4 */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <div className="p-3 bg-purple-50 text-purple-600 rounded-lg group-hover:bg-purple-100 transition-colors">
-                            <Bot className="w-6 h-6" />
-                        </div>
-                        <span className="flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
-                            <ArrowUpRight className="w-3 h-3 mr-1" /> +8%
-                        </span>
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-sm font-medium text-slate-500 mb-1">Resolução via Bot</p>
-                        <h3 className="text-2xl font-bold text-slate-900">68.5%</h3>
-                    </div>
-                </div>
-            </div>
-
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                {/* Main Graph (Revenue) */}
-                <div className="col-span-1 lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col">
-                    <div className="flex justify-between items-end mb-6">
+                {/* Chart Area */}
+                <div className="lg:col-span-2 bg-card rounded-2xl p-6 border border-border flex flex-col">
+                    <div className="flex justify-between items-start mb-6">
                         <div>
-                            <h3 className="text-base font-bold text-slate-900">Receita Fechada (MRR + Setup)</h3>
-                            <p className="text-sm text-slate-500">Crescimento ano a data (YTD)</p>
+                            <p className="text-sm font-semibold text-foreground mb-1">Total Balance</p>
+                            <h2 className="text-3xl font-bold tracking-tight">$ 68.657</h2>
+                        </div>
+                        <div className="flex items-center gap-8 mt-2">
+                            <div className="flex items-center gap-2">
+                                <div className="w-3.5 h-3.5 rounded-full bg-[#facc15]" />
+                                <span className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors">Income</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-3.5 h-3.5 rounded-full bg-primary" />
+                                <span className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors">Outcome</span>
+                            </div>
+                            <button className="flex items-center gap-2 bg-transparent border border-border px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ml-4">
+                                Week <ChevronDown className="w-4 h-4 ml-1" />
+                            </button>
                         </div>
                     </div>
-                    <div className="flex-1 w-full h-[300px]">
+
+                    <div className="flex-1 w-full h-[280px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <ComposedChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                                    <linearGradient id="colorOutcome" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#ff7b00" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#ff7b00" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dx={-10} tickFormatter={(value) => `R$${value / 1000}k`} />
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis dataKey="name" stroke="#555" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                                <YAxis stroke="#555" fontSize={12} tickLine={false} axisLine={false} dx={-10} tickFormatter={(v) => `$ ${v}`} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, 'Receita']}
+                                    contentStyle={{ backgroundColor: '#1c1c1c', border: '1px solid #333', borderRadius: '8px' }}
+                                    itemStyle={{ color: '#fff' }}
+                                    cursor={{ stroke: '#555', strokeWidth: 1, strokeDasharray: '3 3' }}
                                 />
-                                <Area type="monotone" dataKey="total" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
-                            </AreaChart>
+                                <Area type="monotone" dataKey="outcome" stroke="#ff7b00" strokeWidth={3} fillOpacity={1} fill="url(#colorOutcome)" />
+                                <Line type="monotone" dataKey="income" stroke="#facc15" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 4, fill: '#facc15', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                            </ComposedChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                {/* Secondary Graph (Bot vs Human) */}
-                <div className="col-span-1 bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col">
-                    <div className="mb-6">
-                        <h3 className="text-base font-bold text-slate-900">Carga de Atendimento</h3>
-                        <p className="text-sm text-slate-500">Chats resolvidos Bot vs. Transbordo</p>
-                    </div>
-                    <div className="flex-1 w-full h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={botResolutionData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                    cursor={{ fill: '#f8fafc' }}
-                                />
-                                <Bar dataKey="bot" name="Resolvido (Bot)" stackId="a" fill="#4f46e5" radius={[0, 0, 4, 4]} />
-                                <Bar dataKey="humano" name="Transbordo (Humano)" stackId="a" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                {/* Bills */}
+                <div className="bg-transparent flex flex-col gap-4">
+                    <h3 className="text-base font-semibold text-foreground px-1">Bills</h3>
+                    <div className="flex flex-col gap-3">
+                        <BillCard title="Water Bill" icon={<Droplet />} />
+                        <BillCard title="Broadband" icon={<Globe />} />
+                        <BillCard title="Electricity" icon={<Lightbulb />} />
                     </div>
                 </div>
             </div>
 
-            {/* Bottom Row - Activity Feed */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-base font-bold text-slate-900">Deals Recentes Fechados</h3>
-                        <button className="text-sm text-indigo-600 font-medium hover:text-indigo-800 flex items-center gap-1 transition-colors">
-                            Ver Pipeline <ArrowRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                    <div className="space-y-4">
-                        {[
-                            { id: 1, company: 'Acme Corp', value: 'R$ 15.000', owner: 'Carlos M.' },
-                            { id: 2, company: 'Tech Solutions SA', value: 'R$ 8.500', owner: 'Ana B.' },
-                            { id: 3, company: 'Global Retail', value: 'R$ 45.000', owner: 'Marcos P.' },
-                        ].map((deal) => (
-                            <div key={deal.id} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold border border-emerald-200">
-                                        {deal.company.substring(0, 1)}
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-semibold text-slate-900">{deal.company}</h4>
-                                        <p className="text-xs text-slate-500">Fechado por {deal.owner}</p>
-                                    </div>
-                                </div>
-                                <span className="font-bold text-slate-900 text-sm">{deal.value}</span>
-                            </div>
-                        ))}
+            {/* Bottom Section: Transactions & Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-6">
+
+                {/* Recent Transactions */}
+                <div className="bg-card rounded-2xl p-6 border border-border">
+                    <h3 className="text-base font-semibold mb-6">Recent Transactions</h3>
+                    <div className="flex flex-col gap-6">
+                        <TransactionItem color="bg-primary" name="Ahsan Jilani" date="24-Dec-2022 12:33:23 PM" amount="- $ 190" type="negative" />
+                        <TransactionItem color="bg-[#facc15]" name="Furqan Ashiq" date="24-Dec-2022 09:54:23 AM" amount="+ $ 270" type="positive" />
+                        <TransactionItem color="bg-primary" name="Ahtishami" date="02-Dec-2022 05:15:00 PM" amount="- $ 150" type="negative" />
                     </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-base font-bold text-slate-900">Atividade do Robô (Log Automático)</h3>
-                    </div>
-                    <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
-                        {[
-                            { text: 'Bot transferiu um lead por complexidade (Pricing)', time: 'Há 5m', icon: Activity, color: 'text-amber-500', bg: 'bg-amber-100' },
-                            { text: 'Novo HSM aprovado pela Meta: "Promo Inverno"', time: 'Há 12m', icon: MessageSquare, color: 'text-emerald-500', bg: 'bg-emerald-100' },
-                            { text: 'Workflow Lembrete disparado para 45 Leads', time: 'Há 1h', icon: Zap, color: 'text-indigo-500', bg: 'bg-indigo-100' },
-                        ].map((log, i) => (
-                            <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                <div className={`flex items-center justify-center w-6 h-6 rounded-full border-4 border-white ${log.bg} ${log.color} shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm relative z-10`}>
-                                    <log.icon className="w-3 h-3" />
-                                </div>
-                                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-3 rounded border border-slate-100 bg-slate-50 shadow-sm">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <time className="text-xs font-medium text-indigo-600 uppercase">{log.time}</time>
-                                    </div>
-                                    <div className="text-sm font-normal text-slate-600 leading-snug">{log.text}</div>
+                {/* Cards Section */}
+                <div className="bg-card rounded-2xl p-6 border border-border flex flex-col">
+                    <h3 className="text-base font-semibold mb-6">Cards</h3>
+                    <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
+                        {/* Physical Card */}
+                        <div className="w-[320px] h-[190px] shrink-0 rounded-[1.2rem] p-6 flex flex-col justify-between bg-gradient-to-br from-[#ff8a00] to-[#e65c00] text-white shadow-xl shadow-primary/10 relative overflow-hidden group">
+                            <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/20 rounded-full blur-2xl transition-all duration-700 group-hover:bg-white/30" />
+                            <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-black/20 rounded-full blur-2xl transition-all duration-700 group-hover:bg-black/30" />
+
+                            <div className="relative z-10 flex justify-between items-start">
+                                <div>
+                                    <p className="font-semibold text-lg tracking-wide">Ahsan Jilani</p>
+                                    <p className="text-[11px] text-white/80 mt-3 font-medium tracking-wider">Balance</p>
+                                    <p className="text-[22px] font-bold tracking-tight mt-0.5">$ 68.657.00</p>
                                 </div>
                             </div>
-                        ))}
+
+                            <div className="relative z-10 flex flex-col gap-3">
+                                <p className="font-mono tracking-[0.25em] text-sm text-white/95">
+                                    1124 5666 6599 1788
+                                </p>
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[10px] text-white/80 tracking-widest font-medium uppercase">Valid <span className="font-semibold text-white ml-1">11/25</span></p>
+                                    <div className="flex -space-x-2">
+                                        <div className="w-7 h-7 rounded-full bg-red-500/90 mix-blend-multiply" />
+                                        <div className="w-7 h-7 rounded-full bg-yellow-400/90 mix-blend-multiply" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Limit Info */}
+                        <div className="flex flex-col gap-6 w-full max-w-[280px]">
+                            <div className="flex items-center gap-6 justify-center md:justify-start">
+                                {/* Circular Progress */}
+                                <div className="relative w-20 h-20 shrink-0">
+                                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                        <path
+                                            className="text-border"
+                                            strokeWidth="4"
+                                            stroke="currentColor"
+                                            fill="none"
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                        />
+                                        <path
+                                            className="text-primary"
+                                            strokeWidth="4"
+                                            strokeDasharray="65, 100"
+                                            strokeLinecap="round"
+                                            stroke="currentColor"
+                                            fill="none"
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                        />
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="text-sm font-bold text-foreground">65%</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex flex-col">
+                                        <span className="text-[#ef4444] font-bold text-[15px] tracking-tight">$ 270</span>
+                                        <span className="text-xs text-muted-foreground font-medium">Available Limit</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[#22c55e] font-bold text-[15px] tracking-tight">$ 760</span>
+                                        <span className="text-xs text-muted-foreground font-medium">Total Limit</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button className="w-full py-3 rounded-xl border border-border text-foreground font-medium text-sm hover:bg-white/5 hover:border-primary/50 transition-all shadow-sm">
+                                Add New Card
+                            </button>
+                        </div>
                     </div>
                 </div>
+
             </div>
+        </div>
+    )
+}
+
+function ActionCard({ title, icon }: { title: string, icon: React.ReactNode }) {
+    return (
+        <div className="bg-card cursor-pointer hover:border-primary/50 transition-all rounded-[1rem] p-6 border border-border flex items-center justify-between shadow-sm">
+            <p className="text-[13px] font-medium text-muted-foreground whitespace-pre-line leading-relaxed">
+                {title.split('\\n').map((line, i) => (
+                    <React.Fragment key={i}>
+                        {line}
+                        {i === 0 && <br />}
+                    </React.Fragment>
+                ))}
+            </p>
+            <div className="w-[3.5rem] h-[3.5rem] rounded-full border border-primary/30 flex items-center justify-center shrink-0">
+                {icon}
+            </div>
+        </div>
+    )
+}
+
+function BillCard({ title, icon }: { title: string, icon: React.ReactNode }) {
+    return (
+        <div className="bg-card cursor-pointer hover:border-primary/50 transition-all rounded-[1rem] p-[1.15rem] border border-border flex items-center justify-between group shadow-sm">
+            <span className="text-[15px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">{title}</span>
+            <div className="w-12 h-12 border border-primary/30 rounded-xl flex items-center justify-center shrink-0 [&>svg]:w-[1.35rem] [&>svg]:h-[1.35rem] [&>svg]:text-primary">
+                {icon}
+            </div>
+        </div>
+    )
+}
+
+function TransactionItem({ color, name, date, amount, type }: { color: string, name: string, date: string, amount: string, type: 'positive' | 'negative' }) {
+    return (
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <div className={cn("w-3.5 h-3.5 rounded-full", color)} />
+                <div className="flex flex-col">
+                    <span className="font-bold text-[15px] text-foreground tracking-tight">{name}</span>
+                    <span className="text-[11px] text-muted-foreground font-medium mt-0.5">{date}</span>
+                </div>
+            </div>
+            <span className={cn("font-bold text-[15px] tracking-tight", type === 'positive' ? 'text-[#22c55e]' : 'text-[#ef4444]')}>
+                {amount}
+            </span>
         </div>
     )
 }

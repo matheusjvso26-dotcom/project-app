@@ -14,3 +14,21 @@ export async function updateDealStageAction(dealId: string, newStageId: string) 
         return { success: false, error: "Failed to update deal" }
     }
 }
+
+export async function getDealDetails(dealId: string) {
+    try {
+        const deal = await prisma.deal.findUnique({
+            where: { id: dealId },
+            include: {
+                company: true,
+                owner: { select: { name: true, email: true } },
+                stage: { select: { name: true } },
+                organization: { select: { name: true } }
+            }
+        })
+        return deal
+    } catch (error) {
+        console.error("Failed to fetch deal details:", error)
+        return null
+    }
+}
