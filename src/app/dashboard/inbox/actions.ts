@@ -15,7 +15,14 @@ export async function getConversations() {
             organizationId: user.organizationId
         },
         include: {
-            lead: true,
+            lead: {
+                include: {
+                    deals: {
+                        include: { stage: true },
+                        orderBy: { createdAt: 'desc' }
+                    }
+                }
+            },
             messages: {
                 orderBy: { createdAt: 'desc' },
                 take: 50
@@ -31,6 +38,12 @@ export async function getConversations() {
         phone: c.lead.phone,
         status: c.status,
         lgpdConsent: c.lead.lgpdConsent,
+        deals: c.lead.deals.map(d => ({
+            id: d.id,
+            title: d.title,
+            value: d.value,
+            stageName: d.stage?.name || 'Sem Etapa'
+        })),
         time: c.updatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         lastMessage: c.messages[0]?.content || 'Nova conversa',
         isBotHandling: c.status === 'BOT_HANDLING',
@@ -98,4 +111,26 @@ export async function sendMessage(conversationId: string, content: string) {
         time: novaMensagem.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         status: 'sent' as const
     }
+}
+
+/**
+ * Atualiza o valor de um Deal (Card do Kanban)
+ */
+export async function updateDealValue(dealId: string, newValue: number) {
+    const user = await requireUser()
+
+    const deal = await prisma.deal.findUnique({
+        where: { id: dealId }
+    })
+
+    if (!deal || deal.organizationId !== user.organizationId) {
+        throw new Error("Deal não encontrado ou sem permissão.")
+    }
+
+    await prisma.deal.update({
+        where: { id: dealId },
+        data: { value: newValue }
+    })
+
+    return { success: true }
 }

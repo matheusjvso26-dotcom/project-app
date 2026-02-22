@@ -94,6 +94,37 @@ export async function POST(request: Request) {
                         }
                     })
                     isNewLead = true
+
+                    // ======================================
+                    // ROBÔ DE CARNAVAL: ESTEIRA KANBAN AUTOMÁTICA
+                    // ======================================
+                    try {
+                        // Tentar achar o primeiro pipeline e a primeira coluna (Stage) de Triagem
+                        const pipeline = await prisma.pipeline.findFirst({
+                            where: { organizationId: organization.id },
+                            include: {
+                                stages: {
+                                    orderBy: { order: 'asc' },
+                                    take: 1
+                                }
+                            }
+                        })
+                        if (pipeline && pipeline.stages.length > 0) {
+                            await prisma.deal.create({
+                                data: {
+                                    organizationId: organization.id,
+                                    pipelineId: pipeline.id,
+                                    stageId: pipeline.stages[0].id,
+                                    leadId: lead.id,
+                                    title: `Lead WPP: ${leadName}`,
+                                    value: 0
+                                }
+                            })
+                            console.log(`[API/WhatsApp] Deal Kanban Automático criado em "${pipeline.stages[0].name}" para o Lead inédito.`)
+                        }
+                    } catch (dealErr) {
+                        console.error("[API/WhatsApp] Falha ao injetar Deal no Kanban:", dealErr)
+                    }
                 }
 
                 if (lead && organization) {

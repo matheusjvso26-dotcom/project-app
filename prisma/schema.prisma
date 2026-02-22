@@ -69,6 +69,7 @@ model Lead {
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   conversations  Conversation[]
+  deals          Deal[]
 }
 
 model Company {
@@ -128,6 +129,7 @@ model Deal {
   stageId        String
   companyId      String?
   ownerId        String?
+  leadId         String?
   title          String
   value          Float        @default(0)
   status         String       @default("OPEN") // OPEN, WON, LOST
@@ -140,6 +142,7 @@ model Deal {
   stage          Stage        @relation(fields: [stageId], references: [id])
   company        Company?     @relation(fields: [companyId], references: [id])
   owner          User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
 }
 
 // ---------------------------------------------------------

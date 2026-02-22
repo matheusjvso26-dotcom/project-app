@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
-import { sendMessage, getConversations } from './actions'
+import { sendMessage, getConversations, updateDealValue } from './actions'
 import { toast } from 'sonner'
 
 // --- Interfaces ---
@@ -17,6 +17,13 @@ export interface Message {
     sender: 'me' | 'client' | 'bot'
     time: string
     status?: 'sent' | 'delivered' | 'read'
+}
+
+export interface ChatDeal {
+    id: string
+    title: string
+    value: number
+    stageName: string
 }
 
 export interface Chat {
@@ -29,6 +36,7 @@ export interface Chat {
     isBotHandling: boolean
     lgpdConsent: boolean
     messages: Message[]
+    deals: ChatDeal[]
 }
 
 interface InboxBoardProps {
@@ -157,6 +165,35 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             }))
         } finally {
             setIsSending(false)
+        }
+    }
+
+    const handleEditDealValue = async (dealId: string, currentValue: number) => {
+        const valStr = window.prompt("Digite o novo valor negociado (ex: 1500 ou 1500.50):", currentValue.toString())
+        if (valStr === null) return
+
+        const num = parseFloat(valStr.replace(',', '.'))
+        if (isNaN(num)) {
+            toast.error("Formato de valor inválido.")
+            return
+        }
+
+        try {
+            await updateDealValue(dealId, num)
+            toast.success("Valor atualizado na esteira Kanban!")
+
+            // Atualiza de forma otimista localmente
+            setChats(prev => prev.map(c => {
+                if (c.id === activeChatId) {
+                    return {
+                        ...c,
+                        deals: c.deals.map(d => d.id === dealId ? { ...d, value: num } : d)
+                    }
+                }
+                return c
+            }))
+        } catch (e: any) {
+            toast.error(e.message || "Erro ao atualizar valor do negócio.")
         }
     }
 
@@ -420,15 +457,25 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                 </Dialog>
                             </div>
 
-                            {/* Existing Deal Mockup */}
-                            <div className="bg-[#151515] rounded-xl p-3 border border-border/10 cursor-pointer shadow-inner hover:border-[#ff7b00]/30 transition-colors group">
-                                <h4 className="font-medium text-white text-[13px] group-hover:text-[#ff7b00] transition-colors">Consultoria FLY UP Premium</h4>
-                                <div className="flex items-center justify-between mt-2">
-                                    <span className="text-[11px] font-medium text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Apresentação</span>
-                                    <span className="text-[13px] font-bold text-zinc-300">
-                                        R$ 15.000,00
-                                    </span>
-                                </div>
+                            {/* Deals from DB */}
+                            <div className="flex flex-col gap-3 mt-4">
+                                {activeChat.deals && activeChat.deals.length > 0 ? (
+                                    activeChat.deals.map(deal => (
+                                        <div key={deal.id} onClick={() => handleEditDealValue(deal.id, deal.value)} className="bg-[#151515] rounded-xl p-3 border border-border/10 cursor-pointer shadow-inner hover:border-[#ff7b00]/30 transition-colors group">
+                                            <h4 className="font-medium text-white text-[13px] group-hover:text-[#ff7b00] transition-colors">{deal.title}</h4>
+                                            <div className="flex items-center justify-between mt-2">
+                                                <span className="text-[11px] font-medium text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase tracking-wider">{deal.stageName}</span>
+                                                <span className="text-[13px] font-bold text-zinc-300">
+                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.value)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="bg-[#151515] rounded-xl p-4 border border-border/10 text-center">
+                                        <p className="text-[12px] text-zinc-500 font-medium">Nenhuma oportunidade atrelada.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
