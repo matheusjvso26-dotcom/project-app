@@ -146,96 +146,102 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             orderBy: { createdAt: 'desc' }
         })
 
-        if (!lastBotMessage) {
-            // Humano atendeu e não tem mensagem do bot antes? Ou erro. Deixa quieto.
-            return
-        }
-
-        const botContext = lastBotMessage.content || ""
         const userT = incomingText.trim().toLowerCase()
         const isMedia = incomingType === 'document' || incomingType === 'image'
 
-        // ----------------------------------------------------
-        // STATE MACHINE RULES
-        // ----------------------------------------------------
+        if (!lastBotMessage) {
+            // Se não tem mensagem anterior do bot mas o lead digitou saudação (Lead Antigo reiniciando fluxo)
+            if (['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start'].includes(userT)) {
+                responseText = MENU_TEXT
+            } else {
+                // Não é saudação nem tem contexto. Deixa com Atendente Humano
+                return
+            }
+        } else {
+            const botContext = lastBotMessage.content || ""
 
-        if (botContext.includes("Em qual dessas opções você se enquadra?")) {
-            // ESTADO: MENU. Esperamos um numero de 1 a 6 ou texto.
-            if (userT === '1' || userT.includes('aposentado')) responseText = F1_M2
-            else if (userT === '2' || userT.includes('pensionista')) responseText = F2_M2
-            else if (userT === '3' || userT.includes('militar') || userT.includes('exercito')) responseText = F3_M2
-            else if (userT === '4' || userT.includes('servidor')) responseText = F4_M2
-            else if (userT === '5' || userT.includes('fgts') || userT.includes('antecipacao')) responseText = F5_M2
-            else if (userT === '6' || userT.includes('clt') || userT.includes('credito')) responseText = F6_M2
-            else responseText = "Desculpe, não entendi. Digite o *NÚMERO* da opção desejada (ex: 1 para Aposentados)."
-        }
+            // ----------------------------------------------------
+            // STATE MACHINE RULES
+            // ----------------------------------------------------
 
-        // --- FLUXO 1 ---
-        else if (botContext.includes("Qual banco você recebe o benefício?")) {
-            responseText = F1_M3
-        } else if (botContext.includes("Você consegue gerar no app Meu INSS?")) {
-            if (isMedia) responseText = F1_M4
-            else if (userT.includes('não') || userT.includes('nao consegue')) responseText = F1_M5
-            else responseText = F1_M4 // Assumimos que enviou como PDF/Image
-        } else if (botContext.includes("Você está com acesso ao app Meu INSS no seu celular?")) {
-            // Última parada do fluxo 1 (precisa de transbordo humano)
-            return
-        }
+            if (botContext.includes("Em qual dessas opções você se enquadra?")) {
+                // ESTADO: MENU. Esperamos um numero de 1 a 6 ou texto.
+                if (userT === '1' || userT.includes('aposentado')) responseText = F1_M2
+                else if (userT === '2' || userT.includes('pensionista')) responseText = F2_M2
+                else if (userT === '3' || userT.includes('militar') || userT.includes('exercito')) responseText = F3_M2
+                else if (userT === '4' || userT.includes('servidor')) responseText = F4_M2
+                else if (userT === '5' || userT.includes('fgts') || userT.includes('antecipacao')) responseText = F5_M2
+                else if (userT === '6' || userT.includes('clt') || userT.includes('credito')) responseText = F6_M2
+                else responseText = "Desculpe, não entendi. Digite o *NÚMERO* da opção desejada (ex: 1 para Aposentados)."
+            }
 
-        // --- FLUXO 2 ---
-        else if (botContext.includes("Banco que recebe o benefício")) {
-            responseText = F2_M3
-        } else if (botContext.includes("Meu INSS → Extrato de Empréstimos/Consignações → Baixar PDF")) {
-            responseText = F2_M4 // Assumimos que tentou enviar
-        }
+            // --- FLUXO 1 ---
+            else if (botContext.includes("Qual banco você recebe o benefício?")) {
+                responseText = F1_M3
+            } else if (botContext.includes("Você consegue gerar no app Meu INSS?")) {
+                if (isMedia) responseText = F1_M4
+                else if (userT.includes('não') || userT.includes('nao consegue')) responseText = F1_M5
+                else responseText = F1_M4 // Assumimos que enviou como PDF/Image
+            } else if (botContext.includes("Você está com acesso ao app Meu INSS no seu celular?")) {
+                // Última parada do fluxo 1 (precisa de transbordo humano)
+                return
+            }
 
-        // --- FLUXO 3 ---
-        else if (botContext.includes("Posto/graduação")) {
-            responseText = F3_M3
-        } else if (botContext.includes("Você consegue me enviar um contracheque/holerite atualizado")) {
-            responseText = F3_M4
-        }
+            // --- FLUXO 2 ---
+            else if (botContext.includes("Banco que recebe o benefício")) {
+                responseText = F2_M3
+            } else if (botContext.includes("Meu INSS → Extrato de Empréstimos/Consignações → Baixar PDF")) {
+                responseText = F2_M4 // Assumimos que tentou enviar
+            }
 
-        // --- FLUXO 4 ---
-        else if (botContext.includes("Órgão/Prefeitura/Estado")) {
-            responseText = F4_M3
-        } else if (botContext.includes("Com ele eu verifico margem e retorno as melhores condições.")) {
-            responseText = F4_M4
-        }
+            // --- FLUXO 3 ---
+            else if (botContext.includes("Posto/graduação")) {
+                responseText = F3_M3
+            } else if (botContext.includes("Você consegue me enviar um contracheque/holerite atualizado")) {
+                responseText = F3_M4
+            }
 
-        // --- FLUXO 5 ---
-        else if (botContext.includes("Você tem o app Meu FGTS instalado?")) {
-            responseText = F5_M3
-        } else if (botContext.includes("Assim eu já consigo estimar o valor que pode liberar.")) {
-            // Independente de enviar print, já joga a autorização
-            responseText = F5_M4
-            // Logo em seguida a gente dispara a M5, então podemos concatenar ou enviar 2 msg
-            responseText += "\n\n" + F5_M5
-        }
+            // --- FLUXO 4 ---
+            else if (botContext.includes("Órgão/Prefeitura/Estado")) {
+                responseText = F4_M3
+            } else if (botContext.includes("Com ele eu verifico margem e retorno as melhores condições.")) {
+                responseText = F4_M4
+            }
 
-        // --- FLUXO 6 ---
-        else if (botContext.includes("Tempo de carteira assinada (aprox.)")) {
-            responseText = F6_M3
-        } else if (botContext.includes("print da CTPS Digital (dados do contrato).")) {
-            responseText = F6_M4
-        }
+            // --- FLUXO 5 ---
+            else if (botContext.includes("Você tem o app Meu FGTS instalado?")) {
+                responseText = F5_M3
+            } else if (botContext.includes("Assim eu já consigo estimar o valor que pode liberar.")) {
+                // Independente de enviar print, já joga a autorização
+                responseText = F5_M4
+                // Logo em seguida a gente dispara a M5, então podemos concatenar ou enviar 2 msg
+                responseText += "\n\n" + F5_M5
+            }
 
-        // Se chegou no final do fluxo (já mandou as opções Fx_M4) e o usuário responde se quer parcelado etc
-        else if (
-            botContext.includes("Você prefere prazo menor") ||
-            botContext.includes("Você quer mais valor ou parcela menor") ||
-            botContext.includes("Você prefere: (1) maior valor ou (2) menor parcela") ||
-            botContext.includes("Você tem preferência por parcela menor ou liberar mais valor") ||
-            botContext.includes("Você prefere parcela menor ou pegar mais valor") ||
-            botContext.includes("assim que autorizar, me avise") // M5 do FGTS
-        ) {
-            // Chegamos no final do afunilamento
-            responseText = MSG_ENCERRAMENTO
-        }
+            // --- FLUXO 6 ---
+            else if (botContext.includes("Tempo de carteira assinada (aprox.)")) {
+                responseText = F6_M3
+            } else if (botContext.includes("print da CTPS Digital (dados do contrato).")) {
+                responseText = F6_M4
+            }
 
-        else {
-            // Se nenhuma branch do bot bater, encerra processamento e deixa com humano.
-            return
+            // Se chegou no final do fluxo (já mandou as opções Fx_M4) e o usuário responde se quer parcelado etc
+            else if (
+                botContext.includes("Você prefere prazo menor") ||
+                botContext.includes("Você quer mais valor ou parcela menor") ||
+                botContext.includes("Você prefere: (1) maior valor ou (2) menor parcela") ||
+                botContext.includes("Você tem preferência por parcela menor ou liberar mais valor") ||
+                botContext.includes("Você prefere parcela menor ou pegar mais valor") ||
+                botContext.includes("assim que autorizar, me avise") // M5 do FGTS
+            ) {
+                // Chegamos no final do afunilamento
+                responseText = MSG_ENCERRAMENTO
+            }
+
+            else {
+                // Se nenhuma branch do bot bater, encerra processamento e deixa com humano.
+                return
+            }
         }
     }
 
