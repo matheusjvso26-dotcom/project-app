@@ -42,52 +42,52 @@ export function TemplateBoard() {
     const [searchTerm, setSearchTerm] = useState('')
 
     return (
-        <div className="p-8 max-w-7xl mx-auto flex flex-col h-full">
+        <div className="p-8 max-w-7xl mx-auto flex flex-col h-full bg-[#151515]">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Templates WhatsApp (HSM)</h1>
-                    <p className="text-sm text-slate-500 mt-1">Sincronize e gerencie seus modelos de mensagens aprovados pela Meta.</p>
+                    <h1 className="text-2xl font-bold text-white tracking-tight">Templates WhatsApp (HSM)</h1>
+                    <p className="text-sm text-zinc-400 mt-1">Sincronize e gerencie seus modelos de mensagens aprovados pela Meta.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg shadow-sm hover:bg-slate-50 transition-colors font-medium text-sm">
-                        <RefreshCw className="w-4 h-4 text-indigo-600" /> Sincronizar da Meta
+                    <button className="flex items-center gap-2 px-4 py-2 bg-[#1c1c1c] border border-white/10 text-white rounded-lg shadow-sm hover:bg-white/5 transition-colors font-medium text-sm">
+                        <RefreshCw className="w-4 h-4 text-[#ff7b00]" /> Sincronizar da Meta
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-sm hover:bg-indigo-700 transition-colors font-medium text-sm">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-[#ff7b00] text-white rounded-lg shadow-sm hover:bg-[#e66a00] transition-colors font-medium text-sm">
                         <Plus className="w-4 h-4" /> Criar Template
                     </button>
                 </div>
             </div>
 
             {/* Toolbar */}
-            <div className="bg-white border rounded-t-xl border-slate-200 border-b-0 p-4 flex items-center justify-between">
+            <div className="bg-[#1c1c1c] rounded-t-xl p-4 flex items-center justify-between">
                 <div className="relative w-72">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-slate-400" />
+                        <Search className="h-4 w-4 text-zinc-500" />
                     </div>
                     <input
                         type="text"
                         placeholder="Buscar template..."
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow"
+                        className="w-full pl-9 pr-3 py-2 bg-[#151515] border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-shadow placeholder:text-zinc-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-slate-50 transition-colors text-sm">
+                    <button className="flex items-center gap-2 px-3 py-1.5 bg-[#151515] border border-white/10 text-white rounded-md hover:bg-white/5 transition-colors text-sm">
                         <Filter className="w-4 h-4" /> Filtros
                     </button>
-                    <div className="text-sm text-slate-500 font-medium border-l pl-3 ml-1 border-slate-200">
-                        Total: <span className="text-slate-900">{templates.length}</span>
+                    <div className="text-sm text-zinc-400 font-medium border-l pl-3 ml-1 border-white/10">
+                        Total: <span className="text-white">{templates.length}</span>
                     </div>
                 </div>
             </div>
 
             {/* DataTable */}
-            <div className="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden flex-1 flex flex-col">
+            <div className="bg-[#1c1c1c] rounded-b-xl shadow-sm overflow-hidden flex-1 flex flex-col">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-slate-50/80 border-b border-slate-200 uppercase text-[11px] font-bold text-slate-500 tracking-wider">
+                        <thead className="bg-[#151515] border-b border-white/5 uppercase text-[11px] font-bold text-zinc-500 tracking-wider">
                             <tr>
                                 <th scope="col" className="px-6 py-4">Nome do Template</th>
                                 <th scope="col" className="px-6 py-4">Categoria</th>
@@ -97,31 +97,31 @@ export function TemplateBoard() {
                                 <th scope="col" className="px-6 py-4 text-right">Ações</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-white/5">
                             {templates.map((template) => (
-                                <tr key={template.id} className="hover:bg-slate-50/80 transition-colors">
+                                <tr key={template.id} className="hover:bg-white/5 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-md bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100">
+                                            <div className="w-9 h-9 rounded-md bg-[#252525] flex items-center justify-center text-[#ff7b00] border border-white/5">
                                                 <MessageSquareDashed className="w-4 h-4" />
                                             </div>
-                                            <div className="font-semibold text-slate-900">{template.name}</div>
+                                            <div className="font-semibold text-white">{template.name}</div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         {getCategoryBadge(template.category)}
                                     </td>
-                                    <td className="px-6 py-4 text-slate-600 font-medium">
+                                    <td className="px-6 py-4 text-zinc-300 font-medium">
                                         {template.language}
                                     </td>
                                     <td className="px-6 py-4">
                                         {getStatusBadge(template.status)}
                                     </td>
-                                    <td className="px-6 py-4 text-slate-500">
+                                    <td className="px-6 py-4 text-zinc-400">
                                         {template.lastUpdated}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors">
+                                        <button className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-md transition-colors">
                                             <MoreHorizontal className="w-5 h-5" />
                                         </button>
                                     </td>
@@ -132,12 +132,12 @@ export function TemplateBoard() {
                 </div>
 
                 {/* Pagination Footer */}
-                <div className="mt-auto p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-sm text-slate-500">
+                <div className="mt-auto p-4 border-t border-white/5 bg-[#151515] flex items-center justify-between text-sm text-zinc-400">
                     <div>Mostrando 1 a 5 de 5 templates</div>
                     <div className="flex items-center gap-1">
-                        <button className="px-3 py-1 border border-slate-200 bg-white rounded-md hover:bg-slate-50 disabled:opacity-50" disabled>Anterior</button>
-                        <button className="px-3 py-1 bg-indigo-600 text-white rounded-md font-medium">1</button>
-                        <button className="px-3 py-1 border border-slate-200 bg-white rounded-md hover:bg-slate-50 disabled:opacity-50" disabled>Próximo</button>
+                        <button className="px-3 py-1 border border-white/10 bg-[#1c1c1c] text-white rounded-md hover:bg-white/5 disabled:opacity-50" disabled>Anterior</button>
+                        <button className="px-3 py-1 bg-[#ff7b00] text-white rounded-md font-medium">1</button>
+                        <button className="px-3 py-1 border border-white/10 bg-[#1c1c1c] text-white rounded-md hover:bg-white/5 disabled:opacity-50" disabled>Próximo</button>
                     </div>
                 </div>
             </div>

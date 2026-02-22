@@ -1,183 +1,240 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
     CreditCard, Landmark, UserPlus, Coins,
-    Droplet, Globe, Lightbulb, ChevronDown
+    Droplet, Globe, Lightbulb, ChevronDown,
+    TrendingUp, Activity, Users, DollarSign,
+    Zap, Handshake, Target, CheckCircle2
 } from 'lucide-react'
 import {
     ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip
 } from 'recharts'
 import { cn } from '@/lib/utils'
 
-const chartData = [
-    { name: 'Mon', income: 10, outcome: 15 },
-    { name: 'Tue', income: 45, outcome: 38 },
-    { name: 'Wed', income: 30, outcome: 25 },
-    { name: 'Thu', income: 60, outcome: 45 },
-    { name: 'Fri', income: 40, outcome: 38 },
-    { name: 'Sat', income: 35, outcome: 28 },
-    { name: 'Sun', income: 75, outcome: 60 },
+// Mock de dados por período para o Gráfico Principal (Receita do Mês)
+const chartData7Days = [
+    { name: 'Seg', income: 1200, outcome: 400 },
+    { name: 'Ter', income: 2100, outcome: 600 },
+    { name: 'Qua', income: 1500, outcome: 800 },
+    { name: 'Qui', income: 3200, outcome: 900 },
+    { name: 'Sex', income: 2800, outcome: 500 },
+    { name: 'Sáb', income: 900, outcome: 300 },
+    { name: 'Dom', income: 1100, outcome: 200 },
 ]
 
+const chartData15Days = [
+    { name: '1-3', income: 4500, outcome: 1200 },
+    { name: '4-6', income: 5200, outcome: 1500 },
+    { name: '7-9', income: 3800, outcome: 1800 },
+    { name: '10-12', income: 6100, outcome: 2100 },
+    { name: '13-15', income: 5900, outcome: 1900 },
+]
+
+const chartData30Days = [
+    { name: 'Sem 1', income: 12500, outcome: 4200 },
+    { name: 'Sem 2', income: 15200, outcome: 5500 },
+    { name: 'Sem 3', income: 11800, outcome: 4800 },
+    { name: 'Sem 4', income: 18100, outcome: 6100 },
+]
+
+// Mock de dados reais para as métricas com base no período
+const metricsByPeriod = {
+    '7d': { mrr: 12800, activeClients: 14, cac: 120, churn: '1.2%' },
+    '15d': { mrr: 25500, activeClients: 28, cac: 115, churn: '2.1%' },
+    '30d': { mrr: 57600, activeClients: 64, cac: 98, churn: '3.4%' },
+}
+
+type Period = '7d' | '15d' | '30d'
+
+const formatBRL = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value)
+}
+
 export default function AnalyticsDashboard() {
+    const [period, setPeriod] = useState<Period>('30d')
+    const [dropdownOpen, setDropdownOpen] = useState(false)
+
+    // Dados dinâmicos
+    const currentMetrics = metricsByPeriod[period]
+    const currentChartData = period === '7d' ? chartData7Days : (period === '15d' ? chartData15Days : chartData30Days)
+    const periodLabel = period === '7d' ? 'Últimos 7 Dias' : (period === '15d' ? 'Últimos 15 Dias' : 'Últimos 30 Dias')
+
     return (
         <div className="p-8 max-w-[1400px] mx-auto flex flex-col gap-6 h-full z-10 relative bg-[#151515] text-white">
-            {/* Top Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <ActionCard title="Transfer Via\nCard Number" icon={<CreditCard className="w-6 h-6 text-primary" strokeWidth={1.5} />} />
-                <ActionCard title="Transfer to\nAnother Bank" icon={<Landmark className="w-6 h-6 text-primary" strokeWidth={1.5} />} />
-                <ActionCard title="Transfer to\nSame Bank" icon={<UserPlus className="w-6 h-6 text-primary" strokeWidth={1.5} />} />
-                <ActionCard title="Transfer to\nInternational Bank" icon={<Coins className="w-6 h-6 text-primary" strokeWidth={1.5} />} />
+            {/* Header com Filtro de Período */}
+            <div className="flex justify-between items-end mb-2">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Métricas de Software (SaaS)</h1>
+                    <p className="text-sm text-zinc-400">Acompanhe a performance financeira e o engajamento dos seus clientes.</p>
+                </div>
+
+                {/* Custom Period Select */}
+                <div className="relative">
+                    <button
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        className="flex items-center gap-2 bg-[#1c1c1c] border border-white/10 px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-white/5 transition-colors"
+                    >
+                        {periodLabel} <ChevronDown className="w-4 h-4 ml-1 text-zinc-400" />
+                    </button>
+
+                    {dropdownOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#1c1c1c] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
+                            {[
+                                { id: '7d', label: 'Últimos 7 Dias' },
+                                { id: '15d', label: 'Últimos 15 Dias' },
+                                { id: '30d', label: 'Últimos 30 Dias' },
+                            ].map((opt) => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => { setPeriod(opt.id as Period); setDropdownOpen(false) }}
+                                    className={cn(
+                                        "w-full text-left px-4 py-2.5 text-sm transition-colors",
+                                        period === opt.id ? "bg-[#ff7b00]/10 text-[#ff7b00] font-medium" : "text-zinc-300 hover:bg-white/5 hover:text-white"
+                                    )}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Middle Section: Chart & Bills */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Top Action Cards (Kpis Reais) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiCard title="Receita Recorrente\n(MRR Geral)" value={formatBRL(currentMetrics.mrr)} icon={<DollarSign className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
+                <KpiCard title="Clientes CAtivos\nAtualmente" value={currentMetrics.activeClients.toString()} icon={<Users className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
+                <KpiCard title="Custo de Aquisição\n(CAC Médio)" value={formatBRL(currentMetrics.cac)} icon={<Target className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
+                <KpiCard title="Taxa de Cancelamento\n(Churn Rate Mensal)" value={currentMetrics.churn} icon={<Activity className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
+            </div>
+
+            {/* Middle Section: Chart & Operational Alerts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
 
                 {/* Chart Area */}
-                <div className="lg:col-span-2 bg-card rounded-2xl p-6 border border-border flex flex-col">
+                <div className="lg:col-span-2 bg-[#1c1c1c] rounded-2xl p-6 border border-white/5 flex flex-col">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <p className="text-sm font-semibold text-foreground mb-1">Total Balance</p>
-                            <h2 className="text-3xl font-bold tracking-tight">$ 68.657</h2>
+                            <p className="text-sm font-semibold text-zinc-400 mb-1">Faturamento Bruto Gerado</p>
+                            <h2 className="text-3xl font-bold tracking-tight text-white">{formatBRL(currentMetrics.mrr * 1.35)}</h2>
                         </div>
-                        <div className="flex items-center gap-8 mt-2">
+                        <div className="flex items-center gap-6 mt-2">
                             <div className="flex items-center gap-2">
-                                <div className="w-3.5 h-3.5 rounded-full bg-[#facc15]" />
-                                <span className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors">Income</span>
+                                <div className="w-3.5 h-3.5 rounded-full bg-[#ff7b00]" />
+                                <span className="text-sm font-medium text-zinc-400">Total Ganho</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="w-3.5 h-3.5 rounded-full bg-primary" />
-                                <span className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors">Outcome</span>
+                                <div className="w-3.5 h-3.5 rounded-full bg-zinc-600" />
+                                <span className="text-sm font-medium text-zinc-400">Despesas/CAC</span>
                             </div>
-                            <button className="flex items-center gap-2 bg-transparent border border-border px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ml-4">
-                                Week <ChevronDown className="w-4 h-4 ml-1" />
-                            </button>
                         </div>
                     </div>
 
                     <div className="flex-1 w-full h-[280px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                            <ComposedChart data={currentChartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id="colorOutcome" x1="0" y1="0" x2="0" y2="1">
+                                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#ff7b00" stopOpacity={0.8} />
                                         <stop offset="95%" stopColor="#ff7b00" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <XAxis dataKey="name" stroke="#555" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                <YAxis stroke="#555" fontSize={12} tickLine={false} axisLine={false} dx={-10} tickFormatter={(v) => `$ ${v}`} />
+                                <YAxis stroke="#555" fontSize={12} tickLine={false} axisLine={false} dx={-10} tickFormatter={(v) => `R$ ${v / 1000}k`} />
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#1c1c1c', border: '1px solid #333', borderRadius: '8px' }}
                                     itemStyle={{ color: '#fff' }}
                                     cursor={{ stroke: '#555', strokeWidth: 1, strokeDasharray: '3 3' }}
+                                    formatter={(value: any) => formatBRL(Number(value))}
                                 />
-                                <Area type="monotone" dataKey="outcome" stroke="#ff7b00" strokeWidth={3} fillOpacity={1} fill="url(#colorOutcome)" />
-                                <Line type="monotone" dataKey="income" stroke="#facc15" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 4, fill: '#facc15', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                <Area type="monotone" dataKey="income" stroke="#ff7b00" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
+                                <Line type="monotone" dataKey="outcome" stroke="#71717a" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 4, fill: '#71717a', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                             </ComposedChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                {/* Bills */}
+                {/* Automation & Usage Stats */}
                 <div className="bg-transparent flex flex-col gap-4">
-                    <h3 className="text-base font-semibold text-foreground px-1">Bills</h3>
+                    <h3 className="text-base font-semibold text-white px-1">Saúde Operacional (CRM)</h3>
                     <div className="flex flex-col gap-3">
-                        <BillCard title="Water Bill" icon={<Droplet />} />
-                        <BillCard title="Broadband" icon={<Globe />} />
-                        <BillCard title="Electricity" icon={<Lightbulb />} />
+                        <HealthCard title="Usuários CAtivos (Logins)" icon={<Users />} value={`${Math.round(currentMetrics.activeClients * 3.4)} Colaboradores`} />
+                        <HealthCard title="Disparos de WhatsApp" icon={<Zap />} value={`${currentMetrics.activeClients * 340} Mensagens`} />
+                        <HealthCard title="Taxa de Conversão (Win)" icon={<TrendingUp />} value="18.2% Médio" />
                     </div>
                 </div>
             </div>
 
-            {/* Bottom Section: Transactions & Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-6">
+            {/* Bottom Section: Recent CRM Deals & SLA Goals */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6 mt-2">
 
-                {/* Recent Transactions */}
-                <div className="bg-card rounded-2xl p-6 border border-border">
-                    <h3 className="text-base font-semibold mb-6">Recent Transactions</h3>
+                {/* Recent Won Deals */}
+                <div className="bg-[#1c1c1c] rounded-2xl p-6 border border-white/5">
+                    <h3 className="text-base font-semibold mb-6 text-white">Últimos Contratos Fechados</h3>
                     <div className="flex flex-col gap-6">
-                        <TransactionItem color="bg-primary" name="Ahsan Jilani" date="24-Dec-2022 12:33:23 PM" amount="- $ 190" type="negative" />
-                        <TransactionItem color="bg-[#facc15]" name="Furqan Ashiq" date="24-Dec-2022 09:54:23 AM" amount="+ $ 270" type="positive" />
-                        <TransactionItem color="bg-primary" name="Ahtishami" date="02-Dec-2022 05:15:00 PM" amount="- $ 150" type="negative" />
+                        <TransactionItem color="bg-[#22c55e]" name="Nexus Tecnologia Ltda" plan="Enterprise Anual" amount={formatBRL(12500)} type="positive" />
+                        <TransactionItem color="bg-[#22c55e]" name="Logística Express BR" plan="Pro Mensal" amount={formatBRL(490)} type="positive" />
+                        <TransactionItem color="bg-[#ef4444]" name="Acme Corp (Cancelamento)" plan="Downgrade/Churn" amount={formatBRL(-990)} type="negative" />
+                        <TransactionItem color="bg-[#22c55e]" name="Tech Solutions" plan="Enterprise Mensal" amount={formatBRL(2100)} type="positive" />
                     </div>
                 </div>
 
-                {/* Cards Section */}
-                <div className="bg-card rounded-2xl p-6 border border-border flex flex-col">
-                    <h3 className="text-base font-semibold mb-6">Cards</h3>
-                    <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
-                        {/* Physical Card */}
-                        <div className="w-[320px] h-[190px] shrink-0 rounded-[1.2rem] p-6 flex flex-col justify-between bg-gradient-to-br from-[#ff8a00] to-[#e65c00] text-white shadow-xl shadow-primary/10 relative overflow-hidden group">
-                            <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/20 rounded-full blur-2xl transition-all duration-700 group-hover:bg-white/30" />
-                            <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-black/20 rounded-full blur-2xl transition-all duration-700 group-hover:bg-black/30" />
+                {/* SLA and Goals Section */}
+                <div className="bg-[#1c1c1c] rounded-2xl p-6 border border-white/5 flex flex-col">
+                    <h3 className="text-base font-semibold mb-6 text-white">Qualidade de Atendimento</h3>
+                    <div className="flex flex-col items-center justify-center flex-1 py-4 gap-8">
 
-                            <div className="relative z-10 flex justify-between items-start">
-                                <div>
-                                    <p className="font-semibold text-lg tracking-wide">Ahsan Jilani</p>
-                                    <p className="text-[11px] text-white/80 mt-3 font-medium tracking-wider">Balance</p>
-                                    <p className="text-[22px] font-bold tracking-tight mt-0.5">$ 68.657.00</p>
-                                </div>
-                            </div>
-
-                            <div className="relative z-10 flex flex-col gap-3">
-                                <p className="font-mono tracking-[0.25em] text-sm text-white/95">
-                                    1124 5666 6599 1788
-                                </p>
-                                <div className="flex justify-between items-end">
-                                    <p className="text-[10px] text-white/80 tracking-widest font-medium uppercase">Valid <span className="font-semibold text-white ml-1">11/25</span></p>
-                                    <div className="flex -space-x-2">
-                                        <div className="w-7 h-7 rounded-full bg-red-500/90 mix-blend-multiply" />
-                                        <div className="w-7 h-7 rounded-full bg-yellow-400/90 mix-blend-multiply" />
-                                    </div>
-                                </div>
+                        {/* Circular Progress for SLA */}
+                        <div className="relative w-36 h-36 shrink-0 mt-4">
+                            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <path
+                                    className="text-white/5"
+                                    strokeWidth="3.5"
+                                    stroke="currentColor"
+                                    fill="none"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                <path
+                                    className="text-[#ff7b00]"
+                                    strokeWidth="3.5"
+                                    strokeDasharray="92, 100"
+                                    strokeLinecap="round"
+                                    stroke="currentColor"
+                                    fill="none"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-3xl font-bold text-white tracking-tighter">92%</span>
+                                <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mt-1">Geral</span>
                             </div>
                         </div>
 
-                        {/* Limit Info */}
-                        <div className="flex flex-col gap-6 w-full max-w-[280px]">
-                            <div className="flex items-center gap-6 justify-center md:justify-start">
-                                {/* Circular Progress */}
-                                <div className="relative w-20 h-20 shrink-0">
-                                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                                        <path
-                                            className="text-border"
-                                            strokeWidth="4"
-                                            stroke="currentColor"
-                                            fill="none"
-                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                        />
-                                        <path
-                                            className="text-primary"
-                                            strokeWidth="4"
-                                            strokeDasharray="65, 100"
-                                            strokeLinecap="round"
-                                            stroke="currentColor"
-                                            fill="none"
-                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                        />
-                                    </svg>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-sm font-bold text-foreground">65%</span>
+                        <div className="w-full flex flex-col gap-4">
+                            <div className="flex justify-between items-center bg-[#151515] p-3 rounded-xl border border-white/5">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-[#22c55e]/10 flex items-center justify-center">
+                                        <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
                                     </div>
+                                    <span className="text-sm font-medium text-zinc-300">Tempo de Primeira Resposta</span>
                                 </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex flex-col">
-                                        <span className="text-[#ef4444] font-bold text-[15px] tracking-tight">$ 270</span>
-                                        <span className="text-xs text-muted-foreground font-medium">Available Limit</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[#22c55e] font-bold text-[15px] tracking-tight">$ 760</span>
-                                        <span className="text-xs text-muted-foreground font-medium">Total Limit</span>
-                                    </div>
-                                </div>
+                                <span className="text-sm font-bold text-white">4m 12s</span>
                             </div>
 
-                            <button className="w-full py-3 rounded-xl border border-border text-foreground font-medium text-sm hover:bg-white/5 hover:border-primary/50 transition-all shadow-sm">
-                                Add New Card
-                            </button>
+                            <div className="flex justify-between items-center bg-[#151515] p-3 rounded-xl border border-white/5">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-[#ff7b00]/10 flex items-center justify-center">
+                                        <Handshake className="w-4 h-4 text-[#ff7b00]" />
+                                    </div>
+                                    <span className="text-sm font-medium text-zinc-300">Resolução no 1º Contato</span>
+                                </div>
+                                <span className="text-sm font-bold text-white">84%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -187,47 +244,56 @@ export default function AnalyticsDashboard() {
     )
 }
 
-function ActionCard({ title, icon }: { title: string, icon: React.ReactNode }) {
+function KpiCard({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) {
     return (
-        <div className="bg-card cursor-pointer hover:border-primary/50 transition-all rounded-[1rem] p-6 border border-border flex items-center justify-between shadow-sm">
-            <p className="text-[13px] font-medium text-muted-foreground whitespace-pre-line leading-relaxed">
-                {title.split('\\n').map((line, i) => (
-                    <React.Fragment key={i}>
-                        {line}
-                        {i === 0 && <br />}
-                    </React.Fragment>
-                ))}
-            </p>
-            <div className="w-[3.5rem] h-[3.5rem] rounded-full border border-primary/30 flex items-center justify-center shrink-0">
+        <div className="bg-[#1c1c1c] rounded-2xl p-6 border border-white/5 flex flex-col justify-between shadow-sm h-32 relative overflow-hidden group">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#ff7b00]/5 rounded-full blur-2xl transition-all duration-500 group-hover:bg-[#ff7b00]/10" />
+            <div className="flex justify-between items-start z-10">
+                <p className="text-[13px] font-medium text-zinc-400 whitespace-pre-line leading-snug">
+                    {title.split('\\n').map((line, i) => (
+                        <React.Fragment key={i}>
+                            {line}
+                            {i === 0 && <br />}
+                        </React.Fragment>
+                    ))}
+                </p>
+                <div className="w-10 h-10 rounded-full border border-white/10 bg-[#151515] flex items-center justify-center shrink-0">
+                    {icon}
+                </div>
+            </div>
+            <div className="z-10 mt-auto">
+                <p className="text-2xl font-bold tracking-tight text-white">{value}</p>
+            </div>
+        </div>
+    )
+}
+
+function HealthCard({ title, icon, value }: { title: string, icon: React.ReactNode, value: string }) {
+    return (
+        <div className="bg-[#1c1c1c] cursor-default rounded-xl p-[1.15rem] border border-white/5 flex items-center justify-between shadow-sm">
+            <div className="flex flex-col">
+                <span className="text-[14px] font-semibold text-zinc-300">{title}</span>
+                <span className="text-sm font-bold text-white mt-1">{value}</span>
+            </div>
+            <div className="w-11 h-11 border border-white/10 bg-[#151515] rounded-xl flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-[#ff7b00]">
                 {icon}
             </div>
         </div>
     )
 }
 
-function BillCard({ title, icon }: { title: string, icon: React.ReactNode }) {
-    return (
-        <div className="bg-card cursor-pointer hover:border-primary/50 transition-all rounded-[1rem] p-[1.15rem] border border-border flex items-center justify-between group shadow-sm">
-            <span className="text-[15px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">{title}</span>
-            <div className="w-12 h-12 border border-primary/30 rounded-xl flex items-center justify-center shrink-0 [&>svg]:w-[1.35rem] [&>svg]:h-[1.35rem] [&>svg]:text-primary">
-                {icon}
-            </div>
-        </div>
-    )
-}
-
-function TransactionItem({ color, name, date, amount, type }: { color: string, name: string, date: string, amount: string, type: 'positive' | 'negative' }) {
+function TransactionItem({ color, name, plan, amount, type }: { color: string, name: string, plan: string, amount: string, type: 'positive' | 'negative' }) {
     return (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-                <div className={cn("w-3.5 h-3.5 rounded-full", color)} />
+                <div className={cn("w-3 h-3 rounded-full shrink-0", color)} />
                 <div className="flex flex-col">
-                    <span className="font-bold text-[15px] text-foreground tracking-tight">{name}</span>
-                    <span className="text-[11px] text-muted-foreground font-medium mt-0.5">{date}</span>
+                    <span className="font-bold text-[14px] text-white tracking-tight">{name}</span>
+                    <span className="text-[12px] text-zinc-400 font-medium mt-0.5">{plan}</span>
                 </div>
             </div>
-            <span className={cn("font-bold text-[15px] tracking-tight", type === 'positive' ? 'text-[#22c55e]' : 'text-[#ef4444]')}>
-                {amount}
+            <span className={cn("font-bold text-[14px] tracking-tight", type === 'positive' ? 'text-[#22c55e]' : 'text-[#ef4444]')}>
+                {type === 'positive' ? `+ ${amount}` : amount}
             </span>
         </div>
     )

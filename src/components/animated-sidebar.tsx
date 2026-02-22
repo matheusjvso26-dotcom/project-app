@@ -20,17 +20,13 @@ import { cn } from "@/lib/utils"
 
 const mainMenuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-    { icon: Landmark, label: "Accounts", href: "/dashboard/kanban" },
-    { icon: CreditCard, label: "Cards", href: "/dashboard/inbox" },
-    { icon: Contact, label: "Contacts", href: "/dashboard/contacts" },
-    { icon: Calculator, label: "Loan Calculator", href: "/dashboard/automations" },
-    { icon: Settings, label: "Settings", href: "/dashboard/settings" },
-]
-
-const scheduleItems = [
-    { icon: Calendar, label: "Monthly Rent", href: "/dashboard/chatbots" },
-    { icon: Utensils, label: "Food Payment", href: "/dashboard/templates" },
-    { icon: FileText, label: "Utility Bills", href: "#" },
+    { icon: Landmark, label: "Pipeline (Kanban)", href: "/dashboard/kanban" },
+    { icon: CreditCard, label: "Caixa de Entrada", href: "/dashboard/inbox" },
+    { icon: Contact, label: "Contatos e Leads", href: "/dashboard/contacts" },
+    { icon: Calculator, label: "Automações", href: "/dashboard/automations" },
+    { icon: Calendar, label: "Meus Chatbots", href: "/dashboard/chatbots" },
+    { icon: FileText, label: "Templates Meta", href: "/dashboard/templates" },
+    { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ]
 
 export function AnimatedSidebar() {
@@ -52,9 +48,6 @@ export function AnimatedSidebar() {
                     <div className={cn("flex flex-col justify-center transition-opacity duration-300", isHovered ? "opacity-100" : "opacity-0 w-0")}>
                         <span className="text-xl font-bold tracking-tight text-primary leading-none">
                             FLY UP
-                        </span>
-                        <span className="text-[11px] font-bold tracking-[0.2em] text-[#ffffff] uppercase mt-1 leading-none">
-                            BANK
                         </span>
                     </div>
                 </div>
@@ -86,38 +79,6 @@ export function AnimatedSidebar() {
 
                                 <div className="min-w-[5.5rem] flex items-center justify-center flex-shrink-0">
                                     <item.icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground group-hover/item:text-foreground")} strokeWidth={isActive ? 2 : 1.5} />
-                                </div>
-                                <span className={cn("whitespace-nowrap font-medium text-sm transition-opacity duration-300", isHovered ? "opacity-100" : "opacity-0 w-0 hidden")}>
-                                    {item.label}
-                                </span>
-                            </Link>
-                        )
-                    })}
-                </div>
-
-                {/* Schedule Payments */}
-                <div className="flex flex-col space-y-1 mt-4">
-                    <div className={cn("px-[4.5rem] mb-3 text-xs font-semibold text-muted-foreground transition-opacity duration-300", isHovered ? "opacity-100" : "opacity-0")}>
-                        Schedule Payments
-                    </div>
-                    {scheduleItems.map((item) => {
-                        const isActive = pathname === item.href
-                        return (
-                            <Link
-                                key={item.label}
-                                href={item.href}
-                                className={cn(
-                                    "flex flex-row items-center py-3 relative group/item transition-all",
-                                    isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                                )}
-                                title={isHovered ? undefined : item.label}
-                            >
-                                {isActive && (
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-foreground rounded-r-md" />
-                                )}
-
-                                <div className="min-w-[5.5rem] flex items-center justify-center flex-shrink-0">
-                                    <item.icon className={cn("w-5 h-5 text-primary/80 group-hover/item:text-primary")} strokeWidth={1.5} />
                                 </div>
                                 <span className={cn("whitespace-nowrap font-medium text-sm transition-opacity duration-300", isHovered ? "opacity-100" : "opacity-0 w-0 hidden")}>
                                     {item.label}

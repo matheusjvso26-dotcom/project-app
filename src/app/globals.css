@@ -137,6 +137,20 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+
+  /* Esconder a barra de rolagem mas manter a funcionalidade */
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+    /* make scrollbar transparent */
+  }
+
+  * {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
 }
 
 @layer utilities {
