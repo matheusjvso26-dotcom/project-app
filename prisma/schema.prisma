@@ -38,6 +38,7 @@ model User {
   organizationId String
   email          String       @unique
   name           String
+  avatarUrl      String?      // Optional profile picture URL
   role           String       @default("SDR") // ADMIN, CLOSER, SDR
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt

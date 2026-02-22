@@ -1,15 +1,17 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
+import { sendMessage } from './actions'
+import { toast } from 'sonner'
 
-// --- Mock Data ---
-interface Message {
+// --- Interfaces ---
+export interface Message {
     id: string
     content: string
     sender: 'me' | 'client' | 'bot'
@@ -17,7 +19,7 @@ interface Message {
     status?: 'sent' | 'delivered' | 'read'
 }
 
-interface Chat {
+export interface Chat {
     id: string
     name: string
     phone: string
@@ -29,64 +31,85 @@ interface Chat {
     messages: Message[]
 }
 
-const mockChats: Chat[] = [
-    {
-        id: '1',
-        name: 'Carlos Mendes',
-        phone: '+55 11 98888-7777',
-        lastMessage: 'Excelente, podemos fechar assim.',
-        time: '10:45',
-        unread: 0,
-        isBotHandling: false,
-        lgpdConsent: true,
-        messages: [
-            { id: 'm1', content: 'Olá, gostaria de saber mais sobre o FLY UP.', sender: 'client', time: '10:30' },
-            { id: 'mb1', content: 'Olá! Como posso ajudar você hoje?', sender: 'bot', time: '10:30' },
-            { id: 'm2', content: 'Podemos agendar uma demonstração hoje à tarde se preferir.', sender: 'me', time: '10:35', status: 'read' },
-            { id: 'm3', content: 'Excelente, podemos fechar assim.', sender: 'client', time: '10:45' },
-        ]
-    },
-    {
-        id: '2',
-        name: 'Ana Beatriz',
-        phone: '+55 21 97777-6666',
-        lastMessage: 'Qual o valor da implementação?',
-        time: '09:12',
-        unread: 2,
-        isBotHandling: true,
-        lgpdConsent: true,
-        messages: [
-            { id: 'm4', content: 'Bom dia. Encontrei vocês no Google.', sender: 'client', time: '09:10' },
-            { id: 'mb2', content: 'Olá Ana! Sou o assistente automático. Em que ramo da indústria você atua?', sender: 'bot', time: '09:10' },
-            { id: 'm5', content: 'Consultoria Financeira.', sender: 'client', time: '09:11' },
-            { id: 'm6', content: 'Qual o valor da implementação?', sender: 'client', time: '09:12' },
-        ]
-    },
-    {
-        id: '3',
-        name: 'Empresa XPTO Seguros',
-        phone: '+55 31 96666-5555',
-        lastMessage: 'Obrigado!',
-        time: 'Ontem',
-        unread: 0,
-        isBotHandling: false,
-        lgpdConsent: false,
-        messages: [
-            { id: 'm7', content: 'Obrigado!', sender: 'client', time: '18:00' },
-        ]
-    }
-]
+interface InboxBoardProps {
+    initialConversations: Chat[]
+}
 
-export function InboxBoard() {
-    const [chats] = useState<Chat[]>(mockChats)
-    const [activeChatId, setActiveChatId] = useState<string>(chats[0].id)
+export function InboxBoard({ initialConversations }: InboxBoardProps) {
+    const [chats, setChats] = useState<Chat[]>(initialConversations)
+    const [activeChatId, setActiveChatId] = useState<string>(chats.length > 0 ? chats[0].id : '')
     const [messageInput, setMessageInput] = useState('')
+    const [isSending, setIsSending] = useState(false)
+    const messagesEndRef = useRef<HTMLDivElement>(null)
+
+    // Auto-scroll messages
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [activeChatId, chats])
 
     // Create Deal State
     const [isAddDealOpen, setIsAddDealOpen] = useState(false)
     const [newDeal, setNewDeal] = useState({ title: '', value: 0 })
 
     const activeChat = chats.find(c => c.id === activeChatId)
+
+    const handleSendMessage = async () => {
+        if (!messageInput.trim() || !activeChatId || isSending) return
+
+        const tempText = messageInput.trim()
+        setMessageInput('') // Clear UI instantly
+        setIsSending(true)
+
+        // Optimistic UI Append
+        const optimisticId = `opt-${Date.now()}`
+        const optimisticMsg: Message = {
+            id: optimisticId,
+            content: tempText,
+            sender: 'me',
+            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            status: 'sent'
+        }
+
+        setChats(prev => prev.map(c => {
+            if (c.id === activeChatId) {
+                return {
+                    ...c,
+                    messages: [...c.messages, optimisticMsg],
+                    lastMessage: tempText,
+                    time: optimisticMsg.time
+                }
+            }
+            return c
+        }))
+
+        try {
+            // Wait for DB Transaction & WhatsApp Provider Post
+            const realMessage = await sendMessage(activeChatId, tempText)
+
+            // Swap Optimistic ID with Real DB ID
+            setChats(prev => prev.map(c => {
+                if (c.id === activeChatId) {
+                    return {
+                        ...c,
+                        messages: c.messages.map(m => m.id === optimisticId ? { ...realMessage, content: realMessage.content || '' } : m)
+                    }
+                }
+                return c
+            }))
+
+        } catch (error: any) {
+            toast.error(error.message || "Erro no envio de mensagem WhatsApp.")
+            // Remove optimistic on failure
+            setChats(prev => prev.map(c => {
+                if (c.id === activeChatId) {
+                    return { ...c, messages: c.messages.filter(m => m.id !== optimisticId) }
+                }
+                return c
+            }))
+        } finally {
+            setIsSending(false)
+        }
+    }
 
     return (
         <div className="flex h-full w-full bg-[#151515] relative z-10 border-l border-border/10">
@@ -242,20 +265,25 @@ export function InboxBoard() {
                         <div className="flex-1 bg-[#151515] border border-border/20 focus-within:border-[#ff7b00]/50 rounded-full flex items-center px-4 shadow-inner overflow-hidden transition-colors">
                             <input
                                 type="text"
-                                placeholder={activeChat.isBotHandling ? "O chatbot está atendendo. Digite para assumir..." : "Escreva sua mensagem..."}
+                                placeholder={activeChat?.isBotHandling ? "O chatbot está atendendo. Digite para assumir..." : "Escreva sua mensagem..."}
                                 className="w-full py-2.5 bg-transparent text-[14px] outline-none placeholder:text-zinc-600 text-zinc-200"
                                 value={messageInput}
                                 onChange={(e) => setMessageInput(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
-                                        setMessageInput('')
+                                        handleSendMessage()
                                     }
                                 }}
+                                disabled={isSending}
                             />
                         </div>
 
-                        {messageInput.trim() ? (
-                            <button className="p-3 bg-[#ff7b00] text-white rounded-full hover:bg-[#e66a00] transition-colors active:scale-95 shadow-lg shadow-[#ff7b00]/20 flex items-center justify-center shrink-0">
+                        {messageInput.trim() || isSending ? (
+                            <button
+                                onClick={handleSendMessage}
+                                disabled={isSending}
+                                className="p-3 bg-[#ff7b00] text-white rounded-full hover:bg-[#e66a00] transition-colors active:scale-95 shadow-lg shadow-[#ff7b00]/20 flex items-center justify-center shrink-0 disabled:opacity-50"
+                            >
                                 <Send className="w-4 h-4 ml-0.5" />
                             </button>
                         ) : (

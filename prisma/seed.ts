@@ -57,12 +57,10 @@ async function main() {
             name: 'Vendas SaaS (Enterprise)',
             stages: {
                 create: [
-                    { name: 'Leads Recentes', order: 0 },
-                    { name: 'Em Triagem (Bot)', order: 1 },
-                    { name: 'Qualificados', order: 2 },
-                    { name: 'Apresentação Escopo', order: 3 },
-                    { name: 'Envio de Proposta', order: 4 },
-                    { name: 'Negociação Ativa', order: 5 },
+                    { name: 'Entrada', order: 0 },
+                    { name: 'Proposta', order: 1 },
+                    { name: 'Negociação', order: 2 },
+                    { name: 'Fechamento', order: 3 },
                 ]
             }
         },

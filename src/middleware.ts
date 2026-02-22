@@ -8,7 +8,6 @@ export async function middleware(request: NextRequest) {
         },
     })
 
-    /*
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -56,17 +55,16 @@ export async function middleware(request: NextRequest) {
     )
 
     const { data: { user } } = await supabase.auth.getUser()
-    */
 
     // Always protect the dashboard routes in the CRM
-    // if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-    //     return NextResponse.redirect(new URL('/login', request.url))
-    // }
+    if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+        return NextResponse.redirect(new URL('/login', request.url))
+    }
 
     // Redirect to dashboard if logged in and trying to access /login
-    // if (user && request.nextUrl.pathname.startsWith('/login')) {
-    //     return NextResponse.redirect(new URL('/dashboard', request.url))
-    // }
+    if (user && request.nextUrl.pathname.startsWith('/login')) {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
 
     return response
 }

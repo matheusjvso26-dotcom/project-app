@@ -72,30 +72,23 @@ export class MetaCloudProvider implements IWhatsAppProvider {
                 throw new Error("Message must have either text or templateName")
             }
 
-            // MVP Note: We are mocking the actual fetch to prevent crashes if no token is provided.
-            // Uncomment the fetch block below when rolling out to Production with real Meta Tokens.
-
-            /*
             const response = await fetch(`${this.endpoint}/${this.phoneNumberId}/messages`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(apiPayload)
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(apiPayload)
             })
-      
-            const data = await response.json()
-            
-            if (!response.ok) {
-              console.error('[MetaCloudProvider] Error:', data)
-              return { success: false, error: data }
-            }
-      
-            return { success: true, messageId: data.messages?.[0]?.id }
-            */
 
-            return { success: true, messageId: `meta-cloud-${Date.now()}` }
+            const data = await response.json()
+
+            if (!response.ok) {
+                console.error('[MetaCloudProvider] Error:', data)
+                return { success: false, error: data }
+            }
+
+            return { success: true, messageId: data.messages?.[0]?.id }
 
         } catch (error) {
             console.error('[MetaCloudProvider] Catch Error:', error)
@@ -112,7 +105,8 @@ export class MetaCloudProvider implements IWhatsAppProvider {
         const challenge = url.searchParams.get('hub.challenge')
 
         if (mode === 'subscribe' && token === process.env.META_WEBHOOK_VERIFY_TOKEN) {
-            return new Response(challenge, { status: 200 })
+            // A Meta exige OBRIGATORIAMENTE que o challenge seja retornado cru, sem aspas JSON
+            return challenge
         }
 
         const body = await req.json()

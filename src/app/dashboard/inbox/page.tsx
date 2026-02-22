@@ -1,10 +1,13 @@
 import { InboxBoard } from "./InboxBoard"
+import { getConversations } from "./actions"
 
-export default function InboxPage() {
+export default async function InboxPage() {
+    const initialConversations = await getConversations()
+
     return (
         <div className="flex flex-col h-full bg-[#151515]">
             <div className="flex-1 overflow-hidden">
-                <InboxBoard />
+                <InboxBoard initialConversations={initialConversations} />
             </div>
         </div>
     )
