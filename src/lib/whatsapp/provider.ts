@@ -99,10 +99,17 @@ export class MetaCloudProvider implements IWhatsAppProvider {
     async parseWebhook(req: Request) {
         // Official Webhook verification and parsing logic comes here.
         // E.g., handling Challenge Hub verification from Meta.
-        const url = new URL(req.url)
-        const mode = url.searchParams.get('hub.mode')
-        const token = url.searchParams.get('hub.verify_token')
-        const challenge = url.searchParams.get('hub.challenge')
+        // Handles relative and absolute urls properly to extract search parameters
+        const urlStr = req.url || ''
+        const searchParams = urlStr.includes('?')
+            ? new URLSearchParams(urlStr.substring(urlStr.indexOf('?')))
+            : new URL(urlStr, 'https://dummy.com').searchParams
+
+        const mode = searchParams.get('hub.mode')
+        const token = searchParams.get('hub.verify_token')
+        const challenge = searchParams.get('hub.challenge')
+
+        console.log(`[MetaCloudProvider] Handshake Request Params: mode=${mode} token=${token} challenge=${challenge}`)
 
         if (mode === 'subscribe' && token === process.env.META_WEBHOOK_VERIFY_TOKEN) {
             // A Meta exige OBRIGATORIAMENTE que o challenge seja retornado cru, sem aspas JSON
