@@ -28,6 +28,7 @@ async function main() {
         data: {
             name: 'Flow SaaS Demo Org',
             planTier: 'ENTERPRISE',
+            wabaId: process.env.META_WABA_ID || null, // Vínculo essencial para o Webhook Local/Prod funcionar out-of-the-box
         },
     })
 
