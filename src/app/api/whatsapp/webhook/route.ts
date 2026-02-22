@@ -59,24 +59,29 @@ export async function POST(request: Request) {
 
                 console.log(`[API/WhatsApp] Nova Memagem Recebida de ${leadPhone}: ${textContent}`)
 
-                // 1. Procurar o Lead no Flow SaaS
-                // Obs: Aqui separamos lógica de DDD, mas vamos procurar de forma exata por hora
-                let lead = await prisma.lead.findFirst({
-                    where: { phone: leadPhone }
-                })
-
-                // 2. Se Lead não existe e não temos a org via token, não tem como adivinhar por enquanto.
-                // Mas, numa arquitetura multi-tenant limpa, o WABA_ID (WhatsApp Business Account ID)
-                // Que vem dentro do payload 'body.entry[0].id' vincula com a Organização.
+                // 1. Identificar a Organização dona deste WABA ID primeiro para evitar vazamento Multi-Tenant
                 const metaBusId = body.entry[0].id
 
                 const organization = await prisma.organization.findFirst({
                     where: { wabaId: metaBusId }
                 })
 
+                if (!organization) {
+                    console.warn(`[API/WhatsApp] Aviso: WABA ID ${metaBusId} não está vinculado a nenhuma Organização Ativa no sistema. Dropando mensagem silenciosamente.`)
+                    return NextResponse.json({ success: true })
+                }
+
+                // 2. Procurar o Lead RESTRITO ao ecossistema daquela Organização
+                let lead = await prisma.lead.findFirst({
+                    where: {
+                        phone: leadPhone,
+                        organizationId: organization.id
+                    }
+                })
+
                 let isNewLead = false
 
-                if (organization && !lead) {
+                if (!lead) {
                     // Lead totalmente novo caindo de paraquedas no WhatsApp da org
                     lead = await prisma.lead.create({
                         data: {
