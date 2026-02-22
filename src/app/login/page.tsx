@@ -16,10 +16,7 @@ export default async function LoginPage() {
         <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center flex-row items-center gap-3">
-                    <img src="/logo.png" alt="FLY UP Logo" className="w-10 h-10 object-contain" />
-                    <h2 className="text-center text-3xl font-extrabold text-foreground">
-                        FLY UP
-                    </h2>
+                    <img src="/logo.png" alt="FLY UP Logo" className="h-24 w-auto object-contain" />
                 </div>
                 <h2 className="mt-6 text-center text-2xl font-bold text-foreground">
                     Acesse sua conta

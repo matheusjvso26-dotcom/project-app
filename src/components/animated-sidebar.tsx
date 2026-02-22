@@ -5,27 +5,26 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
     LayoutDashboard,
-    Landmark,
-    CreditCard,
+    KanbanSquare,
+    Inbox,
     Contact,
-    Calculator,
+    Workflow,
+    Bot,
+    LayoutTemplate,
     Settings,
     LogOut,
-    Calendar,
-    Utensils,
-    FileText,
     Hexagon
 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 const mainMenuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-    { icon: Landmark, label: "Pipeline (Kanban)", href: "/dashboard/kanban" },
-    { icon: CreditCard, label: "Caixa de Entrada", href: "/dashboard/inbox" },
+    { icon: KanbanSquare, label: "Pipeline (Kanban)", href: "/dashboard/kanban" },
+    { icon: Inbox, label: "Caixa de Entrada", href: "/dashboard/inbox" },
     { icon: Contact, label: "Contatos e Leads", href: "/dashboard/contacts" },
-    { icon: Calculator, label: "Automações", href: "/dashboard/automations" },
-    { icon: Calendar, label: "Meus Chatbots", href: "/dashboard/chatbots" },
-    { icon: FileText, label: "Templates Meta", href: "/dashboard/templates" },
+    { icon: Workflow, label: "Automações", href: "/dashboard/automations" },
+    { icon: Bot, label: "Meus Chatbots", href: "/dashboard/chatbots" },
+    { icon: LayoutTemplate, label: "Templates Meta", href: "/dashboard/templates" },
     { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ]
 
@@ -42,14 +41,16 @@ export function AnimatedSidebar() {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div className="h-28 flex items-center justify-center px-4 transition-all">
-                <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
-                    <Hexagon className="w-8 h-8 text-primary" strokeWidth={1.5} />
-                    <div className={cn("flex flex-col justify-center transition-opacity duration-300", isHovered ? "opacity-100" : "opacity-0 w-0")}>
-                        <span className="text-xl font-bold tracking-tight text-primary leading-none">
-                            FLY UP
-                        </span>
-                    </div>
+            <div className="h-32 flex items-center px-4 transition-all">
+                <div className="flex items-center overflow-hidden whitespace-nowrap w-full justify-center">
+                    <img
+                        src="/logo.png"
+                        alt="FLY UP"
+                        className={cn(
+                            "transition-all duration-300",
+                            isHovered ? "w-40 h-auto object-contain" : "w-14 h-14 object-cover object-left"
+                        )}
+                    />
                 </div>
             </div>
 
