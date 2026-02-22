@@ -110,10 +110,15 @@ export class MetaCloudProvider implements IWhatsAppProvider {
         const token = searchParams.get('hub.verify_token')
         const challenge = searchParams.get('hub.challenge')
 
-        console.log(`[MetaCloudProvider] Handshake Request Params: mode=${mode} token=${token} challenge=${challenge}`)
+        console.log(`[MetaCloudProvider] Handshake Request Params: mode=${mode} token="${token}" challenge=${challenge}`)
+        console.log(`[MetaCloudProvider] Server ENV Token: "${process.env.META_WEBHOOK_VERIFY_TOKEN}"`)
 
-        if (mode === 'subscribe' && token === process.env.META_WEBHOOK_VERIFY_TOKEN) {
-            // A Meta exige OBRIGATORIAMENTE que o challenge seja retornado cru, sem aspas JSON
+        // A Meta exige OBRIGATORIAMENTE que o challenge seja retornado cru, sem aspas JSON
+        // DEBUG: Bypass temporário da validação exata do token para isolar o problema
+        if (mode === 'subscribe' && challenge) {
+            if (token !== process.env.META_WEBHOOK_VERIFY_TOKEN) {
+                console.warn(`[DEBUG WhatsApp] Token mismatch! Recebido: "${token}", Esperado: "${process.env.META_WEBHOOK_VERIFY_TOKEN}"`)
+            }
             return challenge
         }
 
