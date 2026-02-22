@@ -8,7 +8,7 @@ export interface WhatsAppMessagePayload {
 
 export interface IWhatsAppProvider {
     sendMessage(payload: WhatsAppMessagePayload): Promise<{ success: boolean; messageId?: string; error?: any }>
-    parseWebhook(req: Request): Promise<any>
+    parseWebhook(req: Request, method?: string): Promise<any>
 }
 
 // ---------------------------------------------------------
@@ -27,7 +27,8 @@ export class MockWhatsAppProvider implements IWhatsAppProvider {
         }
     }
 
-    async parseWebhook(req: Request) {
+    async parseWebhook(req: Request, method?: string) {
+        if (method !== 'POST') return null
         const body = await req.json()
         console.log(`[MockWhatsAppProvider] Parsing Webhook:`, body)
         return body // Return raw for now
@@ -116,9 +117,19 @@ export class MetaCloudProvider implements IWhatsAppProvider {
             return challenge
         }
 
-        const body = await req.json()
-        console.log(`[MetaCloudProvider] Received Official Webhook Request:`, body)
-        return body
+        // Only parse body for POST (Message/Event Receiving)
+        if (req.method === 'POST') {
+            try {
+                const body = await req.json()
+                console.log(`[MetaCloudProvider] Received Official Webhook Request:`, body)
+                return body
+            } catch (e) {
+                console.error("[MetaCloudProvider] Failed to parse JSON body:", e)
+                return null
+            }
+        }
+
+        return null
     }
 }
 

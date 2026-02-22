@@ -8,21 +8,27 @@ import prisma from '@/lib/prisma'
  */
 export async function GET(request: Request) {
     console.log("[API/WhatsApp] Verificando Handshake de Webhook da Meta...")
-    const provider = getWhatsAppProvider()
 
-    // O provider original lida com a lógica de verificação
-    // Ele extrai mode, token e challenge e responde se bater.
-    const response = await provider.parseWebhook(request)
+    try {
+        const provider = getWhatsAppProvider()
 
-    // A Meta exige o challenge numérico cru
-    if (typeof response === 'string') {
-        return new NextResponse(response, {
-            status: 200,
-            headers: { 'Content-Type': 'text/plain' }
-        })
+        // O provider original lida com a lógica de verificação
+        // Ele extrai mode, token e challenge e responde se bater.
+        const response = await provider.parseWebhook(request, 'GET')
+
+        // A Meta exige o challenge numérico cru
+        if (typeof response === 'string') {
+            return new NextResponse(response, {
+                status: 200,
+                headers: { 'Content-Type': 'text/plain' }
+            })
+        }
+
+        return NextResponse.json({ error: "Invalid Webhook Verification Request" }, { status: 400 })
+    } catch (error: any) {
+        console.error("[API/WhatsApp] Erro fatal no Handshake GET:", error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
     }
-
-    return NextResponse.json({ error: "Invalid Webhook Verification Request" }, { status: 400 })
 }
 
 /**
@@ -34,7 +40,7 @@ export async function POST(request: Request) {
         const provider = getWhatsAppProvider()
 
         // Retorna o body decodificado após leitura da request
-        const body = await provider.parseWebhook(request)
+        const body = await provider.parseWebhook(request, 'POST')
 
         // Estrutura padrão de Objeto da Meta para mensagens Inbound:
         // body.entry[0].changes[0].value.messages[0]
