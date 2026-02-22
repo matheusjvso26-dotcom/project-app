@@ -11,39 +11,7 @@ import {
     ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip
 } from 'recharts'
 import { cn } from '@/lib/utils'
-
-// Mock de dados por período para o Gráfico Principal (Receita do Mês)
-const chartData7Days = [
-    { name: 'Seg', income: 1200, outcome: 400 },
-    { name: 'Ter', income: 2100, outcome: 600 },
-    { name: 'Qua', income: 1500, outcome: 800 },
-    { name: 'Qui', income: 3200, outcome: 900 },
-    { name: 'Sex', income: 2800, outcome: 500 },
-    { name: 'Sáb', income: 900, outcome: 300 },
-    { name: 'Dom', income: 1100, outcome: 200 },
-]
-
-const chartData15Days = [
-    { name: '1-3', income: 4500, outcome: 1200 },
-    { name: '4-6', income: 5200, outcome: 1500 },
-    { name: '7-9', income: 3800, outcome: 1800 },
-    { name: '10-12', income: 6100, outcome: 2100 },
-    { name: '13-15', income: 5900, outcome: 1900 },
-]
-
-const chartData30Days = [
-    { name: 'Sem 1', income: 12500, outcome: 4200 },
-    { name: 'Sem 2', income: 15200, outcome: 5500 },
-    { name: 'Sem 3', income: 11800, outcome: 4800 },
-    { name: 'Sem 4', income: 18100, outcome: 6100 },
-]
-
-// Mock de dados reais para as métricas com base no período
-const metricsByPeriod = {
-    '7d': { mrr: 12800, activeClients: 14, cac: 120, churn: '1.2%' },
-    '15d': { mrr: 25500, activeClients: 28, cac: 115, churn: '2.1%' },
-    '30d': { mrr: 57600, activeClients: 64, cac: 98, churn: '3.4%' },
-}
+import { getDashboardMetrics, DashboardMetrics } from './actions'
 
 type Period = '7d' | '15d' | '30d'
 
@@ -57,11 +25,37 @@ const formatBRL = (value: number) => {
 export default function AnalyticsDashboard() {
     const [period, setPeriod] = useState<Period>('30d')
     const [dropdownOpen, setDropdownOpen] = useState(false)
+    const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
 
-    // Dados dinâmicos
-    const currentMetrics = metricsByPeriod[period]
-    const currentChartData = period === '7d' ? chartData7Days : (period === '15d' ? chartData15Days : chartData30Days)
+    React.useEffect(() => {
+        const fetchMetrics = async () => {
+            setIsLoading(true)
+            try {
+                const days = period === '7d' ? 7 : (period === '15d' ? 15 : 30)
+                const data = await getDashboardMetrics(days)
+                setMetrics(data)
+            } catch (error) {
+                console.error("Falha ao buscar métricas:", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchMetrics()
+    }, [period])
+
     const periodLabel = period === '7d' ? 'Últimos 7 Dias' : (period === '15d' ? 'Últimos 15 Dias' : 'Últimos 30 Dias')
+
+    if (isLoading || !metrics) {
+        return (
+            <div className="flex items-center justify-center w-full h-full bg-[#151515] text-[#ff7b00]">
+                <Activity className="w-8 h-8 animate-pulse" />
+            </div>
+        )
+    }
+
+    const currentMetrics = metrics
+    const currentChartData = metrics.chartData
 
     return (
         <div className="p-8 max-w-[1400px] mx-auto flex flex-col gap-6 h-full z-10 relative bg-[#151515] text-white">
@@ -163,9 +157,9 @@ export default function AnalyticsDashboard() {
                 <div className="bg-transparent flex flex-col gap-4">
                     <h3 className="text-base font-semibold text-white px-1">Saúde Operacional (CRM)</h3>
                     <div className="flex flex-col gap-3">
-                        <HealthCard title="Usuários CAtivos (Logins)" icon={<Users />} value={`${Math.round(currentMetrics.activeClients * 3.4)} Colaboradores`} />
-                        <HealthCard title="Disparos de WhatsApp" icon={<Zap />} value={`${currentMetrics.activeClients * 340} Mensagens`} />
-                        <HealthCard title="Taxa de Conversão (Win)" icon={<TrendingUp />} value="18.2% Médio" />
+                        <HealthCard title="Usuários CAtivos (Logins)" icon={<Users />} value={`${currentMetrics.activeClients} Colaboradores`} />
+                        <HealthCard title="Disparos de WhatsApp" icon={<Zap />} value={`${currentMetrics.messagesSent} Mensagens`} />
+                        <HealthCard title="Taxa de Conversão (Win)" icon={<TrendingUp />} value={currentMetrics.winRate} />
                     </div>
                 </div>
             </div>
@@ -177,10 +171,20 @@ export default function AnalyticsDashboard() {
                 <div className="bg-[#1c1c1c] rounded-2xl p-6 border border-white/5">
                     <h3 className="text-base font-semibold mb-6 text-white">Últimos Contratos Fechados</h3>
                     <div className="flex flex-col gap-6">
-                        <TransactionItem color="bg-[#22c55e]" name="Nexus Tecnologia Ltda" plan="Enterprise Anual" amount={formatBRL(12500)} type="positive" />
-                        <TransactionItem color="bg-[#22c55e]" name="Logística Express BR" plan="Pro Mensal" amount={formatBRL(490)} type="positive" />
-                        <TransactionItem color="bg-[#ef4444]" name="Acme Corp (Cancelamento)" plan="Downgrade/Churn" amount={formatBRL(-990)} type="negative" />
-                        <TransactionItem color="bg-[#22c55e]" name="Tech Solutions" plan="Enterprise Mensal" amount={formatBRL(2100)} type="positive" />
+                        {currentMetrics.recentDeals.length > 0 ? (
+                            currentMetrics.recentDeals.map(deal => (
+                                <TransactionItem
+                                    key={deal.id}
+                                    color={deal.type === 'positive' ? "bg-[#22c55e]" : "bg-[#ef4444]"}
+                                    name={deal.name}
+                                    plan={deal.plan}
+                                    amount={formatBRL(deal.amount)}
+                                    type={deal.type}
+                                />
+                            ))
+                        ) : (
+                            <p className="text-zinc-500 text-sm">Nenhuma oportunidade registrada ainda.</p>
+                        )}
                     </div>
                 </div>
 

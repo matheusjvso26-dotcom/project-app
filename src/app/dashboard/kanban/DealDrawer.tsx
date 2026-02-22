@@ -110,34 +110,8 @@ export function DealDrawer({ dealId, isOpen, onClose }: DealDrawerProps) {
                             </TabsContent>
 
                             <TabsContent value="timeline" className="mt-6">
-                                <div className="flex flex-col gap-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border/50 before:to-transparent">
-                                    {/* Mocked Timeline Item 1 */}
-                                    <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-card shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
-                                            <Plus className="w-4 h-4 text-primary" />
-                                        </div>
-                                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass-card p-4 rounded-xl shadow-sm">
-                                            <div className="flex items-center justify-between space-x-2 mb-1">
-                                                <div className="font-bold text-foreground text-sm">Negócio Criado</div>
-                                                <time className="font-caveat font-medium text-xs text-muted-foreground">{formatDate(deal.createdAt)}</time>
-                                            </div>
-                                            <div className="text-sm text-muted-foreground">Oportunidade adicionada ao pipeline por {deal.owner?.name || 'Sistema'}.</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Mocked Timeline Item 2 */}
-                                    <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-card shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
-                                            <MessageSquare className="w-4 h-4 text-emerald-500" />
-                                        </div>
-                                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass-card p-4 rounded-xl shadow-sm">
-                                            <div className="flex items-center justify-between space-x-2 mb-1">
-                                                <div className="font-bold text-foreground text-sm">WhatsApp Enviado</div>
-                                                <time className="font-caveat font-medium text-xs text-muted-foreground">Agora mesmo</time>
-                                            </div>
-                                            <div className="text-sm text-muted-foreground">Mensagem de prospecção iniciada via Template HSM.</div>
-                                        </div>
-                                    </div>
+                                <div className="flex flex-col gap-6 relative md:before:mx-auto mt-4 items-center text-center">
+                                    <p className="text-zinc-500 text-sm">O histórico cronológico rastreado aparecerá aqui em breve.</p>
                                 </div>
                             </TabsContent>
                         </Tabs>
