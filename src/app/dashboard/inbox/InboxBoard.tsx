@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
-import { sendMessage, getConversations, updateDealValue, sendMediaMessage } from './actions'
+import { sendMessage, getConversations, updateDealValue, sendMediaMessage, createDealFromInbox } from './actions'
 import { toast } from 'sonner'
 
 // --- Interfaces ---
@@ -533,7 +533,6 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                                     return
                                                 }
                                                 try {
-                                                    const { createDealFromInbox } = await import('./actions')
                                                     const deal = await createDealFromInbox(activeChat.id, newDeal.title, newDeal.value || 0)
 
                                                     setChats(prev => prev.map(c => {

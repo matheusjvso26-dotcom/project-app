@@ -1,6 +1,8 @@
 'use server'
 
 import prisma from "@/lib/prisma"
+import { requireUser } from "@/lib/auth-utils"
+import { revalidatePath } from "next/cache"
 
 export async function updateDealStageAction(dealId: string, newStageId: string) {
     try {
@@ -31,4 +33,43 @@ export async function getDealDetails(dealId: string) {
         console.error("Failed to fetch deal details:", error)
         return null
     }
+}
+
+export async function createKanbanDealAction(title: string, company: string, value: number, stageId: string) {
+    const user = await requireUser()
+    const stage = await prisma.stage.findUnique({ where: { id: stageId }, include: { pipeline: true } })
+    if (!stage || stage.pipeline.organizationId !== user.organizationId) {
+        throw new Error("Permissão Negada ou Etapa não encontrada.")
+    }
+
+    let companyId = null
+    if (company && company.trim() !== '') {
+        let companyObj = await prisma.company.findFirst({
+            where: { organizationId: user.organizationId, name: company }
+        })
+        if (!companyObj) {
+            companyObj = await prisma.company.create({
+                data: {
+                    organizationId: user.organizationId,
+                    name: company
+                }
+            })
+        }
+        companyId = companyObj.id
+    }
+
+    const deal = await prisma.deal.create({
+        data: {
+            title,
+            value,
+            stageId,
+            pipelineId: stage.pipelineId,
+            organizationId: user.organizationId,
+            ownerId: user.id,
+            companyId
+        }
+    })
+
+    revalidatePath('/dashboard/kanban')
+    return { success: true, dealId: deal.id }
 }

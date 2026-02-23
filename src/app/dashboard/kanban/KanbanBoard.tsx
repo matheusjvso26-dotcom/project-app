@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
 import { Badge } from '@/components/ui/badge'
-import { updateDealStageAction } from './actions'
+import { updateDealStageAction, createKanbanDealAction } from './actions'
+import { toast } from 'sonner'
 
 import { DealDrawer } from './DealDrawer'
 // --- Data Types ---
@@ -214,7 +215,20 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" onClick={() => setIsAddOpen(false)}>Criar Deal</Button>
+                        <Button type="button" onClick={async () => {
+                            if (!newDeal.title || !activeStageId) {
+                                toast.error("O título e a Etapa são obrigatórios.")
+                                return
+                            }
+                            try {
+                                await createKanbanDealAction(newDeal.title, newDeal.company, newDeal.value, activeStageId)
+                                toast.success("Oportunidade criada com sucesso!")
+                                setIsAddOpen(false)
+                                setNewDeal({ title: '', company: '', value: 0 })
+                            } catch (e: any) {
+                                toast.error(e.message || "Falha ao criar oportunidade.")
+                            }
+                        }}>Criar Oportunidade</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
