@@ -154,13 +154,28 @@ export async function createDealFromInbox(conversationId: string, title: string,
         throw new Error("Conversa não encontrada ou sem permissão.")
     }
 
-    const pipeline = await prisma.pipeline.findFirst({
+    let pipeline = await prisma.pipeline.findFirst({
         where: { organizationId: user.organizationId },
         include: { stages: { orderBy: { order: 'asc' }, take: 1 } }
     })
 
     if (!pipeline || pipeline.stages.length === 0) {
-        throw new Error("Organização não possui um Pipeline configurado.")
+        console.log("[CreateDeal] Criando Pipeline Padrão porque Organização não tinha nenhum.")
+        pipeline = await prisma.pipeline.create({
+            data: {
+                organizationId: user.organizationId,
+                name: "Funil de Vendas",
+                stages: {
+                    create: [
+                        { name: "1. Triagem", order: 1 },
+                        { name: "2. Qualificação", order: 2 },
+                        { name: "3. Negociação", order: 3 },
+                        { name: "4. Ganho", order: 4 }
+                    ]
+                }
+            },
+            include: { stages: { orderBy: { order: 'asc' }, take: 1 } }
+        })
     }
 
     const savedDeal = await prisma.deal.create({
