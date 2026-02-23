@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { getWhatsAppProvider } from '@/lib/whatsapp/provider'
 import prisma from '@/lib/prisma'
 import { processBotFlow } from '@/lib/whatsapp/botEngine'
+import { transcribeAudioMessage } from '@/lib/whatsapp/transcriber'
+import { sendPushNotification } from '@/lib/push'
 
 /**
  * GET: Endpoint utilizado pela Meta (Facebook) no momento de vincular e verificar o Webhook
@@ -142,7 +144,6 @@ export async function POST(request: Request) {
                                     organizationId: organization.id,
                                     pipelineId: pipeline.id,
                                     stageId: pipeline.stages[0].id,
-                                    leadId: lead.id,
                                     title: `Lead WPP: ${leadName}`,
                                     value: 0
                                 }
@@ -171,7 +172,7 @@ export async function POST(request: Request) {
                     }
 
                     // Salvar no prisma (Chat de entrada)
-                    await prisma.message.create({
+                    const msgEntity = await prisma.message.create({
                         data: {
                             conversationId: conversation.id,
                             direction: "INBOUND",
@@ -181,11 +182,32 @@ export async function POST(request: Request) {
                         }
                     })
 
+                    // Se for áudio, engatilha a transcrição em background
+                    if (msgType === 'audio' && mediaId) {
+                        transcribeAudioMessage(msgEntity.id, mediaId).catch(err => {
+                            console.error("[API/WhatsApp] Erro assíncrono no Transcriber:", err)
+                        })
+                    }
+
                     // Fazemos bump na updatedAt da thread para subir ela
                     await prisma.conversation.update({
                         where: { id: conversation.id },
                         data: { updatedAt: new Date() }
                     })
+
+                    // Notificar Atendentes via PWA Push (Background Promise)
+                    prisma.user.findMany({
+                        where: { organizationId: conversation.organizationId }
+                    }).then(users => {
+                        const pushFmt = {
+                            title: `Nova mensagem de ${lead.name}`,
+                            body: finalContent.length > 50 ? finalContent.substring(0, 50) + '...' : finalContent,
+                            url: `/dashboard/inbox`
+                        }
+                        users.forEach(u => {
+                            sendPushNotification(u.id, pushFmt).catch(() => { })
+                        })
+                    }).catch(e => console.error("[Push] Erro finding users:", e))
 
                     // ======================================
                     // ROBÔ AUTOMADOR M2R CRED: STATELESS FLOW
@@ -201,6 +223,42 @@ export async function POST(request: Request) {
                         })
                     } catch (botErr) {
                         console.error("[API/WhatsApp/BotEngine] Falha ao processar maquina de estado do robô:", botErr)
+                    }
+                }
+            } else if (changes.statuses && changes.statuses.length > 0) {
+                const statusEvent = changes.statuses[0]
+                const wamid = statusEvent.id // "wamid.HBg..."
+                const newStatusText = statusEvent.status // 'sent', 'delivered', 'read', 'failed'
+
+                let finalStatus = 'SENT'
+                if (newStatusText === 'delivered') finalStatus = 'DELIVERED'
+                else if (newStatusText === 'read') finalStatus = 'READ'
+                else if (newStatusText === 'failed') finalStatus = 'FAILED'
+
+                let errorDesc = null
+                if (newStatusText === 'failed' && statusEvent.errors) {
+                    errorDesc = statusEvent.errors.map((e: any) => e.title || e.message).join(', ')
+                    console.error(`[API/WhatsApp] Mensagem FALHOU para WAMID ${wamid}:`, errorDesc)
+                }
+
+                if (wamid) {
+                    const msg = await prisma.message.findUnique({
+                        where: { providerId: wamid }
+                    })
+
+                    if (msg) {
+                        let updatedContent = msg.content || ""
+                        if (errorDesc && !updatedContent.includes('Erro de Envio')) {
+                            updatedContent = `${updatedContent}\n\n⚠️ Erro de Envio da Meta: ${errorDesc}`
+                        }
+
+                        await prisma.message.update({
+                            where: { id: msg.id },
+                            data: {
+                                status: finalStatus,
+                                content: updatedContent
+                            }
+                        })
                     }
                 }
             }

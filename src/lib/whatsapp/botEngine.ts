@@ -251,15 +251,22 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
     if (responseText !== "") {
         console.log(`[BotEngine] Respondendo para ${leadPhone} -> ${responseText.substring(0, 30)}...`)
 
-        // 1. Salvar no Banco
+        // 1. Disparar o Request HTTP para a Meta/Cloud API
+        const res = await provider.sendMessage({
+            to: leadPhone,
+            text: responseText
+        })
+
+        // 2. Salvar no Banco
         await prisma.message.create({
             data: {
                 conversationId,
                 direction: "OUTBOUND",
                 type: "TEXT",
                 content: responseText,
-                status: "DELIVERED",
-                senderId: null // O bot
+                status: res.success ? "DELIVERED" : "FAILED",
+                senderId: null, // O bot
+                providerId: res.messageId || null
             }
         })
 
@@ -270,12 +277,6 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                 updatedAt: new Date(),
                 status: 'BOT_HANDLING'
             }
-        })
-
-        // 2. Disparar o Request HTTP para a Meta/Cloud API
-        await provider.sendMessage({
-            to: leadPhone,
-            text: responseText
         })
     }
 }

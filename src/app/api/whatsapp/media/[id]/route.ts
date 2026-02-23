@@ -43,10 +43,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         // Criar resposta proxy mantendo os headers originais de MimeType (PDF, Images, etc)
         const contentType = mediaRes.headers.get('content-type') || 'application/octet-stream'
 
+        const disposition = contentType.startsWith('image/') || contentType.startsWith('audio/') || contentType.startsWith('video/')
+            ? 'inline'
+            : 'attachment'
+
         return new NextResponse(mediaRes.body, {
             headers: {
                 'Content-Type': contentType,
-                'Content-Disposition': `attachment; filename="whatsapp-media-${mediaId}"`
+                'Content-Disposition': `${disposition}; filename="whatsapp-media-${mediaId}"`,
+                'Cache-Control': 'public, max-age=86400' // Cache na cloudflare/browser por 1 dia
             }
         })
 

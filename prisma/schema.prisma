@@ -51,6 +51,7 @@ model User {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   dealsOwned     Deal[]
   messagesSent   Message[]
+  pushSubscriptions PushSubscription[]
 }
 
 // ---------------------------------------------------------
@@ -154,6 +155,7 @@ model Conversation {
   organizationId String
   leadId         String
   status         String       @default("OPEN") // OPEN, CLOSED, BOT_HANDLING
+  tags           String[]     @default([]) // e.g. "VIP", "Reclamação", "Pensionista"
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
@@ -170,6 +172,8 @@ model Message {
   direction      String       // INBOUND, OUTBOUND
   content        String?      // Contains either text or JSON representation of templates/media
   status         String       @default("SENT") // SENT, DELIVERED, READ, FAILED
+  providerId     String?      @unique // Armazena o wamid da rede do Facebook para tracking
+  transcription  String?      @db.Text // Armazena transcrição em texto da IA Whisper
   createdAt      DateTime     @default(now())
 
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -191,4 +195,18 @@ model Automation {
   updatedAt      DateTime     @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------
+// PWA Web Push Module
+// ---------------------------------------------------------
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

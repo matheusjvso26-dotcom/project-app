@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { PushProvider } from "./PushProvider"
 import {
     LayoutDashboard,
     KanbanSquare,
@@ -91,6 +92,13 @@ export function AnimatedSidebar() {
                     })}
                 </div>
             </nav>
+
+            {/* Push Notifications Opt-In (Only visible when hovered/expanded) */}
+            <div className={cn("px-2 pb-2 overflow-hidden transition-all duration-300", isHovered ? "opacity-100 h-auto" : "opacity-0 h-0 w-0 hidden")}>
+                <div className="border border-border/10 bg-background/50 rounded-lg p-2 flex flex-col items-center">
+                    <PushProvider />
+                </div>
+            </div>
 
             <div className="pb-8 pt-4">
                 <form action="/auth/logout" method="POST">

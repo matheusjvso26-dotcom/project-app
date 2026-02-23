@@ -43,6 +43,7 @@ export async function getConversations() {
             name: c.lead?.name || 'Sem Nome',
             phone: c.lead?.phone || '',
             status: c.status,
+            tags: c.tags || [],
             lgpdConsent: c.lead?.lgpdConsent || false,
             deals: cDeals.map(d => ({
                 id: d.id,
@@ -58,6 +59,7 @@ export async function getConversations() {
                 id: m.id,
                 content: m.content || '',
                 type: m.type,
+                transcription: m.transcription || null,
                 sender: (m.direction === 'OUTBOUND' ? (m.senderId ? 'me' : 'bot') : 'client') as "me" | "bot" | "client",
                 time: m.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                 status: (m.status === 'READ' ? 'read' : (m.status === 'DELIVERED' ? 'delivered' : 'sent')) as "read" | "delivered" | "sent"
@@ -125,7 +127,8 @@ export async function sendMessage(conversationId: string, content: string) {
             content: content,
             type: "TEXT",
             senderId: user.id,
-            status: "SENT"
+            status: result.success ? "SENT" : "FAILED",
+            providerId: result.messageId || null
         }
     })
 
@@ -264,7 +267,7 @@ export async function sendMediaMessage(conversationId: string, formData: FormDat
     }
 
     // Now send the message
-    await provider.sendMessage({
+    const result = await provider.sendMessage({
         to: conversation.lead.phone,
         mediaId: mediaId,
         mediaType: mediaType as 'document' | 'image' | 'audio' | 'video',
@@ -285,7 +288,8 @@ export async function sendMediaMessage(conversationId: string, formData: FormDat
             direction: "OUTBOUND",
             type: mediaType.toUpperCase(),
             content: finalContent,
-            status: "SENT"
+            status: result.success ? "SENT" : "FAILED",
+            providerId: result.messageId || null
         }
     })
 
@@ -302,4 +306,35 @@ export async function sendMediaMessage(conversationId: string, formData: FormDat
         sender: 'me' as const,
         status: 'sent' as const
     }
+}
+
+/**
+ * Adiciona ou remove uma Tag (Ex: "Urgente", "VIP") de uma Conversa.
+ */
+export async function toggleTag(conversationId: string, tag: string) {
+    const user = await requireUser()
+
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId }
+    })
+
+    if (!conversation || conversation.organizationId !== user.organizationId) {
+        throw new Error("Chat não encontrado ou permissão negada.")
+    }
+
+    const currentTags = conversation.tags || []
+    let newTags = [...currentTags]
+
+    if (newTags.includes(tag)) {
+        newTags = newTags.filter(t => t !== tag)
+    } else {
+        newTags.push(tag)
+    }
+
+    await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { tags: newTags }
+    })
+
+    return { success: true, tags: newTags }
 }
