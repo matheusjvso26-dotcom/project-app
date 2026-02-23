@@ -1,10 +1,13 @@
 import { KanbanBoard, Stage, DealStatus } from "./KanbanBoard"
 import prisma from "@/lib/prisma"
+import { requireUser } from "@/lib/auth-utils"
 
 export default async function KanbanPage() {
+    const user = await requireUser()
 
-    // Fetch the first pipeline available (since it's an MVP, we just pick the primary one)
-    const pipeline = await prisma.pipeline.findFirst({
+    // Fetch the first pipeline available for this organization
+    let pipeline = await prisma.pipeline.findFirst({
+        where: { organizationId: user.organizationId },
         include: {
             stages: {
                 orderBy: { order: 'asc' },
@@ -18,6 +21,30 @@ export default async function KanbanPage() {
             }
         }
     })
+
+    if (!pipeline) {
+        console.log("[Kanban] Criando Pipeline Padrão porque a Organização não tinha nenhum.")
+        pipeline = await prisma.pipeline.create({
+            data: {
+                organizationId: user.organizationId,
+                name: "Funil de Vendas",
+                stages: {
+                    create: [
+                        { name: "1. Triagem", order: 1 },
+                        { name: "2. Qualificação", order: 2 },
+                        { name: "3. Negociação", order: 3 },
+                        { name: "4. Ganho", order: 4 }
+                    ]
+                }
+            },
+            include: {
+                stages: {
+                    orderBy: { order: 'asc' },
+                    include: { deals: { include: { company: true } } }
+                }
+            }
+        })
+    }
 
     let initialData: Stage[] = []
 
