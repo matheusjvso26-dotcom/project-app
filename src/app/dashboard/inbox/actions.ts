@@ -51,6 +51,7 @@ export async function getConversations() {
         messages: c.messages.reverse().map(m => ({
             id: m.id,
             content: m.content || '',
+            type: m.type,
             sender: (m.direction === 'OUTBOUND' ? (m.senderId ? 'me' : 'bot') : 'client') as "me" | "bot" | "client",
             time: m.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             status: (m.status === 'READ' ? 'read' : (m.status === 'DELIVERED' ? 'delivered' : 'sent')) as "read" | "delivered" | "sent"
@@ -133,4 +134,126 @@ export async function updateDealValue(dealId: string, newValue: number) {
     })
 
     return { success: true }
+}
+
+/**
+ * Cria um novo Deal para um Lead através da Caixa de Entrada
+ */
+export async function createDealFromInbox(conversationId: string, title: string, value: number) {
+    const user = await requireUser()
+
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        include: { lead: true }
+    })
+
+    if (!conversation || conversation.organizationId !== user.organizationId) {
+        throw new Error("Conversa não encontrada ou sem permissão.")
+    }
+
+    const pipeline = await prisma.pipeline.findFirst({
+        where: { organizationId: user.organizationId },
+        include: { stages: { orderBy: { order: 'asc' }, take: 1 } }
+    })
+
+    if (!pipeline || pipeline.stages.length === 0) {
+        throw new Error("Organização não possui um Pipeline configurado.")
+    }
+
+    const savedDeal = await prisma.deal.create({
+        data: {
+            organizationId: user.organizationId,
+            pipelineId: pipeline.id,
+            stageId: pipeline.stages[0].id,
+            leadId: conversation.leadId,
+            title,
+            value,
+            ownerId: user.id
+        },
+        include: { stage: true }
+    })
+
+    return {
+        id: savedDeal.id,
+        title: savedDeal.title,
+        value: savedDeal.value,
+        stageName: savedDeal.stage?.name || 'Sem Etapa'
+    }
+}
+
+/**
+ * Envia arquivo de Mídia pelo Chat e faz upload oficial na Cloud API Meta.
+ */
+export async function sendMediaMessage(conversationId: string, formData: FormData) {
+    const user = await requireUser()
+    const file = formData.get('file') as File
+    if (!file) throw new Error("Arquivo não recebido no servidor.")
+
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        include: { lead: true }
+    })
+
+    if (!conversation || conversation.organizationId !== user.organizationId) {
+        throw new Error("Conversa não encontrada ou não autorizada.")
+    }
+
+    const provider = getWhatsAppProvider()
+
+    let mediaId = ""
+    let mediaType = "document"
+
+    if (file.type.startsWith('image/')) mediaType = 'image'
+    else if (file.type.startsWith('video/')) mediaType = 'video'
+    else if (file.type.startsWith('audio/')) mediaType = 'audio'
+
+    if (provider.uploadMedia) {
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const uploadedId = await provider.uploadMedia(buffer, file.type, file.name)
+        if (!uploadedId) throw new Error("A API da Meta recusou a Mídia. Verifique formato/tamanho.")
+        mediaId = uploadedId
+    } else {
+        mediaId = `mock-media-${Date.now()}`
+    }
+
+    // Now send the message
+    await provider.sendMessage({
+        to: conversation.lead.phone,
+        mediaId: mediaId,
+        mediaType: mediaType as 'document' | 'image' | 'audio' | 'video',
+        mediaCaption: file.name
+    })
+
+    const finalContent = JSON.stringify({
+        text: `[ENVIADO: ${mediaType.toUpperCase()}] ${file.name}`,
+        mediaId,
+        caption: file.name,
+        type: mediaType.toUpperCase()
+    })
+
+    const msg = await prisma.message.create({
+        data: {
+            conversationId,
+            senderId: user.id,
+            direction: "OUTBOUND",
+            type: mediaType.toUpperCase(),
+            content: finalContent,
+            status: "SENT"
+        }
+    })
+
+    await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { updatedAt: new Date() }
+    })
+
+    return {
+        id: msg.id,
+        content: finalContent,
+        type: msg.type,
+        time: msg.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        sender: 'me' as const,
+        status: 'sent' as const
+    }
 }

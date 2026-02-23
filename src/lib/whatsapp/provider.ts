@@ -4,11 +4,15 @@ export interface WhatsAppMessagePayload {
     templateName?: string
     templateLanguage?: string
     templateComponents?: any[]
+    mediaId?: string
+    mediaType?: 'document' | 'image' | 'audio' | 'video'
+    mediaCaption?: string
 }
 
 export interface IWhatsAppProvider {
     sendMessage(payload: WhatsAppMessagePayload): Promise<{ success: boolean; messageId?: string; error?: any }>
     parseWebhook(req: Request, method?: string): Promise<any>
+    uploadMedia?(buffer: Buffer, mimeType: string, filename: string): Promise<string | null>
 }
 
 // ---------------------------------------------------------
@@ -71,11 +75,17 @@ export class MetaCloudProvider implements IWhatsAppProvider {
                     language: { code: payload.templateLanguage || "pt_BR" },
                     components: payload.templateComponents || []
                 }
+            } else if (payload.mediaId && payload.mediaType) {
+                apiPayload.type = payload.mediaType
+                apiPayload[payload.mediaType] = { id: payload.mediaId }
+                if (payload.mediaCaption && (payload.mediaType === 'document' || payload.mediaType === 'image' || payload.mediaType === 'video')) {
+                    apiPayload[payload.mediaType].caption = payload.mediaCaption
+                }
             } else if (payload.text) {
                 apiPayload.type = "text"
                 apiPayload.text = { body: payload.text, preview_url: false }
             } else {
-                throw new Error("Message must have either text or templateName")
+                throw new Error("Message must have either text, mediaId or templateName")
             }
 
             const response = await fetch(`${this.endpoint}/${this.phoneNumberId}/messages`, {
@@ -99,6 +109,35 @@ export class MetaCloudProvider implements IWhatsAppProvider {
         } catch (error) {
             console.error('[MetaCloudProvider] Catch Error:', error)
             return { success: false, error }
+        }
+    }
+
+    async uploadMedia(buffer: Buffer, mimeType: string, filename: string): Promise<string | null> {
+        console.log(`[MetaCloudProvider] Uploading media ${filename}...`)
+        try {
+            const formData = new FormData()
+            const blob = new Blob([new Uint8Array(buffer)], { type: mimeType })
+            formData.append('file', blob, filename)
+            formData.append('messaging_product', 'whatsapp')
+
+            const response = await fetch(`${this.endpoint}/${this.phoneNumberId}/media`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                },
+                body: formData
+            })
+
+            const data = await response.json()
+            if (!response.ok) {
+                console.error('[MetaCloudProvider] Error Uploading Media:', data)
+                return null
+            }
+
+            return data.id
+        } catch (error) {
+            console.error('[MetaCloudProvider] Catch Error Uploading Media:', error)
+            return null
         }
     }
 

@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { CpfInput, PhoneInput, MoneyInput } from "@/components/ui/masked-input"
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
+import { createLeadWithDeal } from './actions'
 
 export interface Contact {
     id: string
@@ -37,6 +40,28 @@ export function ContactsBoard({ initialContacts }: ContactsBoardProps) {
     const [searchTerm, setSearchTerm] = useState('')
     const [isCreateOpen, setIsCreateOpen] = useState(false)
     const [formData, setFormData] = useState({ name: '', company: '', document: '', phone: '', value: 0 })
+    const router = useRouter()
+    const [isSaving, setIsSaving] = useState(false)
+
+    const handleCreateContact = async () => {
+        if (!formData.name || !formData.phone) {
+            toast.error("Nome e Telefone são obrigatórios.")
+            return
+        }
+
+        setIsSaving(true)
+        try {
+            await createLeadWithDeal(formData)
+            toast.success("Lead salvo e adicionado ao Kanban!")
+            setIsCreateOpen(false)
+            setFormData({ name: '', company: '', document: '', phone: '', value: 0 })
+            router.refresh()
+        } catch (e: any) {
+            toast.error(e.message || "Erro ao criar lead.")
+        } finally {
+            setIsSaving(false)
+        }
+    }
 
     return (
         <div className="p-8 max-w-7xl mx-auto flex flex-col h-full relative z-10 bg-[#151515]">
@@ -87,7 +112,9 @@ export function ContactsBoard({ initialContacts }: ContactsBoardProps) {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="submit" className="bg-[#ff7b00] hover:bg-[#e66a00] text-white" onClick={() => setIsCreateOpen(false)}>Salvar Lead</Button>
+                                <Button type="submit" disabled={isSaving} className="bg-[#ff7b00] hover:bg-[#e66a00] text-white" onClick={handleCreateContact}>
+                                    {isSaving ? "Salvando..." : "Salvar Lead"}
+                                </Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>

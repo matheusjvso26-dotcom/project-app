@@ -55,11 +55,38 @@ export async function POST(request: Request) {
 
                 const leadPhone = incomingMessage.from
                 const leadName = contactInfo?.profile?.name || "Desconhecido"
-                const textContent = incomingMessage.text?.body || ""
+
                 const msgType = incomingMessage.type || 'text'
                 const msgId = incomingMessage.id
 
-                console.log(`[API/WhatsApp] Nova Memagem Recebida de ${leadPhone} | Tipo: ${msgType} | Texto: ${textContent}`)
+                let textContent = ""
+                let mediaId = ""
+                let caption = ""
+
+                if (msgType === 'text') {
+                    textContent = incomingMessage.text?.body || ""
+                } else if (msgType === 'document') {
+                    mediaId = incomingMessage.document?.id || ""
+                    caption = incomingMessage.document?.filename || "Documento"
+                    textContent = `[ARQUIVO] ${caption}`
+                } else if (msgType === 'image') {
+                    mediaId = incomingMessage.image?.id || ""
+                    caption = incomingMessage.image?.caption || "Imagem"
+                    textContent = `[IMAGEM] ${caption}`
+                } else if (msgType === 'audio') {
+                    mediaId = incomingMessage.audio?.id || ""
+                    textContent = `[ÁUDIO] Voz`
+                } else if (msgType === 'video') {
+                    mediaId = incomingMessage.video?.id || ""
+                    caption = incomingMessage.video?.caption || "Vídeo"
+                    textContent = `[VÍDEO] ${caption}`
+                } else {
+                    textContent = "[Mídia Genérica ou Interativa]"
+                }
+
+                const finalContent = mediaId ? JSON.stringify({ text: textContent, mediaId, caption, type: msgType }) : textContent
+
+                console.log(`[API/WhatsApp] Nova Mensagem Recebida de ${leadPhone} | Tipo: ${msgType} | Texto: ${textContent}`)
 
                 // 1. Identificar a Organização dona deste WABA ID primeiro para evitar vazamento Multi-Tenant
                 const metaBusId = body.entry[0].id
@@ -148,8 +175,8 @@ export async function POST(request: Request) {
                         data: {
                             conversationId: conversation.id,
                             direction: "INBOUND",
-                            type: "TEXT",
-                            content: textContent,
+                            type: mediaId ? msgType.toUpperCase() : "TEXT",
+                            content: finalContent,
                             status: "DELIVERED"
                         }
                     })

@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus } from 'lucide-react'
+import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus, Download, FileText, Image as ImageIcon, FileAudio, Video } from 'lucide-react'
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
-import { sendMessage, getConversations, updateDealValue } from './actions'
+import { sendMessage, getConversations, updateDealValue, sendMediaMessage } from './actions'
 import { toast } from 'sonner'
 
 // --- Interfaces ---
@@ -17,6 +18,7 @@ export interface Message {
     sender: 'me' | 'client' | 'bot'
     time: string
     status?: 'sent' | 'delivered' | 'read'
+    type?: string
 }
 
 export interface ChatDeal {
@@ -48,7 +50,9 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     const [activeChatId, setActiveChatId] = useState<string>(chats.length > 0 ? chats[0].id : '')
     const [messageInput, setMessageInput] = useState('')
     const [isSending, setIsSending] = useState(false)
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Auto-scroll messages
     useEffect(() => {
@@ -165,6 +169,34 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             }))
         } finally {
             setIsSending(false)
+        }
+    }
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !activeChatId || isSending) return
+
+        setIsSending(true)
+        const toastId = toast.loading("Enviando anexo para plataforma...")
+
+        try {
+            const formData = new FormData()
+            formData.append('file', file)
+
+            const realMsg = await sendMediaMessage(activeChatId, formData)
+
+            setChats(prev => prev.map(c => {
+                if (c.id === activeChatId) {
+                    return { ...c, messages: [...c.messages, realMsg] as Message[], lastMessage: "📎 Anexo enviado", time: realMsg.time }
+                }
+                return c
+            }))
+            toast.success("Anexo enviado!", { id: toastId })
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao enviar anexo.", { id: toastId })
+        } finally {
+            setIsSending(false)
+            if (fileInputRef.current) fileInputRef.current.value = ''
         }
     }
 
@@ -311,6 +343,20 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             const isMe = message.sender === 'me'
                             const isBot = message.sender === 'bot'
 
+                            let displayContent = message.content
+                            let isMedia = false
+                            let mediaId = ""
+                            let msgType = message.type || 'TEXT'
+
+                            if (msgType !== 'TEXT') {
+                                try {
+                                    const parsed = JSON.parse(message.content)
+                                    displayContent = parsed.text
+                                    mediaId = parsed.mediaId
+                                    isMedia = true
+                                } catch (e) { }
+                            }
+
                             // High Contrast SaaS Dark Bubbles
                             let bubbleClass = "px-4 py-2.5 shadow-md text-[13.5px] leading-relaxed max-w-[75%] lg:max-w-[65%] "
                             if (isMe || isBot) {
@@ -327,7 +373,24 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                                 <Bot className="w-3 h-3" /> FLY UP Bot
                                             </div>
                                         )}
-                                        <p className="whitespace-pre-wrap">{message.content}</p>
+                                        <div className="whitespace-pre-wrap">
+                                            {isMedia && (
+                                                <span className="flex items-center gap-2 mb-1 opacity-80 text-[11px] font-bold">
+                                                    {msgType === 'DOCUMENT' && <FileText className="w-3.5 h-3.5" />}
+                                                    {msgType === 'IMAGE' && <ImageIcon className="w-3.5 h-3.5" />}
+                                                    {msgType === 'AUDIO' && <FileAudio className="w-3.5 h-3.5" />}
+                                                    {msgType === 'VIDEO' && <Video className="w-3.5 h-3.5" />}
+                                                </span>
+                                            )}
+                                            {displayContent}
+                                        </div>
+
+                                        {isMedia && mediaId && (
+                                            <a href={`/api/whatsapp/media/${mediaId}`} target="_blank" rel="noreferrer" className="mt-2 text-[11px] flex items-center justify-center gap-1.5 bg-black/20 hover:bg-black/40 w-full px-3 py-2 rounded-md border border-white/10 transition-colors shadow-inner font-medium">
+                                                <Download className="w-3.5 h-3.5 text-zinc-300" /> Baixar Anexo (Original)
+                                            </a>
+                                        )}
+
                                         <div className={`text-[10px] text-right mt-1.5 flex items-center justify-end gap-1 float-right pl-4 pt-1 ${isMe || isBot ? 'text-white/70' : 'text-zinc-500'}`}>
                                             {message.time}
                                             {isMe && message.status === 'read' && <span className="text-white text-[10px] font-bold -ml-0.5">✓✓</span>}
@@ -337,14 +400,27 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                 </div>
                             )
                         })}
+                        <div ref={messagesEndRef} />
                     </div>
 
                     {/* Input Area */}
-                    <div className="min-h-[70px] flex-shrink-0 bg-[#1c1c1c] px-6 py-3 flex items-center gap-3 z-10 border-t border-border/10">
-                        <button className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-full transition-colors shrink-0">
+                    <div className="min-h-[70px] flex-shrink-0 bg-[#1c1c1c] px-6 py-3 flex items-center gap-3 z-10 border-t border-border/10 relative">
+                        {showEmojiPicker && (
+                            <div className="absolute bottom-[80px] left-6 z-50 shadow-2xl rounded-lg overflow-hidden border border-white/10">
+                                <EmojiPicker
+                                    theme={Theme.DARK}
+                                    onEmojiClick={(e: EmojiClickData) => setMessageInput(prev => prev + e.emoji)}
+                                />
+                            </div>
+                        )}
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*,audio/*,application/pdf" onChange={handleFileUpload} />
+                        <button onClick={() => fileInputRef.current?.click()} className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-full transition-colors shrink-0">
                             <Paperclip className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-full transition-colors shrink-0">
+                        <button
+                            className={`p-2 rounded-full transition-colors shrink-0 ${showEmojiPicker ? 'text-[#ff7b00] bg-white/5' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        >
                             <Smile className="w-4 h-4" />
                         </button>
 
@@ -451,7 +527,30 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                             </div>
                                         </div>
                                         <DialogFooter>
-                                            <Button type="button" className="bg-[#ff7b00] hover:bg-[#e66a00] text-white" onClick={() => setIsAddDealOpen(false)}>Confirmar</Button>
+                                            <Button type="button" className="bg-[#ff7b00] hover:bg-[#e66a00] text-white" onClick={async () => {
+                                                if (!newDeal.title) {
+                                                    toast.error("O título não pode estar vazio.")
+                                                    return
+                                                }
+                                                try {
+                                                    const { createDealFromInbox } = await import('./actions')
+                                                    const deal = await createDealFromInbox(activeChat.id, newDeal.title, newDeal.value || 0)
+
+                                                    setChats(prev => prev.map(c => {
+                                                        if (c.id === activeChat.id) {
+                                                            return { ...c, deals: [deal, ...c.deals] }
+                                                        }
+                                                        return c
+                                                    }))
+                                                    toast.success("Negócio Criado e Inserido no Kanban!")
+                                                    setIsAddDealOpen(false)
+                                                    setNewDeal({ title: '', value: 0 })
+                                                } catch (e: any) {
+                                                    toast.error(e.message || "Falha ao criar oportunidade.")
+                                                }
+                                            }}>
+                                                Confirmar
+                                            </Button>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
