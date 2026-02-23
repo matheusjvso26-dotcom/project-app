@@ -27,63 +27,61 @@ export async function getDashboardMetrics(periodDays: number): Promise<Dashboard
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - periodDays)
 
-    // Agregações básicas
-    const totalLeads = await prisma.lead.count({
-        where: {
-            organizationId,
-            createdAt: { gte: startDate }
-        }
-    })
-
-    const totalMessages = await prisma.message.count({
-        where: {
-            conversation: {
-                organizationId
+    // Agregando requisições em paralelo (`Promise.all`) para evitar cascata e enfileiramento de Tempo de Rede:
+    const [
+        totalLeads,
+        totalMessages,
+        wonDeals,
+        allDealsInPeriod,
+        recentDealsRaw,
+        lostDeals
+    ] = await Promise.all([
+        prisma.lead.count({
+            where: {
+                organizationId,
+                createdAt: { gte: startDate }
+            }
+        }),
+        prisma.message.count({
+            where: {
+                conversation: { organizationId },
+                createdAt: { gte: startDate }
+            }
+        }),
+        prisma.deal.findMany({
+            where: {
+                organizationId,
+                status: "WON",
+                updatedAt: { gte: startDate }
             },
-            createdAt: { gte: startDate }
-        }
-    })
-
-    // Deals Won no período para composição de Receita/MRR
-    const wonDeals = await prisma.deal.findMany({
-        where: {
-            organizationId,
-            status: "WON",
-            updatedAt: { gte: startDate }
-        },
-        include: {
-            lead: true,
-            company: true,
-            stage: true
-        },
-        orderBy: { updatedAt: 'desc' }
-    })
+            include: { lead: true, company: true, stage: true },
+            orderBy: { updatedAt: 'desc' }
+        }),
+        prisma.deal.count({
+            where: {
+                organizationId,
+                createdAt: { gte: startDate }
+            }
+        }),
+        prisma.deal.findMany({
+            where: { organizationId },
+            include: { lead: true, company: true, stage: true },
+            orderBy: { updatedAt: 'desc' },
+            take: 4
+        }),
+        prisma.deal.count({
+            where: {
+                organizationId,
+                status: "LOST",
+                updatedAt: { gte: startDate }
+            }
+        })
+    ])
 
     const totalMRR = wonDeals.reduce((acc, deal) => acc + deal.value, 0)
 
     // Todos os deals no período (para Win Rate)
-    const allDealsInPeriod = await prisma.deal.count({
-        where: {
-            organizationId,
-            createdAt: { gte: startDate }
-        }
-    })
-
     const winRateVal = allDealsInPeriod > 0 ? (wonDeals.length / allDealsInPeriod) * 100 : 0
-
-    // Vamos buscar todas as conversas/Deals recentes
-    const recentDealsRaw = await prisma.deal.findMany({
-        where: {
-            organizationId,
-        },
-        include: {
-            lead: true,
-            company: true,
-            stage: true
-        },
-        orderBy: { updatedAt: 'desc' },
-        take: 4
-    })
 
     const recentDealsFormatted = recentDealsRaw.map(deal => ({
         id: deal.id,
@@ -97,13 +95,6 @@ export async function getDashboardMetrics(periodDays: number): Promise<Dashboard
     const cac = totalLeads > 0 ? (totalLeads * 8.5) / totalLeads : 0
 
     // Churn Simulado (Deals Perdidos / Total)
-    const lostDeals = await prisma.deal.count({
-        where: {
-            organizationId,
-            status: "LOST",
-            updatedAt: { gte: startDate }
-        }
-    })
     const churn = allDealsInPeriod > 0 ? ((lostDeals / allDealsInPeriod) * 100).toFixed(1) + '%' : '0%'
 
     // Construção do Gráfico
