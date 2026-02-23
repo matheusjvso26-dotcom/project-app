@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
-import { sendMessage, getConversations, updateDealValue, sendMediaMessage, createDealFromInbox } from './actions'
+import { sendMessage, getConversations, updateDealValue, sendMediaMessage, createDealFromInbox, toggleBotStatus } from './actions'
 import { toast } from 'sonner'
 
 // --- Interfaces ---
@@ -229,6 +229,23 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         }
     }
 
+    const handleToggleBot = async () => {
+        if (!activeChatId || !activeChat) return
+
+        // Optimistic toggle
+        const newStatus = !activeChat.isBotHandling
+        setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, isBotHandling: newStatus } : c))
+
+        try {
+            await toggleBotStatus(activeChatId, newStatus)
+            toast.success(newStatus ? "Robô reativado para esta conversa." : "Atendimento assumido pelo Humano.")
+        } catch (error: any) {
+            toast.error("Falha ao alterar controle do bot.")
+            // Rollback on fail
+            setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, isBotHandling: !newStatus } : c))
+        }
+    }
+
     return (
         <div className="flex h-full w-full bg-[#151515] relative z-10 border-l border-border/10">
 
@@ -320,15 +337,12 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 text-zinc-400">
-                            <button className="hover:text-white transition-colors p-2 rounded-md hover:bg-white/5 hidden sm:block">
-                                <Search className="w-4 h-4" />
-                            </button>
-                            <button className="hover:text-white transition-colors p-2 rounded-md hover:bg-white/5 hidden sm:block">
-                                <ShieldAlert className="w-4 h-4" />
-                            </button>
-                            <button className="hover:text-white transition-colors p-2 rounded-md hover:bg-white/5">
-                                <MoreVertical className="w-4 h-4" />
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleToggleBot}
+                                className={`text-[12px] font-bold px-3 py-1.5 rounded-md transition-colors border ${activeChat.isBotHandling ? 'text-zinc-300 border-white/20 hover:bg-white/10' : 'text-[#ff7b00] bg-[#ff7b00]/10 border-[#ff7b00]/30 hover:bg-[#ff7b00]/20'}`}
+                            >
+                                {activeChat.isBotHandling ? "Assumir Conversa" : "Devolver ao Robô"}
                             </button>
                         </div>
                     </div>

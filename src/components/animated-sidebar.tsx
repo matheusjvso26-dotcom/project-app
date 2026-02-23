@@ -13,7 +13,8 @@ import {
     LayoutTemplate,
     Settings,
     LogOut,
-    Hexagon
+    Hexagon,
+    Landmark
 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
@@ -22,8 +23,9 @@ const mainMenuItems = [
     { icon: KanbanSquare, label: "Pipeline (Kanban)", href: "/dashboard/kanban" },
     { icon: Inbox, label: "Caixa de Entrada", href: "/dashboard/inbox" },
     { icon: Contact, label: "Contatos e Leads", href: "/dashboard/contacts" },
-    { icon: Workflow, label: "Automações", href: "/dashboard/automations" },
+    { icon: Workflow, label: "Campanhas em Lote", href: "/dashboard/automations" },
     { icon: Bot, label: "Meus Chatbots", href: "/dashboard/chatbots" },
+    { icon: Landmark, label: "Relatórios Financeiros", href: "/dashboard/finance" },
     { icon: LayoutTemplate, label: "Templates Meta", href: "/dashboard/templates" },
     { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ]

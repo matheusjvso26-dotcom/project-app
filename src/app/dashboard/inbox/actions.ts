@@ -27,14 +27,17 @@ export async function getConversations() {
 
     const leadIds = conversations.map(c => c.leadId)
     const deals = await prisma.deal.findMany({
-        where: { leadId: { in: leadIds } },
+        where: { organizationId: user.organizationId },
         include: { stage: true },
         orderBy: { createdAt: 'desc' }
     })
 
     // Serializando o retorno para o Client Component não quebrar com Datas
     return conversations.map(c => {
-        const cDeals = deals.filter(d => d.leadId === c.leadId)
+        // Encontra negócios que estajam associados opcionalmente ao user via tags ou etc. (Como leadId não existe, buscamos por title)
+        // Solução temporária para o Inbox: Buscamos Deals que contém o nome do lead no titulo ou se a company cruzar (MVP)
+        const leadName = c.lead?.name || 'Sem Nome'
+        const cDeals = deals.filter(d => d.title.includes(leadName) || (d.companyId && d.companyId === c.leadId))
         return {
             id: c.id,
             name: c.lead?.name || 'Sem Nome',
@@ -62,6 +65,30 @@ export async function getConversations() {
         }
     })
 }
+/**
+ * Alterna o controle da conversa entre Atendente (OPEN) e Chatbot (BOT_HANDLING)
+ */
+export async function toggleBotStatus(conversationId: string, isBotActive: boolean) {
+    const user = await requireUser()
+
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId }
+    })
+
+    if (!conversation || conversation.organizationId !== user.organizationId) {
+        throw new Error("Chat não encontrado ou permissão negada.")
+    }
+
+    await prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+            status: isBotActive ? 'BOT_HANDLING' : 'OPEN'
+        }
+    })
+
+    return { success: true }
+}
+
 /**
  * Envia uma mensagem de um Atendente/Usuário para o Lead via WhatsApp 
  */
@@ -183,7 +210,6 @@ export async function createDealFromInbox(conversationId: string, title: string,
             organizationId: user.organizationId,
             pipelineId: pipeline.id,
             stageId: pipeline.stages[0].id,
-            leadId: conversation.leadId,
             title,
             value,
             ownerId: user.id
