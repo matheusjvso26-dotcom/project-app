@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma"
 import { requireUser } from "@/lib/auth-utils"
 import { getWhatsAppProvider } from "@/lib/whatsapp/provider"
+import { revalidatePath } from "next/cache"
 
 /**
  * Busca todas as conversas da organização atual
@@ -15,14 +16,7 @@ export async function getConversations() {
             organizationId: user.organizationId
         },
         include: {
-            lead: {
-                include: {
-                    deals: {
-                        include: { stage: true },
-                        orderBy: { createdAt: 'desc' }
-                    }
-                }
-            },
+            lead: true,
             messages: {
                 orderBy: { createdAt: 'desc' },
                 take: 50
@@ -31,34 +25,43 @@ export async function getConversations() {
         orderBy: { updatedAt: 'desc' }
     })
 
-    // Serializando o retorno para o Client Component não quebrar com Datas
-    return conversations.map(c => ({
-        id: c.id,
-        name: c.lead.name || 'Sem Nome',
-        phone: c.lead.phone,
-        status: c.status,
-        lgpdConsent: c.lead.lgpdConsent,
-        deals: c.lead.deals.map(d => ({
-            id: d.id,
-            title: d.title,
-            value: d.value,
-            stageName: d.stage?.name || 'Sem Etapa'
-        })),
-        time: c.updatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        lastMessage: c.messages[0]?.content || 'Nova conversa',
-        isBotHandling: c.status === 'BOT_HANDLING',
-        unread: 0,
-        messages: c.messages.reverse().map(m => ({
-            id: m.id,
-            content: m.content || '',
-            type: m.type,
-            sender: (m.direction === 'OUTBOUND' ? (m.senderId ? 'me' : 'bot') : 'client') as "me" | "bot" | "client",
-            time: m.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: (m.status === 'READ' ? 'read' : (m.status === 'DELIVERED' ? 'delivered' : 'sent')) as "read" | "delivered" | "sent"
-        }))
-    }))
-}
+    const leadIds = conversations.map(c => c.leadId)
+    const deals = await prisma.deal.findMany({
+        where: { leadId: { in: leadIds } },
+        include: { stage: true },
+        orderBy: { createdAt: 'desc' }
+    })
 
+    // Serializando o retorno para o Client Component não quebrar com Datas
+    return conversations.map(c => {
+        const cDeals = deals.filter(d => d.leadId === c.leadId)
+        return {
+            id: c.id,
+            name: c.lead?.name || 'Sem Nome',
+            phone: c.lead?.phone || '',
+            status: c.status,
+            lgpdConsent: c.lead?.lgpdConsent || false,
+            deals: cDeals.map(d => ({
+                id: d.id,
+                title: d.title,
+                value: d.value,
+                stageName: d.stage?.name || 'Sem Etapa'
+            })),
+            time: c.updatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            lastMessage: c.messages[0]?.content || 'Nova conversa',
+            isBotHandling: c.status === 'BOT_HANDLING',
+            unread: 0,
+            messages: c.messages.reverse().map(m => ({
+                id: m.id,
+                content: m.content || '',
+                type: m.type,
+                sender: (m.direction === 'OUTBOUND' ? (m.senderId ? 'me' : 'bot') : 'client') as "me" | "bot" | "client",
+                time: m.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                status: (m.status === 'READ' ? 'read' : (m.status === 'DELIVERED' ? 'delivered' : 'sent')) as "read" | "delivered" | "sent"
+            }))
+        }
+    })
+}
 /**
  * Envia uma mensagem de um Atendente/Usuário para o Lead via WhatsApp 
  */
@@ -172,6 +175,8 @@ export async function createDealFromInbox(conversationId: string, title: string,
         },
         include: { stage: true }
     })
+
+    revalidatePath('/dashboard/kanban')
 
     return {
         id: savedDeal.id,
