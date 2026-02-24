@@ -12,7 +12,7 @@ import { sendMessage, getConversations, updateDealValue, sendMediaMessage, creat
 import { toast } from 'sonner'
 import { toggleTag } from './actions'
 
-const AVAILABLE_TAGS = ['Urgente', 'Reclamação', 'Dúvida', 'Pensionista']
+const AVAILABLE_TAGS = ['Urgente', 'Reclamação', 'Dúvida']
 
 // --- Interfaces ---
 export interface Message {
@@ -59,6 +59,12 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const isSendingRef = useRef(false)
+
+    // Sincronizando o estado isSending com o Ref para acesso síncrono no Polling
+    useEffect(() => {
+        isSendingRef.current = isSending
+    }, [isSending])
 
     // Auto-scroll messages
     useEffect(() => {
@@ -69,9 +75,14 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     // Usado como MVP simples para buscar os pushes novos do Webhook da Meta
     useEffect(() => {
         const fetchMessages = async () => {
-            if (isSending) return // pausa a varredura caso eu esteja prestes a dar o push
+            if (isSendingRef.current) return // pausa a varredura se estiver ocorrendo uma ação
             try {
                 const refreshedChats = await getConversations()
+
+                // RAÇA (RACE CONDITION) CHECK:
+                // Se o usuário clicou em algo DURANTE os milissegundos que o banco demorou pra responder, 
+                // descartamos os dados velhos para não chover (overwrite) a UI do usuário.
+                if (isSendingRef.current) return
 
                 setChats((prevChats) => {
                     let hasNewAlert = false
