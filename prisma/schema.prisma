@@ -24,6 +24,7 @@ model Organization {
   welcomeMessage String?  @db.Text
   closureMessage String?  @db.Text
   closureMinutes Int      @default(240) // Fecha conversas sozinhas em 4 horas (default)
+  fixedCosts     Float    @default(0)   // Para o CFO Module (Phase 10)
   
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -135,6 +136,7 @@ model Deal {
   value          Float        @default(0)
   status         String       @default("OPEN") // OPEN, WON, LOST
   tags           String[]     @default([])
+  scheduledTo    DateTime?    // Para Phase 9: Agendamentos
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 

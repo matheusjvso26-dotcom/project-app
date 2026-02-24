@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getWhatsAppProvider } from '@/lib/whatsapp/provider'
 import prisma from '@/lib/prisma'
 import { processBotFlow } from '@/lib/whatsapp/botEngine'
+import { processAgendaCommand } from '@/lib/whatsapp/agendaHandler'
 import { transcribeAudioMessage } from '@/lib/whatsapp/transcriber'
 import { sendPushNotification } from '@/lib/push'
 
@@ -187,6 +188,36 @@ export async function POST(request: Request) {
                         transcribeAudioMessage(msgEntity.id, mediaId).catch(err => {
                             console.error("[API/WhatsApp] Erro assíncrono no Transcriber:", err)
                         })
+                    }
+
+                    // Agenda Interceptor Nativo (Inbound)
+                    if (textContent && textContent.trim().toLowerCase().startsWith('/agenda')) {
+                        let confirmTxt = ""
+                        try {
+                            const agendaResult = await processAgendaCommand(lead.id, textContent)
+                            if (agendaResult) confirmTxt = agendaResult
+                        } catch (err: any) {
+                            confirmTxt = err.message || "Erro no comando de agendamento."
+                        }
+
+                        if (confirmTxt) {
+                            const providerConfirm = await provider.sendMessage({
+                                to: leadPhone,
+                                text: confirmTxt
+                            })
+                            await prisma.message.create({
+                                data: {
+                                    conversationId: conversation.id,
+                                    direction: "OUTBOUND",
+                                    content: confirmTxt,
+                                    type: "TEXT",
+                                    status: providerConfirm.success ? "SENT" : "FAILED",
+                                    providerId: providerConfirm.messageId || null
+                                }
+                            })
+                            // Pula o processamento do robô se foi um comando explícito
+                            return NextResponse.json({ success: true })
+                        }
                     }
 
                     // Fazemos bump na updatedAt da thread para subir ela

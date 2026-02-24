@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma"
 import { requireUser } from "@/lib/auth-utils"
 import { getWhatsAppProvider } from "@/lib/whatsapp/provider"
+import { processAgendaCommand } from "@/lib/whatsapp/agendaHandler"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -107,11 +108,24 @@ export async function sendMessage(conversationId: string, content: string) {
         throw new Error("Chat não encontrado ou permissão negada.")
     }
 
+    // Interceptar comando "/agenda" antes de enviar para a API da Meta
+    let messageContent = content
+    let isAgendaCommand = false
+    try {
+        const agendaResult = await processAgendaCommand(conversation.leadId, content)
+        if (agendaResult) {
+            messageContent = agendaResult
+            isAgendaCommand = true
+        }
+    } catch (cmdErr: any) {
+        throw new Error(cmdErr.message || "Erro durante agendamento pela IA.")
+    }
+
     // 2. Disparar API do WhatsApp (Provedor Dinâmico: Mock ou Real)
     const provider = getWhatsAppProvider()
     const result = await provider.sendMessage({
         to: conversation.lead.phone,
-        text: content
+        text: messageContent
     })
 
     if (!result.success) {
@@ -124,7 +138,7 @@ export async function sendMessage(conversationId: string, content: string) {
         data: {
             conversationId: conversation.id,
             direction: "OUTBOUND",
-            content: content,
+            content: messageContent,
             type: "TEXT",
             senderId: user.id,
             status: result.success ? "SENT" : "FAILED",
@@ -337,4 +351,89 @@ export async function toggleTag(conversationId: string, tag: string) {
     })
 
     return { success: true, tags: newTags }
+}
+
+/**
+ * Puxa o histórico de mensagens de uma conversa e solicita uma sugestão de cópia para a OpenAI
+ */
+export async function generateAiReply(conversationId: string) {
+    const user = await requireUser()
+
+    // 1. Validar e buscar conversa
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        include: {
+            lead: true,
+            messages: {
+                orderBy: { createdAt: 'desc' },
+                take: 15 // Pega as ultimas 15 mensagens de contexto
+            }
+        }
+    })
+
+    if (!conversation || conversation.organizationId !== user.organizationId) {
+        throw new Error("Chat não encontrado ou permissão negada.")
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+        throw new Error("A chave da OpenAI (OPENAI_API_KEY) não está configurada no servidor.")
+    }
+
+    // 2. Formatar o mapa de conversas para envio a OpenAI
+    const reversedMessages = [...conversation.messages].reverse()
+    const openAiMessages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> = []
+
+    // System Prompt Vendedor
+    openAiMessages.push({
+        role: "system",
+        content: `Você é um Assistente de Vendas inteligente e educado trabalhando no WhatsApp de uma empresa.
+O Lead com quem estamos conversando se chama "${conversation.lead.name}".
+Sua missão é ler o contexto recente da conversa e redigir uma sugetsão ágil, calorosa e comercial para o atendente (humano) enviar em seguida.
+A resposta deve ser curta (1 a 3 parágrafos no máximo), ir direto ao ponto respondendo as dores do lead, usar 1 ou 2 emojis corporativos discretos e conduzir para o fechamento. 
+Fale sempre em Português do Brasil de maneira natural para o WhatsApp, evite ser robótico.`
+    })
+
+    // Adiciona o histórico
+    reversedMessages.forEach((msg) => {
+        if (!msg.content) return
+
+        let prefix = ""
+        if (msg.direction === 'INBOUND') {
+            prefix = `[Cliente (${conversation.lead.name})]: `
+            openAiMessages.push({ role: 'user', content: prefix + msg.content })
+        } else {
+            prefix = `[Nós (Empresa)]: `
+            openAiMessages.push({ role: 'assistant', content: prefix + msg.content })
+        }
+    })
+
+    // 3. Chamar Endpoint via fetch cru
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: openAiMessages,
+            temperature: 0.7,
+            max_tokens: 250
+        })
+    })
+
+    if (!response.ok) {
+        const errorBody = await response.text()
+        console.error("OpenAI falhou:", errorBody)
+        throw new Error("Falha ao comunicar com a OpenAI.")
+    }
+
+    const data = await response.json()
+    const suggestion = data.choices[0]?.message?.content
+
+    if (!suggestion) {
+        throw new Error("A Inteligência Artificial retornou um conteúdo vazio.")
+    }
+
+    return { suggestion: suggestion.trim() }
 }

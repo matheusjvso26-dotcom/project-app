@@ -126,13 +126,81 @@ type ProcessBotArgs = {
     isNewLead: boolean;
 }
 
-/**
- * Função principal que processa a intenção do usuário e devolve (envia) a resposta correta baseado no estado (Stateless Engine).
- */
 export async function processBotFlow({ conversationId, leadPhone, incomingText, incomingType, isNewLead }: ProcessBotArgs) {
     const provider = getWhatsAppProvider()
     let responseText = ""
 
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: { organizationId: true }
+    })
+
+    if (conversation) {
+        const automation = await prisma.automation.findFirst({
+            where: { organizationId: conversation.organizationId, isActive: true },
+            orderBy: { updatedAt: 'desc' }
+        })
+
+        if (automation && automation.workflowJson && automation.workflowJson.length > 5) {
+            try {
+                const flow = JSON.parse(automation.workflowJson)
+                const nodes: any[] = flow.nodes || []
+                const edges: any[] = flow.edges || []
+
+                // INTERPRETADOR NATIVO REACT FLOW
+                if (nodes.length > 1) { // Tem mais que o Start apenas
+                    if (isNewLead) {
+                        const startNode = nodes.find(n => n.id === 'start')
+                        if (startNode) {
+                            const edge = edges.find(e => e.source === startNode.id)
+                            if (edge) {
+                                const nextNode = nodes.find(n => n.id === edge.target)
+                                if (nextNode && nextNode.data?.label) responseText = nextNode.data.label
+                            }
+                        }
+                    } else {
+                        const lastBotMessage = await prisma.message.findFirst({
+                            where: { conversationId, direction: 'OUTBOUND', senderId: null },
+                            orderBy: { createdAt: 'desc' }
+                        })
+
+                        if (lastBotMessage && lastBotMessage.content) {
+                            const currentNode = nodes.find(n => n.data?.label === lastBotMessage.content)
+                            if (currentNode) {
+                                const outgoingEdges = edges.filter(e => e.source === currentNode.id)
+                                // Simplificação: pega a primeira aresta que sai do nó anterior, sem validar intencionalmente condição
+                                if (outgoingEdges.length > 0) {
+                                    const nextNode = nodes.find(n => n.id === outgoingEdges[0].target)
+                                    if (nextNode && nextNode.data?.label) responseText = nextNode.data.label
+                                }
+                            }
+                        }
+                    }
+
+                    // Se o interpretador Visual Flow gerou Resposta:
+                    if (responseText) {
+                        const res = await provider.sendMessage({ to: leadPhone, text: responseText })
+                        await prisma.message.create({
+                            data: {
+                                conversationId, direction: "OUTBOUND", type: "TEXT", content: responseText,
+                                status: res.success ? "DELIVERED" : "FAILED", senderId: null, providerId: res.messageId || null
+                            }
+                        })
+                        await prisma.conversation.update({
+                            where: { id: conversationId }, data: { updatedAt: new Date(), status: 'BOT_HANDLING' }
+                        })
+                        return // Encerra, não cai no Legacy Switch
+                    } else {
+                        return // Não tinha aresta. Fim do fluxo, cai pro humano.
+                    }
+                }
+            } catch (err) {
+                console.error("[BotEngine] Fallback Ativado - Erro lendo Grafo visual:", err)
+            }
+        }
+    }
+
+    // --- CÓDIGO LEGADO (MVP HARDCODED FUNIL M2R CRED) ---
     if (isNewLead) {
         responseText = MENU_TEXT
     } else {

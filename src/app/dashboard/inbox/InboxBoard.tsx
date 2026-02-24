@@ -1,16 +1,15 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus, Download, FileText, Image as ImageIcon, FileAudio, Video } from 'lucide-react'
+import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus, Download, FileText, Image as ImageIcon, FileAudio, Video, Sparkles } from 'lucide-react'
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
-import { sendMessage, getConversations, updateDealValue, sendMediaMessage, createDealFromInbox, toggleBotStatus } from './actions'
+import { sendMessage, getConversations, updateDealValue, sendMediaMessage, createDealFromInbox, toggleBotStatus, generateAiReply, toggleTag } from './actions'
 import { toast } from 'sonner'
-import { toggleTag } from './actions'
 
 const AVAILABLE_TAGS = ['Urgente', 'Reclamação', 'Dúvida']
 
@@ -57,6 +56,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     const [isSending, setIsSending] = useState(false)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null)
+    const [isGeneratingAi, setIsGeneratingAi] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const isSendingRef = useRef(false)
@@ -288,6 +288,22 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, tags: currentTags } : c))
         } finally {
             setIsSending(false)
+        }
+    }
+
+    const handleAiSuggestion = async () => {
+        if (!activeChatId) return
+
+        setIsGeneratingAi(true)
+        const toastId = toast.loading("✨ Analisando conversa com IA...")
+        try {
+            const { suggestion } = await generateAiReply(activeChatId)
+            setMessageInput(suggestion)
+            toast.success("Sugestão de resposta criada!", { id: toastId })
+        } catch (error: any) {
+            toast.error(error.message || "A Mágica falhou. Tente novamente.", { id: toastId })
+        } finally {
+            setIsGeneratingAi(false)
         }
     }
 
@@ -535,6 +551,15 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         >
                             <Smile className="w-4 h-4" />
+                        </button>
+
+                        <button
+                            disabled={isGeneratingAi}
+                            onClick={handleAiSuggestion}
+                            title="Sugerir Resposta Mágica"
+                            className="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0 disabled:opacity-50"
+                        >
+                            <Sparkles className={`w-4 h-4 ${isGeneratingAi ? 'animate-pulse' : ''}`} />
                         </button>
 
                         <div className="flex-1 bg-[#151515] border border-border/20 focus-within:border-[#ff7b00]/50 rounded-full flex items-center px-4 shadow-inner overflow-hidden transition-colors">

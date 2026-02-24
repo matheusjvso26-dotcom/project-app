@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Bot, Plus, Settings, MessageSquare, BrainCircuit, Activity, BookOpen, AlertCircle } from 'lucide-react'
+import { Bot, Plus, Settings, MessageSquare, BrainCircuit, Activity, BookOpen, AlertCircle, Share2 } from 'lucide-react'
+import { FlowBuilder } from './FlowBuilder'
 
 // --- Mock Data ---
 interface BotConfig {
@@ -20,12 +21,21 @@ const mockBots: BotConfig[] = [
 
 export function ChatbotBoard() {
     const [bots] = useState<BotConfig[]>(mockBots)
-    const [viewMode, setViewMode] = useState<'list' | 'training'>('list')
+    const [viewMode, setViewMode] = useState<'list' | 'training' | 'flow'>('list')
     const [activeBot, setActiveBot] = useState<BotConfig | null>(null)
 
     const openTraining = (bot: BotConfig) => {
         setActiveBot(bot)
         setViewMode('training')
+    }
+
+    const openFlow = (bot: BotConfig) => {
+        setActiveBot(bot)
+        setViewMode('flow')
+    }
+
+    if (viewMode === 'flow' && activeBot) {
+        return <FlowBuilder botName={activeBot.name} onBack={() => setViewMode('list')} />
     }
 
     if (viewMode === 'training' && activeBot) {
@@ -212,8 +222,12 @@ export function ChatbotBoard() {
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-end">
-                            <button onClick={() => openTraining(bot)} className="text-sm font-medium text-zinc-400 hover:text-[#ff7b00] flex items-center gap-1 transition-colors z-10">
+                        <div className="mt-6 border-t border-white/5 pt-4 flex items-center justify-between gap-4">
+                            <button onClick={() => openFlow(bot)} className="flex-1 px-3 py-1.5 bg-[#f3f4f6]/5 hover:bg-[#ff7b00]/10 border border-white/5 hover:border-[#ff7b00]/30 text-zinc-400 hover:text-[#ff7b00] rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                                <Share2 className="w-4 h-4" /> Builder Visual
+                            </button>
+
+                            <button onClick={() => openTraining(bot)} className="flex-1 px-3 py-1.5 bg-[#f3f4f6]/5 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 text-zinc-400 hover:text-emerald-500 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
                                 <Settings className="w-4 h-4" /> Configurar Intenções
                             </button>
                         </div>
