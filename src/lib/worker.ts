@@ -9,6 +9,10 @@ const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:63
     maxRetriesPerRequest: null,
 })
 
+redisConnection.on('error', (err) => {
+    console.error('[Worker Redis] Connection Error:', err.message)
+})
+
 export const campaignWorker = new Worker('whatsapp-campaigns', async job => {
     const { phone, name, templateText, organizationId, userId } = job.data
 
@@ -77,14 +81,17 @@ export const campaignWorker = new Worker('whatsapp-campaigns', async job => {
 
         console.log(`[Worker] Sent to ${finalPhone}: ${res.success}`)
 
-    } catch (err) {
-        console.error(`[Worker] Error sending to ${phone}:`, err)
-        throw err
+    } catch (error) {
+        console.error("Worker process fail:", error)
+        throw error
     }
-
 }, {
     connection: redisConnection,
     concurrency: 5 // Processa 5 mensagens simultâneas da fila
+})
+
+campaignWorker.on('error', err => {
+    console.error('[Worker] Unknown worker error:', err.message)
 })
 
 // Tratamento de erros globais do Worker

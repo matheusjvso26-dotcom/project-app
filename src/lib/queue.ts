@@ -6,6 +6,10 @@ const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:63
     maxRetriesPerRequest: null,
 })
 
+redisConnection.on('error', (err) => {
+    console.error('[Queue Redis] Connection Error:', err.message)
+})
+
 // Tipagem do Payload da Fila
 export interface CampaignJobData {
     phone: string
@@ -18,4 +22,8 @@ export interface CampaignJobData {
 // Inicializa Fila
 export const campaignQueue = new Queue<CampaignJobData>('whatsapp-campaigns', {
     connection: redisConnection
+})
+
+campaignQueue.on('error', (err) => {
+    console.error('[Queue] Error:', err.message)
 })
