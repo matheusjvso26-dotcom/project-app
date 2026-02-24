@@ -119,15 +119,20 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
                         <div key={stage.id} className="flex min-w-[320px] max-w-[320px] flex-col rounded-2xl glass-card border border-border/50 p-3 h-fit shadow-xs">
                             {/* Stage Header */}
                             <div className="flex items-center justify-between mb-4 px-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="font-semibold text-foreground text-sm">{stage.name}</h3>
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                                        {stage.deals.length}
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-foreground text-[15px]">{stage.name}</h3>
+                                        <span className="flex h-[20px] px-2 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                                            {stage.deals.length}
+                                        </span>
+                                    </div>
+                                    <span className="text-[12.5px] font-semibold text-muted-foreground mt-0.5 tracking-tight">
+                                        {formatCurrency(stage.deals.reduce((acc, deal) => acc + deal.value, 0))}
                                     </span>
                                 </div>
                                 <button
                                     onClick={() => handleAddClick(stage.id)}
-                                    className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
+                                    className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all self-start"
                                 >
                                     <Plus className="w-4 h-4" />
                                 </button>
