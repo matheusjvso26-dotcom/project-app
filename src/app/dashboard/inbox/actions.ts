@@ -48,14 +48,14 @@ export async function getConversations() {
             deals: cDeals.map(d => ({
                 id: d.id,
                 title: d.title,
-                value: d.value,
+                value: d.value ? Number(d.value) : 0,
                 stageName: d.stage?.name || 'Sem Etapa'
             })),
             time: c.updatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             lastMessage: c.messages[0]?.content || 'Nova conversa',
             isBotHandling: c.status === 'BOT_HANDLING',
             unread: 0,
-            messages: c.messages.reverse().map(m => ({
+            messages: [...c.messages].reverse().map(m => ({
                 id: m.id,
                 content: m.content || '',
                 type: m.type,
