@@ -216,6 +216,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             return
         }
 
+        setIsSending(true)
         try {
             await updateDealValue(dealId, num)
             toast.success("Valor atualizado na esteira Kanban!")
@@ -232,12 +233,15 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             }))
         } catch (e: any) {
             toast.error(e.message || "Erro ao atualizar valor do negócio.")
+        } finally {
+            setIsSending(false)
         }
     }
 
     const handleToggleBot = async () => {
         if (!activeChatId || !activeChat) return
 
+        setIsSending(true)
         // Optimistic toggle
         const newStatus = !activeChat.isBotHandling
         setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, isBotHandling: newStatus } : c))
@@ -249,12 +253,15 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             toast.error("Falha ao alterar controle do bot.")
             // Rollback on fail
             setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, isBotHandling: !newStatus } : c))
+        } finally {
+            setIsSending(false)
         }
     }
 
     const handleToggleTag = async (tag: string) => {
         if (!activeChatId || !activeChat) return
 
+        setIsSending(true)
         const currentTags = activeChat.tags || []
         const newTags = currentTags.includes(tag) ? currentTags.filter(t => t !== tag) : [...currentTags, tag]
 
@@ -268,6 +275,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             toast.error("Falha ao atualizar tag.")
             // Rollback on fail
             setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, tags: currentTags } : c))
+        } finally {
+            setIsSending(false)
         }
     }
 
