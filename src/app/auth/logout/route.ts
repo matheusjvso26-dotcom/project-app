@@ -5,17 +5,10 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     await supabase.auth.signOut()
 
-    // Pega o host real do proxy Reverso (Cloudflare/Traefik) para evitar redirecionamento a IP de container
-    const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host')
-    const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+    const isProd = process.env.NODE_ENV === 'production'
+    const baseUrl = isProd ? 'https://app.fire675.com' : request.url
 
-    if (forwardedHost) {
-        return NextResponse.redirect(`${forwardedProto}://${forwardedHost}/login`, { status: 303 })
-    }
-
-    // Fallback normal
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    const url = new URL('/login', baseUrl)
     return NextResponse.redirect(url, { status: 303 })
 }
 
@@ -23,16 +16,9 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     await supabase.auth.signOut()
 
-    // Pega o host real do proxy Reverso (Cloudflare/Traefik)
-    const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host')
-    const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+    const isProd = process.env.NODE_ENV === 'production'
+    const baseUrl = isProd ? 'https://app.fire675.com' : request.url
 
-    if (forwardedHost) {
-        return NextResponse.redirect(`${forwardedProto}://${forwardedHost}/login`, { status: 303 })
-    }
-
-    // Fallback normal
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    const url = new URL('/login', baseUrl)
     return NextResponse.redirect(url, { status: 303 })
 }

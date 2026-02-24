@@ -56,14 +56,22 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
+    // Helper functions to construct URLs defying Docker internal hostnames
+    const getRedirectUrl = (path: string) => {
+        // Fallback blindado para evitar vazamento de ID de DNS do Container (eg. fea3e7385d1b)
+        const isProd = process.env.NODE_ENV === 'production'
+        const baseUrl = isProd ? 'https://app.fire675.com' : request.url
+        return new URL(path, baseUrl)
+    }
+
     // Always protect the dashboard routes in the CRM
     if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-        return NextResponse.redirect(new URL('/login', request.url))
+        return NextResponse.redirect(getRedirectUrl('/login'))
     }
 
     // Redirect to dashboard if logged in and trying to access /login
     if (user && request.nextUrl.pathname.startsWith('/login')) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
+        return NextResponse.redirect(getRedirectUrl('/dashboard'))
     }
 
     return response
