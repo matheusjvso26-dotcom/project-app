@@ -1,21 +1,40 @@
 'use client'
 
 import React, { useState } from 'react'
-import { User, Bell, Lock, Building, Zap, Save, Loader2, Bot } from 'lucide-react'
+import { User, Bell, Lock, Building, Zap, Save, Loader2, Bot, Users } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { User as PrismaUser, Organization as PrismaOrganization } from '@prisma/client'
 import { updateUserProfile, updateAvatarUrl, updateOrganizationBotSettings } from './actions'
 import { AvatarUpload } from '@/components/avatar-upload'
+import { inviteUser } from './team-actions'
 
-interface SettingsTabsProps {
-    initialUser: PrismaUser
-    initialOrg: PrismaOrganization
+interface ExtendedUser extends PrismaUser {
+    avatarUrl: string | null;
 }
 
-export function SettingsTabs({ initialUser, initialOrg }: SettingsTabsProps) {
+interface ExtendedOrg extends PrismaOrganization {
+    welcomeMessage: string | null;
+    closureMessage: string | null;
+    closureMinutes: number;
+}
+
+interface SettingsTabsProps {
+    initialUser: ExtendedUser
+    initialOrg: ExtendedOrg
+    initialTeam: {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        createdAt: Date;
+    }[]
+}
+
+export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsTabsProps) {
     const [activeTab, setActiveTab] = useState('profile')
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+    const [teamMessage, setTeamMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
     async function handleProfileSubmit(formData: FormData) {
         setIsLoading(true)
@@ -52,6 +71,14 @@ export function SettingsTabs({ initialUser, initialOrg }: SettingsTabsProps) {
                             activeTab === 'org' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
                         )}>
                         <Building className="w-4 h-4" /> Organização e Faturamento
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('team')}
+                        className={cn(
+                            "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                            activeTab === 'team' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                        )}>
+                        <Users className="w-4 h-4" /> Minha Equipe
                     </button>
                     <button
                         onClick={() => setActiveTab('notifications')}
@@ -100,7 +127,7 @@ export function SettingsTabs({ initialUser, initialOrg }: SettingsTabsProps) {
                         <div className="p-6 space-y-6">
                             {/* Avatar */}
                             <AvatarUpload
-                                currentAvatarUrl={initialUser.avatarUrl}
+                                currentAvatarUrl={initialUser.avatarUrl || null}
                                 userName={initialUser.name}
                                 onUploadSuccess={async (newUrl) => {
                                     setIsLoading(true);
@@ -210,6 +237,115 @@ export function SettingsTabs({ initialUser, initialOrg }: SettingsTabsProps) {
                         <h2 className="text-lg font-bold text-white">Organização e Faturamento</h2>
                         <p className="text-sm text-zinc-400 mt-1 mb-6">Em breve: gerencie a assinatura e os dados da sua empresa aqui.</p>
                     </div>
+                )}
+
+                {activeTab === 'team' && (
+                    <>
+                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-bold text-white">Membros da Equipe</h2>
+                                <p className="text-sm text-zinc-400 mt-1">Gerencie acessos e adicione novos consultores/vendedores na organização.</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            {/* Listagem de Membros */}
+                            <div className="mb-8">
+                                <h3 className="text-sm font-semibold text-zinc-300 mb-4">Usuários Ativos ({initialTeam.length})</h3>
+                                <div className="border border-white/5 rounded-xl overflow-hidden">
+                                    <table className="w-full text-left text-sm whitespace-nowrap">
+                                        <thead className="bg-white/5 text-zinc-400 border-b border-white/5">
+                                            <tr>
+                                                <th className="px-6 py-3 font-medium">Nome</th>
+                                                <th className="px-6 py-3 font-medium">Email</th>
+                                                <th className="px-6 py-3 font-medium">Cargo</th>
+                                                <th className="px-6 py-3 font-medium">Entrada</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5 bg-[#151515]">
+                                            {initialTeam.map(member => (
+                                                <tr key={member.id} className="hover:bg-white/5 transition-colors">
+                                                    <td className="px-6 py-4 flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-[#ff7b00]/20 text-[#ff7b00] flex items-center justify-center font-bold text-xs border border-[#ff7b00]/30">
+                                                            {member.name.substring(0, 2).toUpperCase()}
+                                                        </div>
+                                                        <span className="text-white font-medium">{member.name} {member.id === initialUser.id && <span className="text-xs ml-1 text-zinc-500">(Você)</span>}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-zinc-400">{member.email}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={cn(
+                                                            "px-2.5 py-1 rounded-full text-xs font-medium border",
+                                                            member.role === 'ADMIN' ? "bg-red-500/10 text-red-400 border-red-500/20" :
+                                                                member.role === 'CLOSER' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                                                                    "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                                        )}>
+                                                            {member.role}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-zinc-500">{new Date(member.createdAt).toLocaleDateString('pt-BR')}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Formulário de Convite (Vísível só pra Admin teoricamente, mas Action bloqueia caso masquem frontend) */}
+                            {initialUser.role === 'ADMIN' && (
+                                <div className="border border-white/10 rounded-xl bg-[#1c1c1c] p-6">
+                                    <h3 className="text-md font-bold text-white mb-1">Adicionar novo Membro</h3>
+                                    <p className="text-xs text-zinc-400 mb-6">Convide um usuário preenchendo os dados abaixo. Eles poderão acessar com esse e-mail e senha formatada.</p>
+
+                                    {teamMessage && (
+                                        <div className={cn(
+                                            "p-4 rounded-lg text-sm font-medium mb-6",
+                                            teamMessage.type === 'success' ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"
+                                        )}>
+                                            {teamMessage.text}
+                                        </div>
+                                    )}
+
+                                    <form action={async (formData) => {
+                                        setIsLoading(true)
+                                        setTeamMessage(null)
+                                        const res = await inviteUser(formData)
+                                        if (res?.error) setTeamMessage({ type: 'error', text: res.error })
+                                        else if (res?.success) {
+                                            setTeamMessage({ type: 'success', text: res.message })
+                                            // Optional: reset form via JS if needed, but since it's a server action, page will revalidate and we get fresh list.
+                                        }
+                                        setIsLoading(false)
+                                    }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Nome Completo</label>
+                                            <input name="name" type="text" required className="w-full bg-[#151515] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-[#ff7b00]" placeholder="Marcos Silva" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">E-mail Comercial</label>
+                                            <input name="email" type="email" required className="w-full bg-[#151515] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-[#ff7b00]" placeholder="marcos@empresa.com" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Cargo / Hierarquia</label>
+                                            <select name="role" required className="w-full bg-[#151515] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-[#ff7b00] appearance-none">
+                                                <option value="SDR">SDR (Pré-vendas)</option>
+                                                <option value="CLOSER">Closer (Vendedor Master)</option>
+                                                <option value="ADMIN">Administrador (Total Acesso)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Senha Provisória</label>
+                                            <input name="password" type="text" required minLength={6} className="w-full bg-[#151515] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-[#ff7b00]" placeholder="Ex: Mudar123!" />
+                                        </div>
+                                        <div className="md:col-span-2 mt-2">
+                                            <button type="submit" disabled={isLoading} className="px-4 py-2 bg-white text-black font-semibold rounded-lg text-sm hover:bg-zinc-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar Usuário"}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
+                        </div>
+                    </>
                 )}
 
                 {activeTab === 'notifications' && (
