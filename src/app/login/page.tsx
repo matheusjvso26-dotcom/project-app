@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { Mail, Lock } from 'lucide-react'
 import { login } from '@/app/auth/actions'
 
-export default async function LoginPage() {
+export default async function LoginPage({
+    searchParams,
+}: {
+    searchParams: { message: string }
+}) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -30,6 +34,11 @@ export default async function LoginPage() {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                {searchParams?.message && (
+                    <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-lg mb-6 text-center text-sm">
+                        {searchParams.message}
+                    </div>
+                )}
                 <div className="bg-card py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-border/50">
                     <form className="space-y-6" action={login}>
                         <div>
