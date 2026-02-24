@@ -21,7 +21,7 @@ export async function requireUser() {
 
     if (!dbUser) {
         // Edge case: user exists in auth but missing in DB.
-        redirect('/auth/logout')
+        redirect('/auth/logout?reason=db_missing')
     }
 
     return dbUser

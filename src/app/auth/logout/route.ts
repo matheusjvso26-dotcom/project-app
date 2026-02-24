@@ -19,6 +19,14 @@ export async function GET(request: NextRequest) {
     const isProd = process.env.NODE_ENV === 'production'
     const baseUrl = isProd ? 'https://app.fire675.com' : request.url
 
-    const url = new URL('/login?message=Sessão%20expirada%20com%20sucesso.', baseUrl)
+    const searchParams = request.nextUrl.searchParams
+    const reason = searchParams.get('reason')
+
+    let message = 'Sessão expirada com sucesso.'
+    if (reason === 'db_missing') {
+        message = 'Conta de banco resetada! Por favor, REGISTRE-SE de novo utilizando OUTRO E-MAIL.'
+    }
+
+    const url = new URL(`/login?message=${message}`, baseUrl)
     return NextResponse.redirect(url, { status: 303 })
 }
