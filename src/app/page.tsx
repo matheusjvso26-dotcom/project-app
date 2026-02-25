@@ -8,10 +8,7 @@ export default function Home() {
       <header className="fixed top-0 w-full z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tight">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ff7b00] to-[#e65a00] flex items-center justify-center shadow-lg shadow-[#ff7b00]/20">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            FLY UP CRM
+            <img src="/logo.png" alt="FLY UP CRM" className="h-8 w-auto object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
             <a href="#features" className="hover:text-white transition-colors">Recursos</a>
@@ -40,12 +37,12 @@ export default function Home() {
               Versão 2.0 Disponível
             </div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-[1] mb-8 max-w-5xl">
-              Automatize o WhatsApp e <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff7b00] to-[#ffaa00]">escale as vendas.</span>
+            <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[1.1] mb-6 max-w-4xl">
+              Automatize o WhatsApp e <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff7b00] to-[#ffaa00]">Escale suas Vendas.</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl leading-relaxed">
-              O CRM construído para operações de alta velocidade. Caixa de Entrada com IA, Automação Visual e CRM Kanban engatados. Tudo num só lugar.
+            <p className="text-lg text-zinc-400 mb-10 max-w-2xl leading-relaxed">
+              O CRM dinâmico para alta velocidade. Caixa de Entrada integrada, Automação Visual e Quadro Kanban.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
@@ -63,8 +60,8 @@ export default function Home() {
         <section id="features" className="py-24 px-6 border-t border-white/5 bg-[#0d0d0d]">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16 max-w-2xl mx-auto">
-              <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">A central do seu faturamento</h2>
-              <p className="text-lg text-zinc-400">Não pague por ferramentas separadas de chat, e-mail e Kanban. Unificamos tudo em uma experiência relâmpago.</p>
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Sua central de lucro</h2>
+              <p className="text-lg text-zinc-400">Todo o fluxo da empresa: chat, automações e comissões num só app.</p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -72,9 +69,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-[#ff7b00]/10 rounded-2xl flex items-center justify-center mb-6 border border-[#ff7b00]/20">
                   <MessageSquare className="w-7 h-7 text-[#ff7b00]" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Caixa de Entrada com IA</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Converse com todos os clientes numa única tela e acione nosso agente integrado OpenAI para sugerir mensagens altamente conversivas.
+                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Inbox Omnichannel e IA</h3>
+                <p className="text-zinc-400 leading-relaxed text-sm">
+                  Converse em uma única tela. Peça para a Inteligência Artificial formular respostas rápidas focadas em conversão.
                 </p>
               </div>
 
@@ -82,9 +79,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-6 border border-indigo-500/20">
                   <Bot className="w-7 h-7 text-indigo-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Flow Builder de Chatbots</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Crie árvores de respostas automáticas sem código usando um canvas drag and drop idêntico ao flowbuilder de automações das gigantes.
+                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Criador Drag&Drop de Chatbots</h3>
+                <p className="text-zinc-400 leading-relaxed text-sm">
+                  Crie robôs complexos soltando blocos na tela. Capture dados do cliente antes de passar ao vendedor humano sem código.
                 </p>
               </div>
 
@@ -93,8 +90,8 @@ export default function Home() {
                   <Layers className="w-7 h-7 text-emerald-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Kanban Real-Time</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Leads novos no WhatsApp geram "Business Deals" imediatos. Arraste cards num board responsivo que já calcula seus lucros no topo.
+                <p className="text-zinc-400 leading-relaxed text-sm">
+                  Saiba onde está cada proposta. Cards automáticos calculam instantaneamente os valores na mesa conforme os negócios caminham.
                 </p>
               </div>
 
@@ -102,9 +99,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 border border-blue-500/20">
                   <Zap className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Campanhas em Massa</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Faça upload da sua base .xlsx de "leads frios" ou clientes antigos e reinicie milhares de conversas com um painel de processamento unificado.
+                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Disparos em Massa</h3>
+                <p className="text-zinc-400 leading-relaxed text-sm">
+                  Faça upload do Excel da base fria. Reinicie milhares de conversas com variáveis dinâmicas e painel rastreador.
                 </p>
               </div>
 
@@ -112,9 +109,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-yellow-500/10 rounded-2xl flex items-center justify-center mb-6 border border-yellow-500/20">
                   <BarChart3 className="w-7 h-7 text-yellow-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Dashboards Preditos CFO</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Não seja cego com seu dinheiro. O Fly UP detecta suas conversões prévias para projetar a Receita Recorrente e seu Retorno Sobre o Investimento.
+                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Painel Executivo (CFO)</h3>
+                <p className="text-zinc-400 leading-relaxed text-sm">
+                  Gráficos automáticos exibem as vendas do mês, ticket médio, Custos vs Retorno (ROI) e Projeção de Faturamento futura.
                 </p>
               </div>
 
@@ -122,9 +119,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-pink-500/10 rounded-2xl flex items-center justify-center mb-6 border border-pink-500/20">
                   <Users className="w-7 h-7 text-pink-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Gestão de Privilégios (Equipe)</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Dê cargos diferentes para sua operação. Permita que Closers fechem oportunidades e restringe SDRs de apagar históricos essenciais.
+                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">Hierarquia de Acessos</h3>
+                <p className="text-zinc-400 leading-relaxed text-sm">
+                  Crie senhas para a Equipe. Limite exclusões a Administradores e distribua logins protegidos para Closers e Pré-vendedores.
                 </p>
               </div>
             </div>
@@ -147,28 +144,28 @@ export default function Home() {
                   <div className="mb-2">
                     <h3 className="text-xl font-bold text-white inline flex-col">Starter</h3>
                   </div>
-                  <p className="text-zinc-400 mb-8 mt-2 line-clamp-2 h-10">Perfeito para quem trabalha sozinho vendendo ou prestando serviços.</p>
+                  <p className="text-zinc-400 mb-8 mt-2 line-clamp-2 h-10 text-sm">Controle sua carteira e funil de clientes de forma segura e imediata.</p>
                   <div className="mb-8 flex items-end gap-1">
-                    <span className="text-5xl font-extrabold text-white">R$ 0</span>
+                    <span className="text-5xl font-extrabold text-white">R$ 289</span>
                     <span className="text-zinc-500 font-medium pb-1.5">/mês</span>
                   </div>
                   <ul className="space-y-4 mb-8">
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
                       <span>Licença para 1 Usuário Mestre</span>
                     </li>
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
-                      <span>Quadro Kanban Ilimitado</span>
+                      <span>Caixa de Entrada Unificada</span>
                     </li>
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
-                      <span>1 Número/Sessão de WhatsApp</span>
+                      <span>Kanban de Vendas Ilimitado</span>
                     </li>
                   </ul>
                 </div>
                 <Link href="/register" className="w-full py-4 rounded-full border border-white/10 bg-white/5 text-white font-semibold text-center hover:bg-white/10 transition-colors">
-                  Começar Grátis
+                  Assinar Starter
                 </Link>
               </div>
 
@@ -181,32 +178,32 @@ export default function Home() {
                   <div className="mb-2">
                     <h3 className="text-xl font-bold text-[#ff7b00]">Pro</h3>
                   </div>
-                  <p className="text-zinc-400 mb-8 mt-2 line-clamp-2 h-10">Para equipes de prospecção pesada que precisam de ferramentas completas.</p>
+                  <p className="text-zinc-400 mb-8 mt-2 line-clamp-2 h-10 text-sm">Mais faturamento para equipes que precisam de autonomia.</p>
                   <div className="mb-8 flex items-end gap-1">
-                    <span className="text-5xl font-extrabold text-white">R$ 197</span>
+                    <span className="text-5xl font-extrabold text-white">R$ 489</span>
                     <span className="text-zinc-500 font-medium pb-1.5">/mês</span>
                   </div>
                   <ul className="space-y-4 mb-8">
-                    <li className="flex gap-3 text-white font-medium items-start">
+                    <li className="flex gap-3 text-white font-medium items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0 mt-0.5" />
                       <span>Até 5 colaboradores logados</span>
                     </li>
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0 mt-0.5" />
-                      <span>Módulo IA: Whisper e ChatGPT Inbox</span>
+                      <span>Sugestão de Respostas via IA (GPT)</span>
                     </li>
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0 mt-0.5" />
-                      <span>Flow Builder Visual de Chatbots</span>
+                      <span>Chatbot com builder Visual Interativo</span>
                     </li>
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0 mt-0.5" />
-                      <span>Disparos em massa ilimitados</span>
+                      <span>Ferramenta de Disparos em Massa</span>
                     </li>
                   </ul>
                 </div>
                 <Link href="/register" className="w-full py-4 rounded-full bg-[#ff7b00] text-white font-semibold text-center hover:bg-[#e66a00] transition-colors shadow-lg shadow-[#ff7b00]/25">
-                  Criar Conta Pro
+                  Assinar Pro
                 </Link>
               </div>
 
@@ -216,21 +213,21 @@ export default function Home() {
                   <div className="mb-2">
                     <h3 className="text-xl font-bold text-white">Enterprise</h3>
                   </div>
-                  <p className="text-zinc-400 mb-8 mt-2 line-clamp-2 h-10">O pacote da liderança para faturamentos múltiplos com suporte irrestrito.</p>
+                  <p className="text-zinc-400 mb-8 mt-2 line-clamp-2 h-10 text-sm">O pacote de performance para faturamentos múltiplos e grandes centros.</p>
                   <div className="mb-8 flex items-end gap-1">
-                    <span className="text-5xl font-extrabold text-white">R$ 500+</span>
+                    <span className="text-5xl font-extrabold text-white">R$ 989+</span>
                     <span className="text-zinc-500 font-medium pb-1.5">/projeto</span>
                   </div>
                   <ul className="space-y-4 mb-8">
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
                       <span>Equipe ilimitada</span>
                     </li>
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
-                      <span>Domínios / White Label</span>
+                      <span>Painel Avançado (CFO / ROI)</span>
                     </li>
-                    <li className="flex gap-3 text-zinc-300 items-start">
+                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
                       <CheckCircle2 className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
                       <span>Suporte Especializado 24h</span>
                     </li>
@@ -261,7 +258,7 @@ export default function Home() {
       <footer className="py-12 px-6 border-t border-white/5 bg-[#050505]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 text-white font-bold tracking-tight opacity-80">
-            <Bot className="w-5 h-5" />
+            <img src="/logo.png" alt="FLY UP CRM" className="h-6 w-auto object-contain opacity-80 mix-blend-screen" />
             FLY UP CRM
           </div>
           <div className="text-sm text-zinc-600 font-medium tracking-wide">
