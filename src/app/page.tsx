@@ -75,7 +75,6 @@ export default function Home() {
                 src="/perfil-hero.png"
                 alt="Especialista"
                 className="w-full max-w-lg object-contain relative z-0 drop-shadow-[0_0_50px_rgba(255,123,0,0.3)] filter contrast-125"
-                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80&fm=png&bg=transparent' }}
               />
             </div>
           </div>
