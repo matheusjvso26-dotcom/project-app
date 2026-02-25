@@ -1,3 +1,5 @@
+'use server'
+
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -29,7 +31,7 @@ export async function login(formData: FormData) {
     })
 
     if (error) {
-        redirect('/login?message=E-mail ou senha incorretos')
+        return { error: 'E-mail ou senha incorretos' }
     }
 
     const prisma = (await import('@/lib/prisma')).default
@@ -41,11 +43,11 @@ export async function login(formData: FormData) {
     // @ts-ignore: Propriedades incluídas recentemente no Prisma DB Schema
     if (dbUser?.organization?.status === 'PENDING' || dbUser?.status === 'PENDING') {
         await supabase.auth.signOut()
-        redirect('/login?message=Sua conta aguarda aprovação em nosso sistema.')
+        return { error: 'Sua conta aguarda aprovação em nosso sistema.' }
     }
 
     revalidatePath('/', 'layout')
-    redirect('/dashboard?message=Login efetuado com sucesso')
+    redirect('/dashboard')
 }
 
 export async function register(formData: FormData) {
@@ -60,8 +62,7 @@ export async function register(formData: FormData) {
     // 1. Zod Validation
     const parsed = registerSchema.safeParse({ email, password, name, company, phone })
     if (!parsed.success) {
-        const errorMsg = parsed.error.issues[0].message
-        redirect(`/register?message=${errorMsg}`)
+        return { error: parsed.error.issues[0].message }
     }
 
     const prisma = (await import('@/lib/prisma')).default
@@ -69,12 +70,12 @@ export async function register(formData: FormData) {
     // 2. Strict Duplication Check
     const existingCompany = await prisma.organization.findFirst({ where: { name: company } })
     if (existingCompany) {
-        redirect('/register?message=Nome de empresa já cadastrado em nosso sistema. Escolha outro.')
+        return { error: 'Nome de empresa já cadastrado em nosso sistema. Escolha outro.' }
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {
-        redirect('/register?message=E-mail já cadastrado.')
+        return { error: 'E-mail já cadastrado.' }
     }
 
     const supabase = await createClient()
@@ -89,7 +90,7 @@ export async function register(formData: FormData) {
     })
 
     if (authError || !authData.user) {
-        redirect(`/register?message=${authError?.message || 'Erro ao criar conta.'}`)
+        return { error: authError?.message || 'Erro ao criar conta.' }
     }
 
     const userId = authData.user.id
@@ -120,10 +121,12 @@ export async function register(formData: FormData) {
         })
     } catch (err) {
         console.error("Erro ao provisionar workspace:", err)
-        redirect('/register?message=Erro interno ao criar Workspace')
+        return { error: 'Erro interno ao criar Workspace' }
     }
 
     // Force signout precisely because they must wait for approval to login
     await supabase.auth.signOut()
-    redirect('/login?message=Cadastro finalizado! Sua conta aguarda a aprovação da nossa equipe.')
+
+    // Sucesso, mas retornaremos sucesso para que a UI mostre o toast
+    return { success: 'Cadastro finalizado! Sua conta aguarda aprovação.' }
 }
