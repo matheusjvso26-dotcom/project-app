@@ -1,325 +1,280 @@
 import Link from 'next/link'
-import { CheckCircle2, Bot, Layers, Zap, MessageSquare, BarChart3, Users, ArrowRight, Activity, Terminal, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Bot, Layers, Zap, MessageSquare, BarChart3, Users, ArrowRight, ArrowUpRight, ShieldCheck, Activity, Star } from 'lucide-react'
+
+// Utilizando Laranja da Marca (Primary)
+const primaryColor = "text-[#ff7b00]"
+const bgPrimary = "bg-[#ff7b00]"
+const borderPrimary = "border-[#ff7b00]"
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 font-sans selection:bg-[#ff7b00]/30 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#070707] text-zinc-300 font-sans selection:bg-[#ff7b00]/30 selection:text-white overflow-hidden relative">
 
-      {/* Grid Pattern Background */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0"
-        style={{ backgroundImage: 'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+      {/* Background Matrix/Grid Overlay */}
+      <div className="fixed inset-0 pointer-events-none opacity-20 z-0"
+        style={{
+          backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)',
+          backgroundSize: '80px 80px'
+        }} />
 
-      {/* Top Ambient Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#ff7b00]/10 blur-[120px] rounded-full pointer-events-none z-0" />
+      {/* Header */}
+      <header className="relative z-50 py-6 px-8 max-w-[1400px] mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* A logo no topo - Discreta */}
+          <img src="/logo.png" alt="FLY UP CRM" className="h-8 w-auto object-contain brightness-0 invert opacity-90" />
+        </div>
 
-      {/* Header / Navbar */}
-      <header className="relative z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="FLY UP CRM" className="h-12 w-auto object-contain" />
-          </div>
+        <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-zinc-400">
+          <Link href="#inicio" className="text-white transition-colors">Início</Link>
+          <Link href="#recursos" className="hover:text-white transition-colors">Serviços</Link>
+          <Link href="#sobre" className="hover:text-white transition-colors">Sobre</Link>
+          <Link href="#pricing" className="hover:text-white transition-colors">Preços</Link>
+        </nav>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
-            <Link href="#inicio" className="text-white hover:text-[#ff7b00] transition-colors">Início</Link>
-            <Link href="#recursos" className="hover:text-white transition-colors">Recursos</Link>
-            <Link href="#pricing" className="hover:text-white transition-colors">Preços</Link>
-            <Link href="#contato" className="hover:text-white transition-colors">Contato</Link>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-bold text-white uppercase tracking-wider border border-white/10 hover:border-[#ff7b00] hover:text-[#ff7b00] px-5 py-2.5 rounded-full transition-all flex items-center gap-2 bg-white/5">
-              <ShieldCheck className="w-4 h-4" /> Acessar Sistema
-            </Link>
-          </div>
+        <div className="flex items-center flex-shrink-0">
+          <Link href="/login" className="text-sm font-bold text-black bg-[#ff7b00] uppercase tracking-wider px-6 py-2.5 rounded-full hover:bg-white hover:text-black transition-all">
+            Acessar Sistema
+          </Link>
         </div>
       </header>
 
       <main className="relative z-10">
 
-        {/* Centralized Hero Section */}
-        <section id="inicio" className="pt-24 pb-16 px-6 relative flex flex-col items-center text-center">
+        {/* HERO SECTION */}
+        <section id="inicio" className="pt-16 pb-32 px-8 max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-12 items-center">
 
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#ff7b00]/30 bg-[#ff7b00]/10 text-[#ff7b00] text-xs font-bold uppercase tracking-widest mb-8 shadow-[0_0_15px_rgba(255,123,0,0.1)]">
-            <Zap className="w-3.5 h-3.5" /> O Upgrade que sua operação merece
-          </div>
+          {/* Esquerda - Textos */}
+          <div className="flex flex-col gap-8 relative z-10">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-bold tracking-[0.2em] text-zinc-500 uppercase flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#ff7b00]" /> GARANTA O CONTROLE DO SEU FUNIL !
+              </p>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight">
+                A plataforma de <br />
+                <span className={`text-[#ff7b00]`}>CRM B2B</span> <br />
+                para o seu futuro.
+              </h1>
+            </div>
 
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] tracking-tighter max-w-4xl mx-auto mb-6">
-            TRANSFORME A <span className="text-[#ff7b00] drop-shadow-[0_0_30px_rgba(255,123,0,0.4)]">OPERAÇÃO DE VENDAS</span> DA SUA EQUIPE
-          </h1>
+            <p className="text-lg text-zinc-400 max-w-lg leading-relaxed">
+              O SaaS que centraliza seu WhatsApp, organiza suas propostas e aumenta as conversões através de fluxos inteligentes.
+            </p>
 
-          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
-            Elimine o caos no WhatsApp com automação inteligente B2B. <br className="hidden md:block" /> Um CRM que integra fluxos dinâmicos para você faturar de verdade.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4 mb-20">
-            <Link href="/register" className="bg-[#ff7b00] hover:bg-[#e66a00] text-black font-black uppercase tracking-wider py-4 px-8 rounded-full transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,123,0,0.3)]">
-              Iniciar Avaliação (7 Dias)
-            </Link>
-            <Link href="#pricing" className="bg-transparent border border-white/20 text-white font-bold uppercase tracking-wider py-4 px-8 rounded-full transition-all hover:bg-white/5">
-              Ver Planos
-            </Link>
-          </div>
-
-          {/* Pulsing/Animated Logo Showcase */}
-          <div className="relative w-full max-w-4xl mx-auto mt-12 mb-20 flex justify-center items-center group">
-            {/* Behind Glowing Effect */}
-            <div className="absolute inset-0 bg-[#ff7b00]/20 blur-[100px] rounded-full animate-pulse z-0 scale-75 group-hover:bg-[#ff7b00]/30 transition-all duration-700" />
-            {/* The Logo itself */}
-            <img
-              src="/logo.png"
-              alt="FLY UP CRM Sistema"
-              className="w-full max-w-md md:max-w-xl object-contain relative z-10 drop-shadow-[0_10px_50px_rgba(255,123,0,0.5)] transform hover:scale-110 transition-transform duration-700 ease-in-out animate-[pulse_4s_ease-in-out_infinite]"
-            />
-
-            {/* UI Mock Elements surrounding the logo to look like a tool */}
-            <div className="absolute -left-10 top-1/4 bg-[#111] border border-white/5 p-4 rounded-xl shadow-2xl z-20 hidden md:flex items-center gap-3 animate-bounce" style={{ animationDuration: '3s' }}>
-              <div className="w-10 h-10 bg-[#ff7b00]/20 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="text-[#ff7b00] w-5 h-5" />
+            <div className="flex items-center gap-6 mt-4">
+              <div className="flex -space-x-3">
+                <img className="w-12 h-12 rounded-full border-2 border-[#070707]" src="https://i.pravatar.cc/100?img=33" alt="User" />
+                <img className="w-12 h-12 rounded-full border-2 border-[#070707]" src="https://i.pravatar.cc/100?img=47" alt="User" />
+                <img className="w-12 h-12 rounded-full border-2 border-[#070707]" src="https://i.pravatar.cc/100?img=12" alt="User" />
+                <img className="w-12 h-12 rounded-full border-2 border-[#070707]" src="https://i.pravatar.cc/100?img=28" alt="User" />
+                <div className="w-12 h-12 rounded-full border-2 border-[#070707] bg-[#ff7b00] flex items-center justify-center text-xs text-black font-black">
+                  +3k
+                </div>
               </div>
               <div>
-                <p className="text-xs text-white font-bold">Automação Ativa</p>
-                <p className="text-[10px] text-zinc-500">Há 2 minutos</p>
+                <p className="text-white font-bold text-xl">168K+</p>
+                <p className="text-zinc-500 text-xs uppercase tracking-wider">Leads Gerados</p>
               </div>
             </div>
 
-            <div className="absolute -right-5 bottom-1/4 bg-[#111] border border-white/5 p-4 rounded-xl shadow-2xl z-20 hidden md:flex items-center gap-3 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>
-              <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                <Zap className="text-green-500 w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs text-white font-bold">Venda Fechada!</p>
-                <p className="text-[10px] text-zinc-500">R$ 15.000,00</p>
-              </div>
-            </div>
-          </div>
-
-        </section>
-
-        {/* Logo Carousel (Trust symbols) */}
-        <section className="py-10 border-y border-white/5 bg-black/40 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 text-center">
-            <p className="text-sm text-zinc-500 uppercase font-bold tracking-widest mb-8">Ferramentas que integramos ou emulamos</p>
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-40 grayscale">
-              <div className="flex items-center gap-2 font-black text-xl"><MessageSquare className="w-8 h-8" /> Whatsapp API</div>
-              <div className="flex items-center gap-2 font-black text-xl"><Terminal className="w-8 h-8" /> Meta Cloud</div>
-              <div className="flex items-center gap-2 font-black text-xl"><Layers className="w-8 h-8" /> Kanban Trello</div>
-              <div className="flex items-center gap-2 font-black text-xl"><Bot className="w-8 h-8" /> OpenAI GPT-4</div>
-            </div>
-          </div>
-        </section>
-
-        {/* Bento Grid Features */}
-        <section id="recursos" className="py-32 px-6 relative">
-          <div className="max-w-7xl mx-auto">
-
-            <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter">O FUTURO DO SEU ATENDIMENTO</h2>
-              <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
-                Experimente o poder da gestão visual fluida, robôs que vendem por você e relatórios que guiam a empresa.
+            <div className="flex items-center gap-4 mt-6">
+              <Link href="/register" className="w-14 h-14 rounded-full border border-[#ff7b00] text-[#ff7b00] flex items-center justify-center hover:bg-[#ff7b00] hover:text-black transition-colors group">
+                <ArrowUpRight className="w-6 h-6 group-hover:rotate-45 transition-transform" />
+              </Link>
+              <p className="text-zinc-500 text-sm max-w-[250px]">
+                A FLY UP une e protege seu ecossistema comercial. Atendimentos simultâneos em um só Whatsapp.
               </p>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[auto]">
+          {/* Direita - Arte / Elementos Visuais Livres */}
+          <div className="relative h-[600px] w-full flex items-center justify-center lg:justify-end perspective-1000">
+            {/* Linhas guias simulando gráficos orbitais */}
+            <svg className="absolute inset-0 w-full h-full text-[#ff7b00] opacity-40 mix-blend-screen pointer-events-none" viewBox="0 0 600 600">
+              <path d="M 50,300 C 150,500 450,100 550,300" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" className="animate-[dash_20s_linear_infinite]" />
+              <circle cx="200" cy="200" r="150" fill="none" stroke="currentColor" strokeWidth="1" className="opacity-20" />
+              <path d="M 100,100 C 300,0 500,600 200,500" fill="none" stroke="currentColor" strokeWidth="3" className="opacity-50 blur-[1px]" />
+            </svg>
 
-              {/* Box 1 (Big Highlight) */}
-              <div className="md:col-span-2 bg-gradient-to-br from-[#ff7b00] to-[#b35600] rounded-3xl p-10 flex flex-col justify-between overflow-hidden relative group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
-                <div className="relative z-10 mb-20 text-black">
-                  <div className="bg-black/10 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-6">
-                    <Layers className="w-4 h-4" /> Escopo Ilimitado
-                  </div>
-                  <h3 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter max-w-lg leading-tight">
-                    KANBAN DE VENDAS COM CÁLCULO AO VIVO
-                  </h3>
-                  <p className="mt-4 text-black/80 font-medium max-w-md text-lg">
-                    Saiba exatamente quanto dinheiro está na mesa. Mova as propostas de coluna em coluna com segurança.
-                  </p>
-                </div>
-                <div className="relative z-10 flex items-center gap-4 text-black/90 font-bold">
-                  <span>Ver Funcionalidade</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-                </div>
+            {/* LOGO GIGANTE flutuando (Requisito do usuário) */}
+            <div className="relative z-20 w-full max-w-lg lg:max-w-xl xl:max-w-2xl transform rotate-[-5deg] animate-[float_6s_ease-in-out_infinite]">
+              {/* Brilho de fundo intenso */}
+              <div className="absolute inset-0 bg-[#ff7b00] opacity-30 blur-[100px] rounded-full mix-blend-screen scale-125"></div>
+              <img
+                src="/logo.png"
+                alt="FLY UP CRM Grand"
+                className="w-full h-auto object-contain relative z-30 drop-shadow-[0_20px_50px_rgba(255,123,0,0.4)]"
+              />
+            </div>
+
+            {/* Badge Orbitando 1 */}
+            <div className="absolute top-1/4 left-0 hidden md:flex flex-col gap-1 bg-[#121212]/80 backdrop-blur-md border border-white/5 px-6 py-4 rounded-2xl shadow-2xl z-40 transform -rotate-6 animate-[float_5s_ease-in-out_infinite_reverse]">
+              <div className="text-[#ff7b00] font-black text-xs uppercase flex justify-between gap-6 mb-2"><span>Novos Leads</span> <Activity className="w-4 h-4" /></div>
+              <div className="text-3xl text-white font-bold">4.892</div>
+              <div className="text-green-400 text-xs">+15% essa semana</div>
+            </div>
+
+            {/* Badge Orbitando 2 */}
+            <div className="absolute bottom-1/4 right-0 hidden md:flex flex-col gap-1 bg-[#121212]/80 backdrop-blur-md border border-[#ff7b00]/20 px-6 py-4 rounded-2xl shadow-2xl z-40 transform rotate-3 animate-[float_7s_ease-in-out_infinite]">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-green-500" /></div>
+                <span className="text-white text-sm font-bold">Venda Concluída</span>
               </div>
-
-              {/* Box 2 (Image/Abstract) */}
-              <div className="bg-[#111] rounded-3xl overflow-hidden relative group border border-white/5">
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
-                {/* Stock image replacement / abstract geometric */}
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=600')] bg-cover bg-center bg-no-repeat opacity-40 group-hover:scale-105 transition-transform duration-700"></div>
-                <div className="relative z-20 h-full p-8 flex flex-col justify-end">
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Inbox Omnichannel</h3>
-                  <p className="text-sm text-zinc-400 mt-2">Uma equipe, uma tela. Sem mais confusão no WhatsApp Web de ninguém.</p>
-                </div>
-              </div>
-
-              {/* Box 3 (Small Indicator) */}
-              <div className="bg-[#111] rounded-3xl p-8 border border-white/5 flex flex-col justify-between hover:border-[#ff7b00]/30 transition-colors">
-                <div className="mb-8">
-                  <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
-                    <CheckCircle2 className="text-green-500 w-6 h-6" />
-                  </div>
-                  <div className="text-white font-bold mb-1">Integrações Resolvidas</div>
-                  <div className="text-xs text-zinc-500">Zero dores de cabeça com setup</div>
-                </div>
-                <div className="bg-white/5 rounded-xl h-2 flex overflow-hidden">
-                  <div className="bg-green-500 w-[100%]"></div>
-                </div>
-              </div>
-
-              {/* Box 4 (Charts / Graphs) */}
-              <div className="bg-[#111] rounded-3xl p-8 border border-white/5 flex flex-col justify-center items-center relative overflow-hidden group hover:border-[#ff7b00]/30 transition-colors">
-                <div className="flex items-end gap-2 h-20 mb-6">
-                  <div className="w-3 bg-zinc-800 rounded-t h-[30%] group-hover:bg-[#ff7b00] transition-colors duration-300"></div>
-                  <div className="w-3 bg-zinc-800 rounded-t h-[60%] group-hover:bg-[#ff7b00] transition-colors duration-500 delay-75"></div>
-                  <div className="w-3 bg-zinc-800 rounded-t h-[45%] group-hover:bg-[#ff7b00] transition-colors duration-300 delay-100"></div>
-                  <div className="w-3 bg-[#ff7b00] rounded-t h-[90%] shadow-[0_0_15px_#ff7b00]"></div>
-                  <div className="w-3 bg-zinc-800 rounded-t h-[50%] group-hover:bg-[#ff7b00] transition-colors duration-300 delay-150"></div>
-                  <div className="w-3 bg-zinc-800 rounded-t h-[75%] group-hover:bg-[#ff7b00] transition-colors duration-500 delay-200"></div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-black text-white tracking-tighter">Robôs Visuais</div>
-                  <div className="text-sm text-zinc-400 mt-2">Cadeias lógicas tipo Drag & Drop</div>
-                </div>
-              </div>
-
-              {/* Box 5 (Analytics Info Text) */}
-              <div className="bg-[#111] rounded-3xl p-8 border border-white/5 flex flex-col justify-between hover:border-[#ff7b00]/30 transition-colors">
-                <div>
-                  <Activity className="w-8 h-8 text-[#ff7b00] mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2">Relatórios Precisos CFO</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">
-                    Tome decisões com base no MRR, clientes ativos, e fluxo de caixa contábil sem sair do app.
-                  </p>
-                </div>
-                <div className="flex -space-x-3 mt-8">
-                  <img className="w-10 h-10 rounded-full border-2 border-[#111]" src="https://i.pravatar.cc/100?img=11" alt="" />
-                  <img className="w-10 h-10 rounded-full border-2 border-[#111]" src="https://i.pravatar.cc/100?img=12" alt="" />
-                  <img className="w-10 h-10 rounded-full border-2 border-[#111]" src="https://i.pravatar.cc/100?img=13" alt="" />
-                  <div className="w-10 h-10 rounded-full border-2 border-[#111] bg-white/10 flex items-center justify-center text-xs text-white font-bold">+99</div>
-                </div>
-              </div>
-
+              <div className="text-2xl text-white font-bold tracking-tight">R$ 15.000,00</div>
+              <div className="text-zinc-500 text-xs">Pago via Pix hoje</div>
             </div>
           </div>
         </section>
 
-        {/* Pricing Options - Minimal SaaS Style */}
-        <section id="pricing" className="py-24 px-6 border-t border-white/5 bg-[#050505]">
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter">ESCALA SEM FRONTEIRAS</h2>
-              <p className="text-lg text-zinc-400 max-w-xl mx-auto">Valores adaptados para rotinas de quem fecha vendas todos os dias.</p>
+        {/* MID SECTION - OS 3 CARDS */}
+        <section id="recursos" className="py-20 px-8 max-w-[1400px] mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-end mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+              O parceiro de vendas <br /> mais <span className="text-[#ff7b00]">confiável</span> do Brasil.
+            </h2>
+            <p className="text-zinc-400 text-sm max-w-sm">
+              A FLY UP consolida e protege seu fluxo B2B através de pipelines de vendas especializados. Automação desenhada ponta-a-ponta para conversão.
+            </p>
+          </div>
+
+          {/* Os 3 Blocos de Funcionalidades */}
+          <div className="flex flex-col md:flex-row items-stretch justify-center gap-x-0 relative z-10 w-full mb-32 group/cards">
+
+            {/* Bloco 1 */}
+            <div className="w-full md:w-1/3 bg-[#111111] border border-white/5 rounded-3xl md:rounded-r-none md:border-r-0 p-10 flex flex-col justify-center min-h-[300px] hover:bg-[#161616] transition-colors">
+              <div className="text-[#ff7b00] font-black text-2xl mb-6">01.</div>
+              <h3 className="text-white font-bold text-xl mb-4">Inbox Omnichannel</h3>
+              <p className="text-zinc-500 text-sm leading-relaxed">Múltiplos usuários no mesmo WhatsApp. Organize conversas, filtre mensagens e responda 10x mais rápido.</p>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto items-center">
+            {/* Bloco 2 - DESTAQUE */}
+            <div className="w-full md:w-1/3 bg-[#ff7b00] rounded-3xl p-10 flex flex-col justify-center min-h-[350px] transform md:-translate-y-4 shadow-[0_30px_60px_rgba(255,123,0,0.2)] md:scale-105 z-20 relative">
+              <div className="text-black font-black text-2xl mb-6">02.</div>
+              <h3 className="text-black font-black text-3xl mb-4 tracking-tight leading-none">Robôs visuais & <br />Automação.</h3>
+              <p className="text-black/80 font-medium text-sm leading-relaxed mb-8">
+                Crie cadências de atendimento sem precisar de código. Arraste blocos, envie áudios prontos e filtre os clientes automaticamente.
+              </p>
+              <Link href="/register" className="flex items-center gap-2 text-black font-black uppercase text-sm tracking-widest hover:pl-2 transition-all">
+                SAIBA MAIS <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
 
+            {/* Bloco 3 */}
+            <div className="w-full md:w-1/3 bg-[#111111] border border-white/5 rounded-3xl md:rounded-l-none md:border-l-0 p-10 flex flex-col justify-center min-h-[300px] hover:bg-[#161616] transition-colors">
+              <div className="text-[#ff7b00] font-black text-2xl mb-6">03.</div>
+              <h3 className="text-white font-bold text-xl mb-4">Kanban Financeiro</h3>
+              <p className="text-zinc-500 text-sm leading-relaxed">Acompanhe cards com valores somados ao vivo. Saiba o momento exato em que a receita é gerada pela equipe.</p>
+            </div>
+
+          </div>
+        </section>
+
+        {/* BOTTOM SECTION - GRÁFICOS E CONFIANÇA */}
+        <section className="py-20 px-8 max-w-[1400px] mx-auto border-t border-white/5">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
+
+            {/* Esquerda - Gráfico Abstrato */}
+            <div className="w-full lg:w-1/2 relative h-[450px] flex items-center justify-center">
+
+              {/* Linha do gráfico subindo */}
+              <svg className="absolute w-full h-[70%] top-[30%] text-[#ff7b00] overflow-visible" viewBox="0 0 500 200" fill="none">
+                <path d="M 0,150 Q 80,100 150,180 T 300,50 T 500,0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+
+                {/* Pontos de Intersecção Orbitando */}
+                <circle cx="115" cy="140" r="12" fill="#070707" stroke="#ff7b00" strokeWidth="4" className="animate-pulse" />
+                <circle cx="225" cy="120" r="12" fill="#070707" stroke="#ff7b00" strokeWidth="4" className="animate-pulse" />
+                <circle cx="400" cy="25" r="12" fill="#070707" stroke="#ff7b00" strokeWidth="4" className="animate-pulse" />
+              </svg>
+
+              {/* Widgets do Gráfico */}
+              <div className="absolute top-0 left-0 bg-[#121212]/90 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-2xl z-10 w-56">
+                <div className="text-[#ff7b00] text-sm font-bold mb-1">R$ 15.000 (MÉDIA)</div>
+                <div className="text-xs text-zinc-500 mb-4 leading-tight">Ticket médio atualizado após fechamentos rápidos de hoje.</div>
+                <div className="h-12 w-full flex items-end gap-1 opacity-50">
+                  {[40, 60, 45, 80, 50, 90, 70, 100, 60].map((h, i) => (
+                    <div key={i} style={{ height: `${h}%` }} className="w-full bg-[#ff7b00] rounded-sm"></div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="absolute bottom-10 right-0 lg:-right-10 bg-[#121212]/90 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-2xl z-10 w-64 backdrop-saturate-150">
+                <div className="text-white text-2xl font-bold tracking-tight mb-1">45.000 Lds</div>
+                <div className="text-xs text-zinc-400 mb-4 leading-relaxed">Fluxo capturado de automações integradas na nuvem.</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-[#ff7b00] w-[80%] h-full"></div>
+                  </div>
+                  <span className="text-[#ff7b00] text-xs font-bold">80%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Direita - Textos Finais */}
+            <div className="w-full lg:w-1/2 flex flex-col gap-6">
+              <h2 className="text-4xl md:text-5xl lg:text-5xl font-bold text-white leading-tight tracking-tight">
+                Plataforma escaladora <br />
+                <span className="text-zinc-500">agora & em qualquer lugar.</span>
+              </h2>
+
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className="w-5 h-5 text-white fill-current" />
+                ))}
+              </div>
+
+              <p className="text-zinc-400 text-sm max-w-lg leading-relaxed mt-4">
+                A FLY UP integra o que há de mais eficiente em captação ativa. Com pipelines fluidos, respostas velozes e um Kanban inteligente, o futuro do seu negócio começa no primeiro clique.
+              </p>
+
+              <p className="text-zinc-400 text-sm max-w-lg leading-relaxed">
+                Experimente nosso pacote Starter ou garanta a velocidade e automação que sua equipe exige no plano Pro.
+              </p>
+
+              <div className="flex items-center gap-8 mt-6">
+                <Link href="/register" className="bg-[#ff7b00] text-black font-bold uppercase text-sm tracking-wider px-8 py-4 rounded-full hover:bg-white transition-colors duration-300">
+                  Iniciar Avaliação Grátis <ArrowRight className="inline ml-2 w-4 h-4" />
+                </Link>
+                <Link href="#pricing" className="text-zinc-400 font-medium text-sm hover:text-white transition-colors">
+                  Conhecer os Planos ?
+                </Link>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* Pricing Rápido Opcional (apenas para não perder a navegação) */}
+        <section id="pricing" className="py-20 border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-8 text-center">
+            <h2 className="text-3xl font-bold text-white mb-10">Planos escaláveis para o seu cenário.</h2>
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto opacity-80 hover:opacity-100 transition-opacity">
               {/* Starter */}
-              <div className="bg-[#0a0a0a] border border-white/5 hover:border-white/10 transition-colors rounded-3xl p-10 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-2">Starter</h3>
-                  <p className="text-zinc-500 text-sm mb-6 h-10">Controle do funil seguro e imediato.</p>
-                  <div className="mb-8 font-black text-4xl text-white">
-                    R$ 97 <span className="text-lg text-zinc-500 font-medium">/mês</span>
-                  </div>
-                  <ul className="space-y-4 mb-8">
-                    <li className="flex gap-3 text-zinc-400 items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-white/30 shrink-0" />
-                      <span>Licença para 1 Usuário Mestre</span>
-                    </li>
-                    <li className="flex gap-3 text-zinc-400 items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-white/30 shrink-0" />
-                      <span>Caixa de Entrada Unificada</span>
-                    </li>
-                    <li className="flex gap-3 text-zinc-400 items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-white/30 shrink-0" />
-                      <span>Kanban de Vendas Ilimitado</span>
-                    </li>
-                  </ul>
-                </div>
-                <Link href="/register" className="w-full py-4 rounded-full border border-white/10 text-white font-bold text-sm text-center hover:bg-white/5 transition-all">
-                  Assinar Starter
-                </Link>
+              <div className="p-8 border border-white/10 rounded-3xl bg-[#0a0a0a]">
+                <h3 className="text-xl font-bold text-white">Starter</h3>
+                <div className="text-3xl font-black text-white mt-4 mb-6">R$ 97 <span className="text-sm font-normal text-zinc-500">/mês</span></div>
+                <Link href="/register" className="block w-full text-center border tracking-wider border-[#ff7b00] text-[#ff7b00] py-3 rounded-full text-sm font-bold hover:bg-[#ff7b00] hover:text-black transition-colors">Assinar</Link>
               </div>
-
-              {/* Pro (Highlighted) */}
-              <div className="bg-gradient-to-b from-[#111] to-[#0a0a0a] border border-[#ff7b00]/30 rounded-3xl p-10 flex flex-col justify-between relative shadow-[0_0_50px_rgba(255,123,0,0.05)] transform lg:-translate-y-4">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#ff7b00] text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
-                  Mais Popular
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-[#ff7b00] mb-2">Pro</h3>
-                  <p className="text-zinc-400 text-sm mb-6 h-10">Equipes de prospecção com autonomia total.</p>
-                  <div className="mb-8 font-black text-4xl text-white">
-                    R$ 197 <span className="text-lg text-zinc-500 font-medium">/mês</span>
-                  </div>
-                  <ul className="space-y-4 mb-8">
-                    <li className="flex gap-3 text-white font-medium items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" />
-                      <span>Até 5 colaboradores logados</span>
-                    </li>
-                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" />
-                      <span>Sugestão de Respostas IA</span>
-                    </li>
-                    <li className="flex gap-3 text-zinc-300 items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" />
-                      <span>Robôs Flow & Disparos</span>
-                    </li>
-                  </ul>
-                </div>
-                <Link href="/register" className="w-full py-4 rounded-full bg-[#ff7b00] text-black font-black uppercase tracking-wider text-sm text-center hover:bg-[#e66a00] transition-colors shadow-lg">
-                  Assinar Pro
-                </Link>
+              {/* Pro */}
+              <div className="p-8 border-2 border-[#ff7b00] rounded-3xl bg-[#111111] transform md:-translate-y-4">
+                <h3 className="text-xl font-bold text-[#ff7b00]">Pro</h3>
+                <div className="text-3xl font-black text-white mt-4 mb-6">R$ 197 <span className="text-sm font-normal text-zinc-500">/mês</span></div>
+                <Link href="/register" className="block w-full text-center bg-[#ff7b00] text-black tracking-wider py-3 rounded-full text-sm font-bold hover:bg-white transition-colors">Assinar Agora</Link>
               </div>
-
               {/* Enterprise */}
-              <div className="bg-[#0a0a0a] border border-white/5 hover:border-white/10 transition-colors rounded-3xl p-10 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-2">Enterprise</h3>
-                  <p className="text-zinc-500 text-sm mb-6 h-10">Painel CFO para múltiplos gestores.</p>
-                  <div className="mb-8 font-black text-4xl text-white">
-                    R$ 289 <span className="text-lg text-zinc-500 font-medium">/mês</span>
-                  </div>
-                  <ul className="space-y-4 mb-8">
-                    <li className="flex gap-3 text-zinc-400 items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-white/30 shrink-0" />
-                      <span>Equipe ilimitada</span>
-                    </li>
-                    <li className="flex gap-3 text-zinc-400 items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-white/30 shrink-0" />
-                      <span>Métricas de Receita / CFO</span>
-                    </li>
-                    <li className="flex gap-3 text-zinc-400 items-start text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-white/30 shrink-0" />
-                      <span>Suporte Head 24hrs</span>
-                    </li>
-                  </ul>
-                </div>
-                <Link href="/register" className="w-full py-4 rounded-full border border-white/10 text-white font-bold text-sm text-center hover:bg-white/5 transition-all">
-                  Assinar Enterprise
-                </Link>
+              <div className="p-8 border border-white/10 rounded-3xl bg-[#0a0a0a]">
+                <h3 className="text-xl font-bold text-white">Enterprise</h3>
+                <div className="text-3xl font-black text-white mt-4 mb-6">R$ 289 <span className="text-sm font-normal text-zinc-500">/mês</span></div>
+                <Link href="/register" className="block w-full text-center border tracking-wider border-white/20 text-white py-3 rounded-full text-sm font-bold hover:bg-white/10 transition-colors">Falar com Consultor</Link>
               </div>
-
             </div>
           </div>
         </section>
 
       </main>
 
-      <footer className="py-12 px-6 border-t border-white/5 bg-[#0a0a0a] text-center">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <img src="/logo.png" alt="FLY UP CRM" className="h-8 w-auto object-contain opacity-40 grayscale hover:grayscale-0 transition-all" />
-
-          <div className="flex gap-6 text-sm text-zinc-500 font-semibold uppercase tracking-wider">
-            <Link href="#" className="hover:text-white transition-colors">Termos</Link>
-            <Link href="#" className="hover:text-white transition-colors">Privacidade</Link>
-            <Link href="#contato" className="hover:text-white transition-colors">Suporte</Link>
-          </div>
-        </div>
-        <div className="mt-12 text-xs text-zinc-600 font-medium tracking-wide uppercase">
-          &copy; {new Date().getFullYear()} FLY UP Tech LTDA. Todos os direitos reservados.
-        </div>
+      <footer className="py-10 border-t border-white/5 text-center px-6">
+        <p className="text-xs text-zinc-600 font-bold uppercase tracking-wider">&copy; {new Date().getFullYear()} FLY UP SOFTWARE B2B. TODOS OS DIREITOS RESERVADOS.</p>
       </footer>
+
     </div>
   )
 }
