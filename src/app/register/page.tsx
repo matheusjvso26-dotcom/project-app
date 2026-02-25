@@ -102,6 +102,25 @@ export default async function RegisterPage({
                         </div>
 
                         <div>
+                            <label htmlFor="phone" className="block text-sm font-medium text-card-foreground">
+                                WhatsApp do Responsável
+                            </label>
+                            <div className="mt-1 relative rounded-md shadow-sm">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span className="text-muted-foreground text-sm font-bold ml-1 border-r border-border pr-2 py-1 flex items-center">BR</span>
+                                </div>
+                                <input
+                                    id="phone"
+                                    name="phone"
+                                    type="tel"
+                                    required
+                                    className="focus:ring-primary focus:border-primary block w-full pl-[52px] sm:text-sm border-border/50 rounded-lg py-3 bg-background text-foreground outline-none transition-all"
+                                    placeholder="(11) 99999-9999"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
                             <label htmlFor="password" className="block text-sm font-medium text-card-foreground">
                                 Senha Segura
                             </label>
@@ -125,7 +144,7 @@ export default async function RegisterPage({
                                 type="submit"
                                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md hover:shadow-lg text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
                             >
-                                Começar Teste de 14 Dias Grátis
+                                Iniciar Avaliação de 7 Dias
                             </button>
                         </div>
 

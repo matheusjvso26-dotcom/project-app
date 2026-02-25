@@ -26,6 +26,10 @@ model Organization {
   closureMinutes Int      @default(240) // Fecha conversas sozinhas em 4 horas (default)
   fixedCosts     Float    @default(0)   // Para o CFO Module (Phase 10)
   
+  status         String   @default("PENDING") // PENDING, ACTIVE, SUSPENDED
+  trialEndsAt    DateTime?
+  ownerPhone     String?  // WhatsApp informado no registro para o Super Admin
+  
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -46,6 +50,7 @@ model User {
   name           String
   avatarUrl      String?      // Optional profile picture URL
   role           String       @default("SDR") // ADMIN, CLOSER, SDR
+  status         String       @default("PENDING") // PENDING, ACTIVE, SUSPENDED
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
