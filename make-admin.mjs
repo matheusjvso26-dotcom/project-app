@@ -27,6 +27,13 @@ async function main() {
         }
     });
 
+    await prisma.user.update({
+        where: { email },
+        data: {
+            status: 'ACTIVE'
+        }
+    });
+
     console.log('✅ Organização ativada com sucesso!');
     console.log('Você já pode fazer o login em app.fire675.com/login');
 }

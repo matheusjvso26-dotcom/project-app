@@ -24,13 +24,56 @@ const initialNodes: Node[] = [
     {
         id: 'start',
         type: 'input',
-        data: { label: 'Início (Gatilho)' },
-        position: { x: 250, y: 50 },
-        style: { background: '#1c1c1c', color: '#ff7b00', border: '1px solid #ff7b00', borderRadius: '8px', fontWeight: 'bold' }
+        data: { label: 'Início (Gatilho Webhook)' },
+        position: { x: 400, y: 50 },
+        style: { background: '#1c1c1c', color: '#ff7b00', border: '2px solid #ff7b00', borderRadius: '12px', fontWeight: 'bold', minWidth: '200px', textAlign: 'center' }
+    },
+    {
+        id: 'msg-1',
+        data: { label: '📝 Saudação Textual (Humanizada)\n\n"Olá! Que bom ter você aqui. Tudo bem?"' },
+        position: { x: 400, y: 150 },
+        style: { background: '#2a2a2a', color: '#fff', border: '1px solid #ffffff20', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px' }
+    },
+    {
+        id: 'audio-1',
+        data: { label: '🎙️ Enviar Áudio (.ogg)\n\n[audio_pitch_vendas.ogg]' },
+        position: { x: 400, y: 260 },
+        style: { background: '#1e3a8a', color: '#fff', border: '1px solid #3b82f650', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px', boxShadow: '0 0 15px rgba(59, 130, 246, 0.2)' }
+    },
+    {
+        id: 'menu-1',
+        data: { label: '🤖 Menu de Opções (Espera)\n\n1 - Falar c/ Vendedor\n2 - Tabela de Preços\n3 - Finalizar' },
+        position: { x: 400, y: 370 },
+        style: { background: '#1c1c1c', color: '#fff', border: '1px solid #ffffff40', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px' }
+    },
+    {
+        id: 'act-1',
+        data: { label: '🧑‍💻 Transbordo (Handoff)\n\nAtribuir para: Matheus' },
+        position: { x: 150, y: 520 },
+        style: { background: '#064e3b', color: '#10b981', border: '1px solid #059669', borderRadius: '8px', minWidth: '180px', fontSize: '11px', padding: '10px' }
+    },
+    {
+        id: 'act-2',
+        data: { label: '📄 Ficha Prospecto\n\nEnviar PDF: catalogo.pdf' },
+        position: { x: 400, y: 520 },
+        style: { background: '#450a0a', color: '#f87171', border: '1px solid #dc2626', borderRadius: '8px', minWidth: '180px', fontSize: '11px', padding: '10px' }
+    },
+    {
+        id: 'act-3',
+        data: { label: '✅ Finalizar no CRM\n\nMudar Stage -> Pós Venda' },
+        position: { x: 650, y: 520 },
+        style: { background: '#1c1c1c', color: '#a1a1aa', border: '1px dashed #52525b', borderRadius: '8px', minWidth: '180px', fontSize: '11px', padding: '10px' }
     }
 ]
 
-const initialEdges: Edge[] = []
+const initialEdges: Edge[] = [
+    { id: 'e-start-msg1', source: 'start', target: 'msg-1', animated: true, style: { stroke: '#ff7b00', strokeWidth: 2 } },
+    { id: 'e-msg1-audio1', source: 'msg-1', target: 'audio-1', animated: true, style: { stroke: '#ff7b00', strokeWidth: 2 } },
+    { id: 'e-audio1-menu', source: 'audio-1', target: 'menu-1', animated: true, style: { stroke: '#ff7b00', strokeWidth: 2 } },
+    { id: 'e-menu-act1', source: 'menu-1', target: 'act-1', animated: true, label: 'Se Opção 1', style: { stroke: '#10b981', strokeWidth: 2 } },
+    { id: 'e-menu-act2', source: 'menu-1', target: 'act-2', animated: true, label: 'Se Opção 2', style: { stroke: '#f87171', strokeWidth: 2 } },
+    { id: 'e-menu-act3', source: 'menu-1', target: 'act-3', animated: true, label: 'Se Opção 3', style: { stroke: '#52525b', strokeWidth: 2 } },
+]
 
 export function FlowBuilder({ botName, onBack }: { botName: string, onBack: () => void }) {
     const [nodes, setNodes] = useState<Node[]>(initialNodes)
