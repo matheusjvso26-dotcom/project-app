@@ -11,8 +11,10 @@ export default async function SaasApprovalPage() {
         redirect('/login')
     }
 
-    // TODO: Adicionar checagem real de Super Admin (exemplo: e-mail seu chumbado ou flag isSuperAdmin)
-    // if(user.email !== 'meu-email@master.com') redirect('/dashboard')
+    // Trava de Super Admin baseada no e-mail do dono da aplicação
+    if (user.email !== 'matheusjvso4@gmail.com') {
+        redirect('/dashboard')
+    }
 
     const pendingOrgs = await getPendingOrganizations()
 
