@@ -96,68 +96,72 @@ export async function toggleBotStatus(conversationId: string, isBotActive: boole
  * Envia uma mensagem de um Atendente/Usuário para o Lead via WhatsApp 
  */
 export async function sendMessage(conversationId: string, content: string) {
-    const user = await requireUser()
-
-    // 1. Validar propriedade e obter formato do lead
-    const conversation = await prisma.conversation.findUnique({
-        where: { id: conversationId },
-        include: { lead: true }
-    })
-
-    if (!conversation || conversation.organizationId !== user.organizationId) {
-        throw new Error("Chat não encontrado ou permissão negada.")
-    }
-
-    // Interceptar comando "/agenda" antes de enviar para a API da Meta
-    let messageContent = content
-    let isAgendaCommand = false
     try {
-        const agendaResult = await processAgendaCommand(conversation.leadId, content)
-        if (agendaResult) {
-            messageContent = agendaResult
-            isAgendaCommand = true
+        const user = await requireUser()
+
+        // 1. Validar propriedade e obter formato do lead
+        const conversation = await prisma.conversation.findUnique({
+            where: { id: conversationId },
+            include: { lead: true }
+        })
+
+        if (!conversation || conversation.organizationId !== user.organizationId) {
+            throw new Error("Chat não encontrado ou permissão negada.")
         }
-    } catch (cmdErr: any) {
-        throw new Error(cmdErr.message || "Erro durante agendamento pela IA.")
-    }
 
-    // 2. Disparar API do WhatsApp (Provedor Dinâmico: Mock ou Real)
-    const provider = getWhatsAppProvider()
-    const result = await provider.sendMessage({
-        to: conversation.lead.phone,
-        text: messageContent
-    })
-
-    if (!result.success) {
-        // Toleramos a falha visual no dashboard mas é logada se o provider cair
-        console.error("WhatsApp Provider Error:", result.error)
-    }
-
-    // 3. Registrar "Saída" no banco de dados independentemente do mock para consistência visual
-    const novaMensagem = await prisma.message.create({
-        data: {
-            conversationId: conversation.id,
-            direction: "OUTBOUND",
-            content: messageContent,
-            type: "TEXT",
-            senderId: user.id,
-            status: result.success ? "SENT" : "FAILED",
-            providerId: result.messageId || null
+        // Interceptar comando "/agenda" antes de enviar para a API da Meta
+        let messageContent = content
+        try {
+            const agendaResult = await processAgendaCommand(conversation.leadId, content)
+            if (agendaResult) {
+                messageContent = agendaResult
+            }
+        } catch (cmdErr: any) {
+            console.error("[AGENDA ERROR]", cmdErr)
         }
-    })
 
-    // Atualizar updatedAt da conversa para ela subir na lista
-    await prisma.conversation.update({
-        where: { id: conversation.id },
-        data: { updatedAt: new Date() }
-    })
+        // 2. Disparar API do WhatsApp (Provedor Dinâmico: Mock ou Real)
+        const provider = getWhatsAppProvider()
+        const result = await provider.sendMessage({
+            to: conversation.lead.phone,
+            text: messageContent
+        })
 
-    return {
-        id: novaMensagem.id,
-        content: novaMensagem.content,
-        sender: 'me' as const,
-        time: novaMensagem.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        status: 'sent' as const
+        if (!result.success) {
+            console.error("[WHATSAPP API ERROR]", result.error)
+        }
+
+        // 3. Registrar "Saída" no banco de dados independentemente do mock para consistência visual
+        const novaMensagem = await prisma.message.create({
+            data: {
+                conversationId: conversation.id,
+                direction: "OUTBOUND",
+                content: messageContent,
+                type: "TEXT",
+                senderId: user.id,
+                status: result.success ? "SENT" : "FAILED",
+                providerId: result.messageId || null
+            }
+        })
+
+        // Atualizar updatedAt da conversa para ela subir na lista
+        await prisma.conversation.update({
+            where: { id: conversation.id },
+            data: { updatedAt: new Date() }
+        })
+
+        revalidatePath('/dashboard/inbox')
+
+        return {
+            id: novaMensagem.id,
+            content: novaMensagem.content,
+            sender: 'me' as const,
+            time: novaMensagem.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            status: 'sent' as const
+        }
+    } catch (error: any) {
+        console.error("[SendMessage Action Error]", error)
+        throw new Error(error.message || "Falha intermitente ao enviar mensagem. Tente novamente.")
     }
 }
 
