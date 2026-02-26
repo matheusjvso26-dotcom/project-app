@@ -147,6 +147,19 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                 const nodes: any[] = flow.nodes || []
                 const edges: any[] = flow.edges || []
 
+                // FUNÇÃO DE PURIFICAÇÃO DE TEXTO PARA O LEAD
+                // Ex: '📝 Saudação Textual\n\n"Olá! Tudo bem?"' -> 'Olá! Tudo bem?'
+                const getCleanText = (label: string) => {
+                    if (!label) return ""
+                    const parts = label.split('\n\n')
+                    let text = parts.length > 1 ? parts.slice(1).join('\n\n') : label
+                    // Remove aspas que usamos para design no canvas
+                    if (text.startsWith('"') && text.endsWith('"')) {
+                        text = text.slice(1, -1)
+                    }
+                    return text
+                }
+
                 // INTERPRETADOR NATIVO REACT FLOW
                 if (nodes.length > 1) { // Tem mais que o Start apenas
                     if (isNewLead) {
@@ -155,7 +168,9 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                             const edge = edges.find(e => e.source === startNode.id)
                             if (edge) {
                                 const nextNode = nodes.find(n => n.id === edge.target)
-                                if (nextNode && nextNode.data?.label) responseText = nextNode.data.label
+                                if (nextNode && nextNode.data?.label) {
+                                    responseText = getCleanText(nextNode.data.label)
+                                }
                             }
                         }
                     } else {
@@ -165,14 +180,50 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                         })
 
                         if (lastBotMessage && lastBotMessage.content) {
-                            const currentNode = nodes.find(n => n.data?.label === lastBotMessage.content)
+                            // Encontrar de qual nó saiu a última mensagem comparando o texto limpo
+                            const currentNode = nodes.find(n => getCleanText(n.data?.label) === lastBotMessage.content)
+
                             if (currentNode) {
                                 const outgoingEdges = edges.filter(e => e.source === currentNode.id)
-                                // Simplificação: pega a primeira aresta que sai do nó anterior, sem validar intencionalmente condição
+
                                 if (outgoingEdges.length > 0) {
-                                    const nextNode = nodes.find(n => n.id === outgoingEdges[0].target)
-                                    if (nextNode && nextNode.data?.label) responseText = nextNode.data.label
+                                    let nextEdge = outgoingEdges[0]
+
+                                    // IMPLEMENTAÇÃO DE MENUS / MULTI-BRANCHING
+                                    if (outgoingEdges.length > 1) {
+                                        const userInput = incomingText.trim().toLowerCase()
+
+                                        const matchedEdge = outgoingEdges.find(e => {
+                                            if (!e.label) return false
+                                            const labelParts = e.label.toLowerCase().split(' ')
+                                            // Se o cliente digitou algo que bate com o número da opção (Ex: "1")
+                                            // A label da Edge é "Se Opção 1", logo labelParts[2] == "1"
+                                            return labelParts.some((part: string) => userInput.includes(part)) ||
+                                                userInput === e.label.replace(/\D/g, '') // match by digit only
+                                        })
+
+                                        if (matchedEdge) nextEdge = matchedEdge
+                                    }
+
+                                    const nextNode = nodes.find(n => n.id === nextEdge.target)
+                                    if (nextNode && nextNode.data?.label) {
+                                        let textCandidate = getCleanText(nextNode.data.label)
+
+                                        // MOCK: Para testarmos o nó de ÁUDIO que o usuário pediu
+                                        if (nextNode.id.startsWith('audio-')) {
+                                            responseText = "*(Simulação de Áudio)* 🎙️: [Reproduzindo arquivo de vendas...]"
+                                        } else if (nextNode.id.startsWith('act-1')) {
+                                            responseText = "*(Sistema)* Ação de Transbordo (Handoff) disparada para Atendente Humano na Caixa de Entrada!"
+                                        } else if (nextNode.id.startsWith('act-3')) {
+                                            responseText = "*(Sistema)* Lead movido para próxima fase no Kanban."
+                                        } else {
+                                            responseText = textCandidate
+                                        }
+                                    }
                                 }
+                            } else {
+                                // Se não achar o nó (usuário mexeu no canvas e cortou o fluxo)
+                                responseText = "Desculpe, o fluxo de automação deste atendimento foi descontinuado ou repensado. Posso ajudar em algo mais?"
                             }
                         }
                     }
