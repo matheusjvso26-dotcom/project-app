@@ -358,7 +358,7 @@ export async function toggleTag(conversationId: string, tag: string) {
 }
 
 /**
- * Puxa o histórico de mensagens de uma conversa e solicita uma sugestão de cópia para a OpenAI
+ * Puxa o histórico de mensagens de uma conversa e solicita uma sugestão de cópia para a IA do Google Gemini
  */
 export async function generateAiReply(conversationId: string) {
     try {
@@ -380,70 +380,65 @@ export async function generateAiReply(conversationId: string) {
             throw new Error("Chat não encontrado ou permissão negada.")
         }
 
-        if (!process.env.OPENAI_API_KEY) {
-            throw new Error("A chave da OpenAI (OPENAI_API_KEY) não está configurada no servidor.")
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error("A chave do Google Gemini (GEMINI_API_KEY) não está configurada no servidor.")
         }
 
-        // 2. Formatar o mapa de conversas para envio a OpenAI
+        // 2. Formatar o mapa de conversas para envio a Gemini API
         const reversedMessages = [...conversation.messages].reverse()
-        const openAiMessages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> = []
+        const geminiContentBlocks: Array<{ role: 'user' | 'model', parts: { text: string }[] }> = []
 
-        // System Prompt Vendedor
-        openAiMessages.push({
-            role: "system",
-            content: `Você é um Assistente de Vendas inteligente e educado trabalhando no WhatsApp de uma empresa.
-O Lead com quem estamos conversando se chama "${conversation.lead.name}".
-Sua missão é ler o contexto recente da conversa e redigir uma sugestão ágil, calorosa e comercial para o atendente (humano) enviar em seguida.
-A resposta deve ser curta (1 a 3 parágrafos no máximo), ir direto ao ponto respondendo as dores do lead, usar 1 ou 2 emojis corporativos discretos e conduzir para o fechamento. 
-Fale sempre em Português do Brasil de maneira natural para o WhatsApp, evite ser robótico.`
-        })
-
-        // Adiciona o histórico
+        // Adiciona o histórico formatado
         reversedMessages.forEach((msg) => {
             if (!msg.content) return
 
             let prefix = ""
             if (msg.direction === 'INBOUND') {
                 prefix = `[Cliente (${conversation.lead.name})]: `
-                openAiMessages.push({ role: 'user', content: prefix + msg.content })
+                geminiContentBlocks.push({ role: 'user', parts: [{ text: prefix + msg.content }] })
             } else {
                 prefix = `[Nós (Empresa)]: `
-                openAiMessages.push({ role: 'assistant', content: prefix + msg.content })
+                geminiContentBlocks.push({ role: 'model', parts: [{ text: prefix + msg.content }] })
             }
         })
 
-        // 3. Chamar Endpoint via fetch cru
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const systemInstruction = `Você é um Assistente de Vendas inteligente e educado trabalhando no WhatsApp de uma empresa. O Lead com quem estamos conversando se chama "${conversation.lead.name}". Sua missão é ler o contexto recente da conversa e redigir uma sugestão ágil, calorosa e comercial para o atendente (humano) enviar em seguida. A resposta deve ser curta (1 a 3 parágrafos no máximo), ir direto ao ponto respondendo as dores do lead, usar 1 ou 2 emojis corporativos discretos e conduzir para o fechamento. Fale sempre em Português do Brasil de maneira natural para o WhatsApp, evite ser robótico.`
+
+        // 3. Chamar Endpoint via fetch cru da API do Google Gemini
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: openAiMessages,
-                temperature: 0.7,
-                max_tokens: 250
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                },
+                contents: geminiContentBlocks,
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 250
+                }
             })
         })
 
         if (!response.ok) {
             const errorBody = await response.text()
-            console.error("[generateAiReply] OpenAI HTTP error body:", errorBody)
-            throw new Error("Falha na API da OpenAI (Verifique limites e token).")
+            console.error("[generateAiReply] Google Gemini HTTP error body:", errorBody)
+            throw new Error("Falha na API do Google Gemini (Verifique limites e token).")
         }
 
         const data = await response.json()
-        const suggestion = data.choices[0]?.message?.content
+        const suggestion = data.candidates?.[0]?.content?.parts?.[0]?.text
 
         if (!suggestion) {
-            throw new Error("A Inteligência Artificial retornou um conteúdo vazio.")
+            throw new Error("A Inteligência Artificial do Google retornou um conteúdo vazio.")
         }
 
         return { suggestion: suggestion.trim() }
 
     } catch (error: any) {
         console.error("[generateAiReply] Action Error:", error)
-        throw new Error(error.message || "Erro inesperado ao gerar reposta com IA.")
+        throw new Error(error.message || "Erro inesperado ao gerar reposta com o Gemini.")
     }
 }
