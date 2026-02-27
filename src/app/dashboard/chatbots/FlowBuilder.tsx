@@ -30,39 +30,39 @@ const initialNodes: Node[] = [
     },
     {
         id: 'msg-1',
-        data: { label: '📝 Saudação Textual (Humanizada)\n\n"Olá! Que bom ter você aqui. Tudo bem?"' },
+        data: { label: '📝 Boas-Vindas\n\n"Fala Matheus! Aqui é a inteligência do sistema FLY UP operando em alta performance! 🚀\\n\\nO seu servidor acaba de enviar essa mensagem pelo botEngine oficial via Meta API."' },
         position: { x: 400, y: 150 },
-        style: { background: '#2a2a2a', color: '#fff', border: '1px solid #ffffff20', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px' }
+        style: { background: '#2a2a2a', color: '#fff', border: '1px solid #ffffff20', borderRadius: '8px', minWidth: '250px', fontSize: '12px', padding: '10px' }
     },
     {
         id: 'audio-1',
-        data: { label: '🎙️ Enviar Áudio (.ogg)\n\n[audio_pitch_vendas.ogg]' },
-        position: { x: 400, y: 260 },
-        style: { background: '#1e3a8a', color: '#fff', border: '1px solid #3b82f650', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px', boxShadow: '0 0 15px rgba(59, 130, 246, 0.2)' }
+        data: { label: '🎙️ Áudio Dinâmico (.ogg)\n\n[audio_explicacao.ogg]' },
+        position: { x: 400, y: 280 },
+        style: { background: '#1e3a8a', color: '#fff', border: '1px solid #3b82f650', borderRadius: '8px', minWidth: '250px', fontSize: '11px', padding: '10px', boxShadow: '0 0 15px rgba(59, 130, 246, 0.2)' }
     },
     {
         id: 'menu-1',
-        data: { label: '🤖 Menu de Opções (Espera)\n\n1 - Falar c/ Vendedor\n2 - Tabela de Preços\n3 - Finalizar' },
-        position: { x: 400, y: 370 },
-        style: { background: '#1c1c1c', color: '#fff', border: '1px solid #ffffff40', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px' }
+        data: { label: '🤖 Menu de Ações Rápida\n\nComo quer testar a ramificação interativa?\n\n1 - Quero ver o Transbordo (Humano)\n2 - Mandar pro Kanban\n3 - Me conte uma piada' },
+        position: { x: 400, y: 390 },
+        style: { background: '#1c1c1c', color: '#fff', border: '1px solid #ffffff40', borderRadius: '8px', minWidth: '250px', fontSize: '11px', padding: '10px' }
     },
     {
         id: 'act-1',
-        data: { label: '🧑‍💻 Transbordo (Handoff)\n\nAtribuir para: Matheus' },
-        position: { x: 150, y: 520 },
-        style: { background: '#064e3b', color: '#10b981', border: '1px solid #059669', borderRadius: '8px', minWidth: '180px', fontSize: '11px', padding: '10px' }
-    },
-    {
-        id: 'act-2',
-        data: { label: '📄 Ficha Prospecto\n\nEnviar PDF: catalogo.pdf' },
-        position: { x: 400, y: 520 },
-        style: { background: '#450a0a', color: '#f87171', border: '1px solid #dc2626', borderRadius: '8px', minWidth: '180px', fontSize: '11px', padding: '10px' }
+        data: { label: '🧑‍💻 Transbordo (Handoff)\n\nAtribuir para: Matheus (Dono)' },
+        position: { x: 100, y: 560 },
+        style: { background: '#064e3b', color: '#10b981', border: '1px solid #059669', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px' }
     },
     {
         id: 'act-3',
-        data: { label: '✅ Finalizar no CRM\n\nMudar Stage -> Pós Venda' },
-        position: { x: 650, y: 520 },
-        style: { background: '#1c1c1c', color: '#a1a1aa', border: '1px dashed #52525b', borderRadius: '8px', minWidth: '180px', fontSize: '11px', padding: '10px' }
+        data: { label: '✅ Avançar no CRM\n\nMudar Stage -> Qualificação' },
+        position: { x: 400, y: 560 },
+        style: { background: '#450a0a', color: '#f87171', border: '1px solid #dc2626', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px' }
+    },
+    {
+        id: 'msg-joke',
+        data: { label: '📝 Mandar Piada\n\n"Sabe qual a diferença entre o SaaS e a padaria? Na padaria o pão cai, no SaaS do Matheus o servidor não cai (graças ao Coolify)! 😂"' },
+        position: { x: 700, y: 560 },
+        style: { background: '#2a2a2a', color: '#fff', border: '1px solid #ffffff20', borderRadius: '8px', minWidth: '200px', fontSize: '11px', padding: '10px' }
     }
 ]
 
@@ -71,8 +71,8 @@ const initialEdges: Edge[] = [
     { id: 'e-msg1-audio1', source: 'msg-1', target: 'audio-1', animated: true, style: { stroke: '#ff7b00', strokeWidth: 2 } },
     { id: 'e-audio1-menu', source: 'audio-1', target: 'menu-1', animated: true, style: { stroke: '#ff7b00', strokeWidth: 2 } },
     { id: 'e-menu-act1', source: 'menu-1', target: 'act-1', animated: true, label: 'Se Opção 1', style: { stroke: '#10b981', strokeWidth: 2 } },
-    { id: 'e-menu-act2', source: 'menu-1', target: 'act-2', animated: true, label: 'Se Opção 2', style: { stroke: '#f87171', strokeWidth: 2 } },
-    { id: 'e-menu-act3', source: 'menu-1', target: 'act-3', animated: true, label: 'Se Opção 3', style: { stroke: '#52525b', strokeWidth: 2 } },
+    { id: 'e-menu-act3', source: 'menu-1', target: 'act-3', animated: true, label: 'Se Opção 2', style: { stroke: '#f87171', strokeWidth: 2 } },
+    { id: 'e-menu-joke', source: 'menu-1', target: 'msg-joke', animated: true, label: 'Se Opção 3', style: { stroke: '#52525b', strokeWidth: 2 } },
 ]
 
 export function FlowBuilder({ botName, onBack }: { botName: string, onBack: () => void }) {
