@@ -92,24 +92,34 @@ export async function toggleBotStatus(conversationId: string, isBotActive: boole
     return { success: true }
 }
 
+import { sendTextMessage } from "@/lib/wzapi"
+
 /**
- * Envia uma mensagem de um Atendente/Usuário para o Lead via WhatsApp 
+ * Envia uma mensagem de um Atendente/Usuário para o Lead via WhatsApp (WZAPI)
  */
 export async function sendMessage(conversationId: string, content: string) {
     try {
         const user = await requireUser()
 
-        // 1. Validar propriedade e obter formato do lead
+        // 1. Validar propriedade e obter formato do lead e da Organização para pegar o Token WZAPI
         const conversation = await prisma.conversation.findUnique({
             where: { id: conversationId },
-            include: { lead: true }
+            include: {
+                lead: true,
+                organization: true
+            }
         })
 
         if (!conversation || conversation.organizationId !== user.organizationId) {
             throw new Error("Chat não encontrado ou permissão negada.")
         }
 
-        // Interceptar comando "/agenda" antes de enviar para a API da Meta
+        const org = conversation.organization;
+        if (!org.wzapiInstanceId || org.wzapiStatus !== 'CONNECTED') {
+            throw new Error("Sua Agência não possui um Aparelho WhatsApp (WZAPI) conectado. Escaneie o QRCode em Configurações.");
+        }
+
+        // Interceptar comando "/agenda" antes de enviar para a API (Opcional Mantido)
         let messageContent = content
         try {
             const agendaResult = await processAgendaCommand(conversation.leadId, content)
@@ -120,18 +130,17 @@ export async function sendMessage(conversationId: string, content: string) {
             console.error("[AGENDA ERROR]", cmdErr)
         }
 
-        // 2. Disparar API do WhatsApp (Provedor Dinâmico: Mock ou Real)
-        const provider = getWhatsAppProvider()
-        const result = await provider.sendMessage({
-            to: conversation.lead.phone,
+        // 2. Disparar API do WZAPI
+        const result = await sendTextMessage(org.wzapiInstanceId, org.wzapiToken || '', {
+            number: conversation.lead.phone,
             text: messageContent
         })
 
         if (!result.success) {
-            console.error("[WHATSAPP API ERROR]", result.error)
+            console.error("[WZAPI HTTP ERROR]", result.error)
         }
 
-        // 3. Registrar "Saída" no banco de dados independentemente do mock para consistência visual
+        // 3. Registrar "Saída" no banco de dados
         const novaMensagem = await prisma.message.create({
             data: {
                 conversationId: conversation.id,
@@ -139,12 +148,13 @@ export async function sendMessage(conversationId: string, content: string) {
                 content: messageContent,
                 type: "TEXT",
                 senderId: user.id,
-                status: result.success ? "SENT" : "FAILED",
-                providerId: result.messageId || null
+                status: result.success ? "SENT" : "FAILED", // Em APIs Reais você muda de SENT pra DELIVERED via Webhooks depois
+                // providerId:  Id da mensagem se a API retornar, senão nulo
+                providerId: result?.data?.messageId || null
             }
         })
 
-        // Atualizar updatedAt da conversa para ela subir na lista
+        // Atualizar updatedAt da conversa para ela subir na lista principal do Inbox
         await prisma.conversation.update({
             where: { id: conversation.id },
             data: { updatedAt: new Date() }
@@ -157,7 +167,7 @@ export async function sendMessage(conversationId: string, content: string) {
             content: novaMensagem.content,
             sender: 'me' as const,
             time: novaMensagem.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: 'sent' as const
+            status: result.success ? 'sent' : 'failed' as any
         }
     } catch (error: any) {
         console.error("[SendMessage Action Error]", error)

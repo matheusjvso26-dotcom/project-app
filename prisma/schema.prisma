@@ -16,22 +16,26 @@ datasource db {
 // ---------------------------------------------------------
 
 model Organization {
-  id        String   @id @default(uuid())
-  name           String
-  planTier       String   @default("FREE") // FREE, PRO, ENTERPRISE
-  
-  wabaId         String?  // WhatsApp Business Account ID
-  welcomeMessage String?  @db.Text
-  closureMessage String?  @db.Text
-  closureMinutes Int      @default(240) // Fecha conversas sozinhas em 4 horas (default)
-  fixedCosts     Float    @default(0)   // Para o CFO Module (Phase 10)
-  
-  status         String   @default("PENDING") // PENDING, ACTIVE, SUSPENDED
-  trialEndsAt    DateTime?
-  ownerPhone     String?  // WhatsApp informado no registro para o Super Admin
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id       String @id @default(uuid())
+  name     String
+  planTier String @default("FREE") // FREE, PRO, ENTERPRISE
+
+  wabaId          String? // WhatsApp Business Account ID (Official - Meta)
+  wzapiInstanceId String? // WhatsApp Unofficial Account ID (WZAPI)
+  wzapiToken      String? // JWT Auth Secret do Cliente no WZAPI
+  wzapiStatus     String  @default("DISCONNECTED") // DISCONNECTED, QRCODE_READY, CONNECTED
+
+  welcomeMessage String? @db.Text
+  closureMessage String? @db.Text
+  closureMinutes Int     @default(240) // Fecha conversas sozinhas em 4 horas (default)
+  fixedCosts     Float   @default(0) // Para o CFO Module (Phase 10)
+
+  status      String    @default("PENDING") // PENDING, ACTIVE, SUSPENDED
+  trialEndsAt DateTime?
+  ownerPhone  String? // WhatsApp informado no registro para o Super Admin
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   users         User[]
   leads         Lead[]
@@ -44,19 +48,19 @@ model Organization {
 }
 
 model User {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
-  email          String       @unique
+  email          String   @unique
   name           String
-  avatarUrl      String?      // Optional profile picture URL
-  role           String       @default("SDR") // ADMIN, CLOSER, SDR
-  status         String       @default("PENDING") // PENDING, ACTIVE, SUSPENDED
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  avatarUrl      String? // Optional profile picture URL
+  role           String   @default("SDR") // ADMIN, CLOSER, SDR
+  status         String   @default("PENDING") // PENDING, ACTIVE, SUSPENDED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  dealsOwned     Deal[]
-  messagesSent   Message[]
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dealsOwned        Deal[]
+  messagesSent      Message[]
   pushSubscriptions PushSubscription[]
 }
 
@@ -65,72 +69,72 @@ model User {
 // ---------------------------------------------------------
 
 model Lead {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
-  phone          String       // Primary identifier for WhatsApp
+  phone          String // Primary identifier for WhatsApp
   email          String?
   name           String?
-  tags           String[]     @default([])
-  lgpdConsent    Boolean      @default(false)
-  createdAt      DateTime     @default(now())
+  tags           String[] @default([])
+  lgpdConsent    Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  conversations  Conversation[]
-  deals          Deal[]
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  deals         Deal[]
 }
 
 model Company {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   name           String
   domain         String?
-  tags           String[]     @default([])
-  createdAt      DateTime     @default(now())
+  tags           String[] @default([])
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  contacts       Contact[]
-  deals          Deal[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts     Contact[]
+  deals        Deal[]
 }
 
 model Contact {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   companyId      String?
   name           String
   email          String?
   phone          String?
   jobTitle       String?
-  tags           String[]     @default([])
-  createdAt      DateTime     @default(now())
+  tags           String[] @default([])
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  company      Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
 }
 
 model Pipeline {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
-  name           String       // e.g. "Vendas Nacionais", "Onboarding"
-  createdAt      DateTime     @default(now())
+  name           String // e.g. "Vendas Nacionais", "Onboarding"
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  stages         Stage[]
-  deals          Deal[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stages       Stage[]
+  deals        Deal[]
 }
 
 model Stage {
   id         String   @id @default(uuid())
   pipelineId String
-  name       String   // e.g. "Prospecção", "Apresentação", "Ganha"
+  name       String // e.g. "Prospecção", "Apresentação", "Ganha"
   order      Int      @default(0)
   createdAt  DateTime @default(now())
 
-  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
-  deals      Deal[]
+  pipeline Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals    Deal[]
 }
 
 model Deal {
-  id             String       @id @default(uuid())
+  id             String    @id @default(uuid())
   organizationId String
   pipelineId     String
   stageId        String
@@ -138,19 +142,19 @@ model Deal {
   ownerId        String?
   leadId         String?
   title          String
-  value          Float        @default(0)
-  status         String       @default("OPEN") // OPEN, WON, LOST
-  tags           String[]     @default([])
-  scheduledTo    DateTime?    // Para Phase 9: Agendamentos
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  value          Float     @default(0)
+  status         String    @default("OPEN") // OPEN, WON, LOST
+  tags           String[]  @default([])
+  scheduledTo    DateTime? // Para Phase 9: Agendamentos
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  pipeline       Pipeline     @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
-  stage          Stage        @relation(fields: [stageId], references: [id])
-  company        Company?     @relation(fields: [companyId], references: [id])
-  owner          User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pipeline     Pipeline     @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  stage        Stage        @relation(fields: [stageId], references: [id])
+  company      Company?     @relation(fields: [companyId], references: [id])
+  owner        User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  lead         Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
 }
 
 // ---------------------------------------------------------
@@ -158,33 +162,33 @@ model Deal {
 // ---------------------------------------------------------
 
 model Conversation {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   leadId         String
-  status         String       @default("OPEN") // OPEN, CLOSED, BOT_HANDLING
-  tags           String[]     @default([]) // e.g. "VIP", "Reclamação", "Pensionista"
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  status         String   @default("OPEN") // OPEN, CLOSED, BOT_HANDLING
+  tags           String[] @default([]) // e.g. "VIP", "Reclamação", "Pensionista"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  lead           Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  messages       Message[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  messages     Message[]
 }
 
 model Message {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   conversationId String
-  senderId       String?      // Will be NULL if it is the Lead (Inbound) or Bot
-  type           String       @default("TEXT") // TEXT, MEDIA, TEMPLATE
-  direction      String       // INBOUND, OUTBOUND
-  content        String?      // Contains either text or JSON representation of templates/media
-  status         String       @default("SENT") // SENT, DELIVERED, READ, FAILED
-  providerId     String?      @unique // Armazena o wamid da rede do Facebook para tracking
-  transcription  String?      @db.Text // Armazena transcrição em texto da IA Whisper
-  createdAt      DateTime     @default(now())
+  senderId       String? // Will be NULL if it is the Lead (Inbound) or Bot
+  type           String   @default("TEXT") // TEXT, MEDIA, TEMPLATE
+  direction      String // INBOUND, OUTBOUND
+  content        String? // Contains either text or JSON representation of templates/media
+  status         String   @default("SENT") // SENT, DELIVERED, READ, FAILED
+  providerId     String?  @unique // Armazena o wamid da rede do Facebook para tracking
+  transcription  String?  @db.Text // Armazena transcrição em texto da IA Whisper
+  createdAt      DateTime @default(now())
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User?        @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?        @relation(fields: [senderId], references: [id], onDelete: SetNull)
 }
 
 // ---------------------------------------------------------
@@ -192,16 +196,16 @@ model Message {
 // ---------------------------------------------------------
 
 model Automation {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   name           String
-  triggerType    String       // e.g., "DEAL_STAGE_CHANGED", "INBOUND_MESSAGE"
-  workflowJson   String       // Storing nodes and edges JSON (React Flow or similar)
-  isActive       Boolean      @default(true)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  triggerType    String // e.g., "DEAL_STAGE_CHANGED", "INBOUND_MESSAGE"
+  workflowJson   String // Storing nodes and edges JSON (React Flow or similar)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 // ---------------------------------------------------------
@@ -209,11 +213,11 @@ model Automation {
 // ---------------------------------------------------------
 
 model PushSubscription {
-  id        String   @id @default(uuid())
-  userId    String
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  userId   String
+  endpoint String @unique
+  p256dh   String
+  auth     String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
