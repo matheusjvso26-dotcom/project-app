@@ -164,7 +164,10 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
 
                 // INTERPRETADOR NATIVO REACT FLOW
                 if (nodes.length > 1) { // Tem mais que o Start apenas
-                    if (isNewLead) {
+                    const userT = incomingText.trim().toLowerCase()
+                    const isGreeting = ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'boa madruga', 'menu', 'start', 'voltar'].includes(userT)
+
+                    if (isNewLead || isGreeting) {
                         const startNode = nodes.find(n => n.id === 'start')
                         if (startNode) {
                             const edge = edges.find(e => e.source === startNode.id)
