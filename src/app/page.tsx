@@ -40,11 +40,10 @@ export default function Home() {
         <section className="relative pt-16 pb-24 px-6 flex flex-col items-center text-center z-10">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#ff7b00]/15 blur-[150px] rounded-full pointer-events-none -z-10"></div>
 
-          <h1 className="text-4xl md:text-6xl font-black text-white leading-[1.2] mb-6 tracking-tight max-w-[900px] mx-auto">
-            Transforme conversas no WhatsApp em <span className="text-[#ff7b00]">vendas previsíveis</span>
-            <br className="hidden md:block" /> — com funil, automação e métricas em tempo real.
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight mb-8 tracking-tight max-w-[1000px] mx-auto">
+            Transforme conversas no WhatsApp em <span className="text-[#ff7b00]">vendas previsíveis</span> — com funil, automação e métricas em tempo real.
           </h1>
-          <p className="text-lg md:text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed mb-8 font-light">
+          <p className="text-lg md:text-2xl text-zinc-400 max-w-4xl mx-auto leading-relaxed mb-10 font-light">
             Centralize leads, pipeline (Kanban), chatbot WhatsApp Oficial e financeiro em um único painel com KPIs 3D e relatórios de crescimento (MRR, churn, CAC, LTV).
           </p>
 
@@ -64,19 +63,7 @@ export default function Home() {
               Testar grátis por 7 dias
             </Link>
           </div>
-          <p className="text-xs text-zinc-500 mb-16">Sem cartão. Cancelamento em 1 clique. Suporte humano no WhatsApp.</p>
-
-          <div className="w-full max-w-[1000px] h-[300px] sm:h-[500px] relative rounded-t-xl border-t border-x border-[#333] bg-[#0c0c0c] shadow-[0_-20px_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col mx-auto">
-            <div className="h-10 border-b border-[#333] bg-[#1a1a1a] flex items-center px-4 gap-2 shrink-0">
-              <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-              <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-              <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-            </div>
-            <div className="flex-1 w-full bg-black relative">
-              <img src="/mockup-hero.png" alt="Amostra do Sistema" className="absolute top-0 left-0 w-full h-auto object-cover opacity-90 transition-opacity hover:opacity-100" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-[#000000]/50 to-transparent z-10 pointer-events-none"></div>
-            </div>
-          </div>
+          <p className="text-xs text-zinc-500 mb-8 md:mb-16">Sem cartão. Cancelamento em 1 clique. Suporte humano no WhatsApp.</p>
         </section>
 
         {/* 2) PROVA DE DOR */}
