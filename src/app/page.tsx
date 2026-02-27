@@ -40,10 +40,10 @@ export default function Home() {
         <section className="relative pt-16 pb-24 px-6 flex flex-col items-center text-center z-10">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#ff7b00]/15 blur-[150px] rounded-full pointer-events-none -z-10"></div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight mb-8 tracking-tight max-w-[1000px] mx-auto">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] mb-8 tracking-tight w-full max-w-none px-2 lg:px-8 mx-auto">
             Transforme conversas no WhatsApp em <span className="text-[#ff7b00]">vendas previsíveis</span> — com funil, automação e métricas em tempo real.
           </h1>
-          <p className="text-lg md:text-2xl text-zinc-400 max-w-4xl mx-auto leading-relaxed mb-10 font-light">
+          <p className="text-lg md:text-2xl text-zinc-400 w-full max-w-5xl mx-auto leading-relaxed mb-10 font-light">
             Centralize leads, pipeline (Kanban), chatbot WhatsApp Oficial e financeiro em um único painel com KPIs 3D e relatórios de crescimento (MRR, churn, CAC, LTV).
           </p>
 
