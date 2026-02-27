@@ -68,6 +68,13 @@ export async function POST(request: Request) {
 
                 if (msgType === 'text') {
                     textContent = incomingMessage.text?.body || ""
+                } else if (msgType === 'interactive') {
+                    const interactiveObj = incomingMessage.interactive
+                    if (interactiveObj?.type === 'button_reply') {
+                        textContent = interactiveObj.button_reply.id
+                    } else if (interactiveObj?.type === 'list_reply') {
+                        textContent = interactiveObj.list_reply.id
+                    }
                 } else if (msgType === 'document') {
                     mediaId = incomingMessage.document?.id || ""
                     caption = incomingMessage.document?.filename || "Documento"

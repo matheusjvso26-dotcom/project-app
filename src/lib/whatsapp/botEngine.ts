@@ -167,31 +167,40 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                     const userT = incomingText.trim().toLowerCase()
                     const isGreeting = ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'boa madruga', 'menu', 'start', 'voltar'].includes(userT)
 
+                    let nodeToSend: any = null
+
                     if (isNewLead || isGreeting) {
                         const startNode = nodes.find(n => n.id === 'start')
                         if (startNode) {
                             const edge = edges.find(e => e.source === startNode.id)
                             if (edge) {
-                                const nextNode = nodes.find(n => n.id === edge.target)
-                                if (nextNode && nextNode.data?.label) {
-                                    responseText = getCleanText(nextNode.data.label)
-                                }
+                                nodeToSend = nodes.find(n => n.id === edge.target)
                             }
                         }
                     } else {
                         const lastBotMessage = await prisma.message.findFirst({
                             where: { conversationId, direction: 'OUTBOUND', senderId: null },
-                            orderBy: { createdAt: 'desc' }
+                            orderBy: { createdAt: 'desc' },
+                            take: 1
                         })
 
                         if (lastBotMessage && lastBotMessage.content) {
                             // Encontrar de qual nó saiu a última mensagem usando Normalize Tolerance (ignorando spaces)
+                            // Além disso, mensagens interativas não salvam o texto cru do menu com pontuações.
+                            // Mas para o lastBotMessage, como o próprio bot enviou as quebras ou enviaria, usamos o backup content com regex
                             const targetNorm = normalizeForCompare(lastBotMessage.content)
 
                             const currentNode = nodes.find(n => {
-                                const nodeNorm = normalizeForCompare(getCleanText(n.data?.label))
-                                // Validamos tanto matching exato normalizado quanto contains para caixas de mídia simuladas
-                                return nodeNorm === targetNorm || (nodeNorm.length > 10 && targetNorm.includes(nodeNorm))
+                                const originalNodeText = getCleanText(n.data?.label)
+                                const nodeNorm = normalizeForCompare(originalNodeText)
+
+                                // Para interceptar menus interativos, checamos também se a primeira frase do nó bate com o db
+                                const firstLineNode = normalizeForCompare(originalNodeText.split('\n')[0])
+                                const firstLineDb = normalizeForCompare(lastBotMessage.content!.split('\n')[0])
+
+                                return nodeNorm === targetNorm ||
+                                    (nodeNorm.length > 10 && targetNorm.includes(nodeNorm)) ||
+                                    (firstLineNode.length > 5 && firstLineNode === firstLineDb)
                             })
 
                             if (currentNode) {
@@ -207,8 +216,6 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                                         const matchedEdge = outgoingEdges.find(e => {
                                             if (!e.label) return false
                                             const labelParts = e.label.toLowerCase().trim().split(' ')
-                                            // Se o cliente digitou algo que bate com o número da opção (Ex: "1", "2")
-                                            // A label da Edge é "Se Opção 1", logo a extração dos dígitos deve bater com o userInput exato (ex: input "1" === label digit "1")
                                             const edgeDigit = e.label.replace(/\D/g, '')
                                             return labelParts.some((part: string) => part === userInput) ||
                                                 (edgeDigit && userInput === edgeDigit)
@@ -217,33 +224,78 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                                         if (matchedEdge) nextEdge = matchedEdge
                                     }
 
-                                    const nextNode = nodes.find(n => n.id === nextEdge.target)
-                                    if (nextNode && nextNode.data?.label) {
-                                        let textCandidate = getCleanText(nextNode.data.label)
-
-                                        // MOCK: Para testarmos o nó de ÁUDIO e ACTIONS
-                                        if (nextNode.id.startsWith('audio-')) {
-                                            responseText = `*(Simulação de Áudio)* 🎙️: [Reproduzindo ${textCandidate.replace(/\n.*/g, '')}...]`
-                                        } else if (nextNode.id.startsWith('act-')) {
-                                            responseText = `*(Sistema)* Ação dispatada! ${textCandidate}`
-                                        } else if (nextNode.id.startsWith('msg-joke')) {
-                                            responseText = textCandidate // Rota da piada
-                                        } else {
-                                            responseText = textCandidate
-                                        }
-                                    }
+                                    nodeToSend = nodes.find(n => n.id === nextEdge.target)
                                 }
                             } else {
-                                // Fallback apenas se não achou em nenhum lugar
                                 console.log(`[Flow Debug] Não consegui encontrar o Node de origem para comparar com "${lastBotMessage.content}". Normalize foi: "${targetNorm}"`)
                                 responseText = "Desculpe, o fluxo de automação deste atendimento foi descontinuado ou repensado. Posso ajudar em algo mais?"
                             }
                         }
                     }
 
-                    // Se o interpretador Visual Flow gerou Resposta:
+                    // Se resolvemos qual o nó que deve ser enviado:
+                    let interactiveOptions: any = undefined
+
+                    if (nodeToSend && nodeToSend.data?.label) {
+                        let textCandidate = getCleanText(nodeToSend.data.label)
+
+                        // MOCK: Para testarmos o nó de ÁUDIO e ACTIONS
+                        if (nodeToSend.id.startsWith('audio-')) {
+                            responseText = `*(Simulação de Áudio)* 🎙️: [Reproduzindo ${textCandidate.replace(/\n.*/g, '')}...]`
+                        } else if (nodeToSend.id.startsWith('act-')) {
+                            responseText = `*(Sistema)* Ação disparada! ${textCandidate}`
+                        } else if (nodeToSend.id.startsWith('msg-joke')) {
+                            responseText = textCandidate // Rota da piada
+                        } else {
+                            // É NÓ DE TEXTO. VAMOS TENTAR EXTRAIR BOTÕES INTERATIVOS
+                            const outgoingForMenu = edges.filter(e => e.source === nodeToSend.id)
+
+                            if (outgoingForMenu.length > 1) { // Tem ramificações? É menu.
+                                const extractedOptions: { id: string, title: string, description?: string }[] = []
+                                const lines = textCandidate.split('\n')
+                                const cleanLines: string[] = []
+
+                                for (const line of lines) {
+                                    const match = line.match(/^(\d+)(?:\s|[-.)\]\uFE0F\u20E3])+(.+)$/i)
+                                    if (match) {
+                                        // Achou uma opção (ex: "1 - Aposentados")
+                                        extractedOptions.push({
+                                            id: match[1],
+                                            title: match[2].trim().substring(0, 24)
+                                        })
+                                    } else {
+                                        cleanLines.push(line)
+                                    }
+                                }
+
+                                if (extractedOptions.length > 0) {
+                                    // Removemos as opções do texto do balão
+                                    textCandidate = cleanLines.join('\n').trim() || "Escolha uma opção:"
+
+                                    interactiveOptions = {
+                                        type: extractedOptions.length <= 3 ? 'button' : 'list',
+                                        body: textCandidate,
+                                        buttonText: extractedOptions.length <= 3 ? undefined : "Abrir Menu",
+                                        options: extractedOptions
+                                    }
+                                }
+                            }
+
+                            responseText = textCandidate
+                        }
+                    }
+
+                    // Disparo Final da Mensagem Visual Flow
                     if (responseText) {
-                        const res = await provider.sendMessage({ to: leadPhone, text: responseText })
+                        const payloadToSend: any = { to: leadPhone, text: responseText }
+                        if (interactiveOptions) {
+                            payloadToSend.interactiveOptions = interactiveOptions
+                            // No banco salvamos o texto original para fins de state tracking e inteligência
+                            if (nodeToSend) responseText = getCleanText(nodeToSend.data.label)
+                        }
+
+                        const res = await provider.sendMessage(payloadToSend)
+
                         await prisma.message.create({
                             data: {
                                 conversationId, direction: "OUTBOUND", type: "TEXT", content: responseText,

@@ -7,6 +7,14 @@ export interface WhatsAppMessagePayload {
     mediaId?: string
     mediaType?: 'document' | 'image' | 'audio' | 'video'
     mediaCaption?: string
+    interactiveOptions?: {
+        type: 'button' | 'list',
+        header?: string,
+        body: string,
+        footer?: string,
+        buttonText?: string,
+        options: { id: string, title: string, description?: string }[]
+    }
 }
 
 export interface IWhatsAppProvider {
@@ -68,7 +76,42 @@ export class MetaCloudProvider implements IWhatsAppProvider {
                 to: formattedPhone,
             }
 
-            if (payload.templateName) {
+            if (payload.interactiveOptions) {
+                apiPayload.type = "interactive"
+
+                if (payload.interactiveOptions.type === 'button') {
+                    apiPayload.interactive = {
+                        type: "button",
+                        body: { text: payload.interactiveOptions.body.substring(0, 1024) },
+                        action: {
+                            buttons: payload.interactiveOptions.options.slice(0, 3).map(opt => ({
+                                type: "reply",
+                                reply: { id: opt.id, title: opt.title.substring(0, 20) }
+                            }))
+                        }
+                    }
+                } else if (payload.interactiveOptions.type === 'list') {
+                    apiPayload.interactive = {
+                        type: "list",
+                        header: payload.interactiveOptions.header ? { type: "text", text: payload.interactiveOptions.header.substring(0, 60) } : undefined,
+                        body: { text: payload.interactiveOptions.body.substring(0, 1024) },
+                        footer: payload.interactiveOptions.footer ? { text: payload.interactiveOptions.footer.substring(0, 60) } : undefined,
+                        action: {
+                            button: payload.interactiveOptions.buttonText || "Opções",
+                            sections: [
+                                {
+                                    title: "Menu",
+                                    rows: payload.interactiveOptions.options.slice(0, 10).map(opt => ({
+                                        id: opt.id,
+                                        title: opt.title.substring(0, 24),
+                                        description: opt.description ? opt.description.substring(0, 72) : undefined
+                                    }))
+                                }
+                            ]
+                        }
+                    }
+                }
+            } else if (payload.templateName) {
                 apiPayload.type = "template"
                 apiPayload.template = {
                     name: payload.templateName,
@@ -85,7 +128,7 @@ export class MetaCloudProvider implements IWhatsAppProvider {
                 apiPayload.type = "text"
                 apiPayload.text = { body: payload.text, preview_url: false }
             } else {
-                throw new Error("Message must have either text, mediaId or templateName")
+                throw new Error("Message must have either text, mediaId, templateName or interactiveOptions")
             }
 
             const response = await fetch(`${this.endpoint}/${this.phoneNumberId}/messages`, {
