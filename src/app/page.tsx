@@ -65,24 +65,9 @@ export default function Home() {
               <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
               <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
             </div>
-            <div className="flex-1 flex p-4 gap-4 relative overflow-hidden bg-[url('/bg-grid.svg')] bg-center bg-cover border-b border-[#333]">
-              {/* Side menu simulado */}
-              <div className="w-48 hidden md:flex flex-col gap-3 border-r border-[#333] pr-4">
-                <div className="h-6 w-full bg-[#222] rounded mb-4"></div>
-                <div className="h-3 w-5/6 bg-[#222] rounded"></div>
-                <div className="h-3 w-4/6 bg-[#222] rounded"></div>
-                <div className="h-3 w-full bg-[#222] rounded"></div>
-                <div className="h-3 w-3/6 bg-[#222] rounded"></div>
-              </div>
-              {/* Content simulado */}
-              <div className="flex-1 flex flex-col gap-4">
-                <div className="flex gap-4">
-                  <div className="h-20 flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg"></div>
-                  <div className="h-20 flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg"></div>
-                  <div className="h-20 flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg hidden sm:block"></div>
-                </div>
-                <div className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg"></div>
-              </div>
+            <div className="flex-1 w-full bg-black relative">
+              <img src="/mockup-hero.png" alt="Amostra do Sistema FLY UP Web" className="absolute top-0 left-0 w-full h-auto object-cover opacity-90 transition-opacity hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
             </div>
           </div>
         </section>
