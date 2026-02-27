@@ -1,3 +1,5 @@
+'use server'
+
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
 import { createInstance, getInstanceStatus, logoutInstance } from '@/lib/wzapi'
