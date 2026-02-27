@@ -377,11 +377,11 @@ export async function generateAiReply(conversationId: string) {
         })
 
         if (!conversation || conversation.organizationId !== user.organizationId) {
-            throw new Error("Chat não encontrado ou permissão negada.")
+            return { error: "Chat não encontrado ou permissão negada." }
         }
 
         if (!process.env.GEMINI_API_KEY) {
-            throw new Error("A chave do Google Gemini (GEMINI_API_KEY) não está configurada no servidor.")
+            return { error: "A chave do Google Gemini (GEMINI_API_KEY) não está configurada no servidor." }
         }
 
         // 2. Formatar o mapa de conversas para envio a Gemini API
@@ -425,20 +425,20 @@ export async function generateAiReply(conversationId: string) {
         if (!response.ok) {
             const errorBody = await response.text()
             console.error("[generateAiReply] Google Gemini HTTP error body:", errorBody)
-            throw new Error("Falha na API do Google Gemini (Verifique limites e token).")
+            return { error: "Falha na API do Google Gemini (Verifique limites e token)." }
         }
 
         const data = await response.json()
         const suggestion = data.candidates?.[0]?.content?.parts?.[0]?.text
 
         if (!suggestion) {
-            throw new Error("A Inteligência Artificial do Google retornou um conteúdo vazio.")
+            return { error: "A Inteligência Artificial do Google retornou um conteúdo vazio." }
         }
 
         return { suggestion: suggestion.trim() }
 
     } catch (error: any) {
         console.error("[generateAiReply] Action Error:", error)
-        throw new Error(error.message || "Erro inesperado ao gerar reposta com o Gemini.")
+        return { error: error.message || "Erro inesperado ao gerar reposta com o Gemini." }
     }
 }

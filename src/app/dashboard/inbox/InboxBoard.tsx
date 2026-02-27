@@ -295,11 +295,20 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         if (!activeChatId) return
 
         setIsGeneratingAi(true)
-        const toastId = toast.loading("✨ Analisando conversa com IA...")
+        const toastId = toast.loading("✨ Analisando conversa com a IA Google Gemini...")
         try {
-            const { suggestion } = await generateAiReply(activeChatId)
-            setMessageInput(suggestion)
-            toast.success("Sugestão de resposta criada!", { id: toastId })
+            const aiResponse = await generateAiReply(activeChatId)
+
+            // Nova arquitetura segura contra Digest Errors
+            if (aiResponse.error) {
+                toast.error(aiResponse.error, { id: toastId })
+                return
+            }
+
+            if (aiResponse.suggestion) {
+                setMessageInput(aiResponse.suggestion)
+                toast.success("Sugestão de resposta criada!", { id: toastId })
+            }
         } catch (error: any) {
             toast.error(error.message || "A Mágica falhou. Tente novamente.", { id: toastId })
         } finally {
