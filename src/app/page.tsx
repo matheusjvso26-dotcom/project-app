@@ -36,34 +36,56 @@ export default function Home() {
       </header>
 
       <main className="pt-28">
-        {/* 1) HERO SECTION */}
-        <section className="relative pt-16 pb-24 px-6 flex flex-col items-center text-center z-10">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#ff7b00]/15 blur-[150px] rounded-full pointer-events-none -z-10"></div>
+        {/* 1) HERO SECTION - LAYOUT DUAS COLUNAS */}
+        <section className="relative pt-20 pb-24 px-6 z-10 overflow-hidden border-b border-white/5">
+          <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] mb-8 tracking-tight w-full max-w-none px-2 lg:px-8 mx-auto">
-            Transforme conversas no WhatsApp em <span className="text-[#ff7b00]">vendas previsíveis</span> — com funil, automação e métricas em tempo real.
-          </h1>
-          <p className="text-lg md:text-2xl text-zinc-400 w-full max-w-5xl mx-auto leading-relaxed mb-10 font-light">
-            Centralize leads, pipeline (Kanban), chatbot WhatsApp Oficial e financeiro em um único painel com KPIs 3D e relatórios de crescimento (MRR, churn, CAC, LTV).
-          </p>
+            {/* Esquerda: Texto Enxuto e CTAs */}
+            <div className="text-left relative z-20">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] mb-6 tracking-tight">
+                Vendas previsíveis no <span className="text-[#ff7b00]">WhatsApp</span>.
+              </h1>
+              <p className="text-lg md:text-xl text-zinc-400 leading-relaxed mb-8 font-light max-w-lg">
+                Do primeiro contato ao fechamento: capture leads, automatize conversas e controle lucros num único painel ágil.
+              </p>
 
-          <ul className="text-zinc-300 text-sm md:text-base space-y-3 mb-10 text-left md:inline-block font-medium">
-            <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" /> Captura e qualificação automática de leads (WhatsApp + formulários)</li>
-            <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" /> Funil em Kanban com tarefas e follow-up</li>
-            <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" /> Dashboard com KPIs animados e gráficos sincronizados</li>
-            <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" /> Financeiro com MRR, churn, CAC e LTV (pronto para escalar)</li>
-            <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" /> Multiusuário e multiempresa (pronto para SaaS)</li>
-          </ul>
+              <ul className="text-zinc-300 text-sm md:text-base space-y-4 mb-10 font-medium">
+                <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" /> Captura e qualificação automática via IA</li>
+                <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" /> Kanban interativo com tarefas diárias</li>
+                <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-[#ff7b00] shrink-0" /> Dashboards analíticos em tempo real</li>
+              </ul>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4 z-20 w-full sm:w-auto">
-            <a href="#demo" className="w-full sm:w-auto bg-[#ff7b00] hover:bg-orange-500 text-black font-black uppercase tracking-wider text-sm py-4 px-10 rounded-md transition-all shadow-[0_0_20px_rgba(255,123,0,0.3)]">
-              Quero ver uma demo
-            </a>
-            <Link href="/register" className="w-full sm:w-auto text-white font-medium text-sm py-4 px-10 rounded-md border border-white/20 hover:bg-white/5 transition-colors">
-              Testar grátis por 7 dias
-            </Link>
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <a href="#demo" className="w-full sm:w-auto bg-[#ff7b00] hover:bg-orange-500 text-black font-black uppercase tracking-wider text-sm py-4 px-8 rounded-md transition-all shadow-[0_0_20px_rgba(255,123,0,0.3)] text-center">
+                  Garantir Acesso
+                </a>
+                <Link href="/register" className="w-full sm:w-auto text-white font-medium text-sm py-4 px-8 rounded-md border border-white/20 hover:bg-white/5 transition-colors text-center">
+                  Testar Grátis 7 Dias
+                </Link>
+              </div>
+              <p className="text-xs text-zinc-500">Sem cartão. Cancelamento rápido. Suporte humano.</p>
+            </div>
+
+            {/* Direita: Imagem Premium do Sistema */}
+            <div className="relative w-full flex justify-center lg:justify-end z-20 mt-10 lg:mt-0">
+              {/* Glow ambient background */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[#ff7b00]/20 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+
+              {/* Window Frame */}
+              <div className="w-full max-w-[650px] relative rounded-2xl border border-[#333] bg-[#0c0c0c] shadow-[0_0_50px_rgba(255,123,0,0.15)] overflow-hidden transform hover:-translate-y-2 hover:shadow-[0_0_50px_rgba(255,123,0,0.3)] transition-all duration-500">
+                <div className="h-8 border-b border-[#333] bg-[#1a1a1a] flex items-center px-4 gap-2 shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
+                </div>
+                <div className="relative w-full aspect-[4/3] bg-black">
+                  <img src="/mockup-hero.png" alt="Amostra Premium FLY UP" className="absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none"></div>
+                </div>
+              </div>
+            </div>
+
           </div>
-          <p className="text-xs text-zinc-500 mb-8 md:mb-16">Sem cartão. Cancelamento em 1 clique. Suporte humano no WhatsApp.</p>
         </section>
 
         {/* 2) PROVA DE DOR */}
@@ -104,10 +126,10 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </section >
 
         {/* 3) SOLUÇÃO & 4) BENEFÍCIOS */}
-        <section id="solucao" className="py-24 px-6 relative">
+        < section id="solucao" className="py-24 px-6 relative" >
           <div className="max-w-[1200px] mx-auto">
             <div className="text-center mb-20 max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
@@ -149,10 +171,10 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </section >
 
         {/* 5) COMO FUNCIONA (Passo a Passo) */}
-        <section className="py-24 px-6 bg-[#111] border-y border-white/5">
+        < section className="py-24 px-6 bg-[#111] border-y border-white/5" >
           <div className="max-w-[1200px] mx-auto text-center">
             <h2 className="text-3xl md:text-5xl font-black text-white mb-16">
               Em 3 passos você sai da bagunça e <span className="text-[#ff7b00]">entra no controle.</span>
@@ -183,10 +205,10 @@ export default function Home() {
               Quero configurar em 15 minutos
             </a>
           </div>
-        </section>
+        </section >
 
         {/* 6) DASHBOARD PREMIUM */}
-        <section className="py-24 px-6 relative">
+        < section className="py-24 px-6 relative" >
           <div className="max-w-[1200px] mx-auto flex flex-col lg:flex-row items-center gap-16">
             <div className="lg:w-1/2">
               <h2 className="text-3xl md:text-5xl font-black text-white mb-8">
@@ -222,10 +244,10 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </section >
 
         {/* 7) PARA QUEM É */}
-        <section className="py-24 px-6 bg-[#050505] border-y border-[#111]">
+        < section className="py-24 px-6 bg-[#050505] border-y border-[#111]" >
           <div className="max-w-[1200px] mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-12">
               Feito para quem vende no WhatsApp e <span className="text-[#ff7b00]">precisa de previsibilidade.</span>
@@ -248,10 +270,10 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </section >
 
         {/* 8) PROVA SOCIAL / RESULTADOS */}
-        <section className="py-24 px-6 relative bg-[#ff7b00] text-black">
+        < section className="py-24 px-6 relative bg-[#ff7b00] text-black" >
           <div className="max-w-[1200px] mx-auto text-center">
             <h2 className="text-3xl md:text-5xl font-black mb-20 max-w-4xl mx-auto">
               Resultados típicos após organizar WhatsApp + Funil
@@ -271,10 +293,10 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </section >
 
         {/* 9) PLANOS */}
-        <section id="planos" className="py-24 px-6 relative">
+        < section id="planos" className="py-24 px-6 relative" >
           <div className="max-w-[1200px] mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Planos para o seu momento</h2>
@@ -330,10 +352,10 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </section >
 
         {/* 10) FAQ */}
-        <section id="faq" className="py-24 px-6 bg-[#050505] border-y border-white/5">
+        < section id="faq" className="py-24 px-6 bg-[#050505] border-y border-white/5" >
           <div className="max-w-[800px] mx-auto">
             <h2 className="text-3xl md:text-5xl font-black text-white text-center mb-16">Perguntas frequentes</h2>
             <div className="space-y-6">
@@ -350,10 +372,10 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </section>
+        </section >
 
         {/* 11 & BLOCO FINAL DE CONVERSÃO ) CTA FINAL E FORMULÁRIO */}
-        <section id="demo" className="py-24 px-6 relative bg-gradient-to-b from-[#0a0a0a] to-[#000000]">
+        < section id="demo" className="py-24 px-6 relative bg-gradient-to-b from-[#0a0a0a] to-[#000000]" >
           <div className="max-w-[1200px] mx-auto flex flex-col lg:flex-row gap-16 items-center">
 
             <div className="lg:w-1/2 text-left">
@@ -414,10 +436,10 @@ export default function Home() {
             </div>
 
           </div>
-        </section>
+        </section >
 
         {/* 12) RODAPÉ / COMPLIANCE */}
-        <footer className="py-12 bg-[#000000] border-t border-[#111]">
+        < footer className="py-12 bg-[#000000] border-t border-[#111]" >
           <div className="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
             <Link href="/" className="flex items-center">
               <img src="/logo.png" alt="FLY UP Web" className="h-8 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all drop-shadow-md" />
@@ -437,9 +459,9 @@ export default function Home() {
               &copy; {new Date().getFullYear()} [NOME DO SAAS]. TODOS OS DIREITOS RESERVADOS.
             </div>
           </div>
-        </footer>
+        </footer >
 
-      </main>
-    </div>
+      </main >
+    </div >
   )
 }
