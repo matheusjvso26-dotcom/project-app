@@ -290,13 +290,22 @@ export default function RegisterPage() {
                 </p>
             </motion.div>
 
-            <div className="mt-2 sm:mx-auto sm:w-full sm:max-w-xl relative z-10">
+            <div className="mt-2 sm:mx-auto sm:w-full sm:max-w-xl relative z-10 flex justify-center items-center">
                 <Suspense fallback={
                     <div className="h-[500px] bg-[#0a0a0a] rounded-2xl border border-[#333]/50 flex items-center justify-center shadow-2xl">
                         <Loader2 className="w-8 h-8 text-[#ff7b00] animate-spin" />
                     </div>
                 }>
-                    <RegisterForm />
+                    {/* Ring Component Wrapping the Register Form */}
+                    <div className="login-ring">
+                        <i style={{ '--clr': '#ff7b00' } as React.CSSProperties}></i>
+                        <i style={{ '--clr': '#ff0057' } as React.CSSProperties}></i>
+                        <i style={{ '--clr': '#fffd44' } as React.CSSProperties}></i>
+
+                        <div className="absolute z-10 w-full max-w-xl px-4 mt-8">
+                            <RegisterForm />
+                        </div>
+                    </div>
                 </Suspense>
             </div>
         </div>

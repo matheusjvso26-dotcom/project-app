@@ -207,13 +207,22 @@ export default function LoginPage() {
                 </p>
             </motion.div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 flex justify-center items-center">
                 <Suspense fallback={
                     <div className="h-[400px] bg-[#0a0a0a] rounded-2xl border border-[#333]/50 flex items-center justify-center shadow-2xl">
                         <Loader2 className="w-8 h-8 text-[#ff7b00] animate-spin" />
                     </div>
                 }>
-                    <LoginForm />
+                    {/* Ring Component Wrapping the Login Form */}
+                    <div className="login-ring">
+                        <i style={{ '--clr': '#ff7b00' } as React.CSSProperties}></i>
+                        <i style={{ '--clr': '#ff0057' } as React.CSSProperties}></i>
+                        <i style={{ '--clr': '#fffd44' } as React.CSSProperties}></i>
+
+                        <div className="absolute z-10 w-full max-w-md px-4">
+                            <LoginForm />
+                        </div>
+                    </div>
                 </Suspense>
             </div>
         </div>
