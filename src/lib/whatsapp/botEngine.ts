@@ -147,8 +147,10 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                 const nodes: any[] = flow.nodes || []
                 const edges: any[] = flow.edges || []
 
-                // FUNÇÃO DE PURIFICAÇÃO DE TEXTO PARA O LEAD
-                // Ex: '📝 Saudação Textual\n\n"Olá! Tudo bem?"' -> 'Olá! Tudo bem?'
+                // FUNÇÃO DE COMPARAÇÃO DE TEXTO TOLERANTE
+                // Precisamos ser imunes a caracteres invisiveis, emojis perdidos ou quebras de linha ("\n" virando " " ou vice-versa)
+                const normalizeForCompare = (str: string) => str ? str.replace(/\s+/g, ' ').trim().toLowerCase() : ""
+
                 const getCleanText = (label: string) => {
                     if (!label) return ""
                     const parts = label.split('\n\n')
@@ -157,7 +159,7 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                     if (text.startsWith('"') && text.endsWith('"')) {
                         text = text.slice(1, -1)
                     }
-                    return text
+                    return text.trim()
                 }
 
                 // INTERPRETADOR NATIVO REACT FLOW
@@ -180,8 +182,14 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                         })
 
                         if (lastBotMessage && lastBotMessage.content) {
-                            // Encontrar de qual nó saiu a última mensagem comparando o texto limpo
-                            const currentNode = nodes.find(n => getCleanText(n.data?.label) === lastBotMessage.content)
+                            // Encontrar de qual nó saiu a última mensagem usando Normalize Tolerance (ignorando spaces)
+                            const targetNorm = normalizeForCompare(lastBotMessage.content)
+
+                            const currentNode = nodes.find(n => {
+                                const nodeNorm = normalizeForCompare(getCleanText(n.data?.label))
+                                // Validamos tanto matching exato normalizado quanto contains para caixas de mídia simuladas
+                                return nodeNorm === targetNorm || (nodeNorm.length > 10 && targetNorm.includes(nodeNorm))
+                            })
 
                             if (currentNode) {
                                 const outgoingEdges = edges.filter(e => e.source === currentNode.id)
@@ -195,11 +203,12 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
 
                                         const matchedEdge = outgoingEdges.find(e => {
                                             if (!e.label) return false
-                                            const labelParts = e.label.toLowerCase().split(' ')
-                                            // Se o cliente digitou algo que bate com o número da opção (Ex: "1")
-                                            // A label da Edge é "Se Opção 1", logo labelParts[2] == "1"
-                                            return labelParts.some((part: string) => userInput.includes(part)) ||
-                                                userInput === e.label.replace(/\D/g, '') // match by digit only
+                                            const labelParts = e.label.toLowerCase().trim().split(' ')
+                                            // Se o cliente digitou algo que bate com o número da opção (Ex: "1", "2")
+                                            // A label da Edge é "Se Opção 1", logo a extração dos dígitos deve bater com o userInput exato (ex: input "1" === label digit "1")
+                                            const edgeDigit = e.label.replace(/\D/g, '')
+                                            return labelParts.some((part: string) => part === userInput) ||
+                                                (edgeDigit && userInput === edgeDigit)
                                         })
 
                                         if (matchedEdge) nextEdge = matchedEdge
@@ -209,20 +218,21 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                                     if (nextNode && nextNode.data?.label) {
                                         let textCandidate = getCleanText(nextNode.data.label)
 
-                                        // MOCK: Para testarmos o nó de ÁUDIO que o usuário pediu
+                                        // MOCK: Para testarmos o nó de ÁUDIO e ACTIONS
                                         if (nextNode.id.startsWith('audio-')) {
-                                            responseText = "*(Simulação de Áudio)* 🎙️: [Reproduzindo arquivo de vendas...]"
-                                        } else if (nextNode.id.startsWith('act-1')) {
-                                            responseText = "*(Sistema)* Ação de Transbordo (Handoff) disparada para Atendente Humano na Caixa de Entrada!"
-                                        } else if (nextNode.id.startsWith('act-3')) {
-                                            responseText = "*(Sistema)* Lead movido para próxima fase no Kanban."
+                                            responseText = `*(Simulação de Áudio)* 🎙️: [Reproduzindo ${textCandidate.replace(/\n.*/g, '')}...]`
+                                        } else if (nextNode.id.startsWith('act-')) {
+                                            responseText = `*(Sistema)* Ação dispatada! ${textCandidate}`
+                                        } else if (nextNode.id.startsWith('msg-joke')) {
+                                            responseText = textCandidate // Rota da piada
                                         } else {
                                             responseText = textCandidate
                                         }
                                     }
                                 }
                             } else {
-                                // Se não achar o nó (usuário mexeu no canvas e cortou o fluxo)
+                                // Fallback apenas se não achou em nenhum lugar
+                                console.log(`[Flow Debug] Não consegui encontrar o Node de origem para comparar com "${lastBotMessage.content}". Normalize foi: "${targetNorm}"`)
                                 responseText = "Desculpe, o fluxo de automação deste atendimento foi descontinuado ou repensado. Posso ajudar em algo mais?"
                             }
                         }
@@ -240,9 +250,10 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                         await prisma.conversation.update({
                             where: { id: conversationId }, data: { updatedAt: new Date(), status: 'BOT_HANDLING' }
                         })
-                        return // Encerra, não cai no Legacy Switch
+                        return // Encerra o processo aqui com sucesso
                     } else {
-                        return // Não tinha aresta. Fim do fluxo, cai pro humano.
+                        // Não tinha próxima aresta (Fim do funil)
+                        return
                     }
                 }
             } catch (err) {
