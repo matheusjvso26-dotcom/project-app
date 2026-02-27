@@ -405,7 +405,7 @@ export async function generateAiReply(conversationId: string) {
         const systemInstruction = `Você é um Assistente de Vendas inteligente e educado trabalhando no WhatsApp de uma empresa. O Lead com quem estamos conversando se chama "${conversation.lead.name}". Sua missão é ler o contexto recente da conversa e redigir uma sugestão ágil, calorosa e comercial para o atendente (humano) enviar em seguida. A resposta deve ser curta (1 a 3 parágrafos no máximo), ir direto ao ponto respondendo as dores do lead, usar 1 ou 2 emojis corporativos discretos e conduzir para o fechamento. Fale sempre em Português do Brasil de maneira natural para o WhatsApp, evite ser robótico.`
 
         // 3. Chamar Endpoint via fetch cru da API do Google Gemini
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
