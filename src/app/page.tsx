@@ -116,13 +116,13 @@ export default function Home() {
               </div>
               <div className="bg-[#0a0a0a] border border-[#222] rounded-xl p-8 flex flex-col gap-4 text-center items-center hover:border-red-500/30 transition-colors lg:col-span-1">
                 <DollarSign className="w-10 h-10 text-red-500" />
-                <h4 className="text-white font-bold text-lg">Financeiro desconectado</h4>
-                <p className="text-sm text-zinc-500">Totalmente separado do funil no WhatsApp.</p>
+                <h4 className="text-white font-bold text-lg">Lucro cego</h4>
+                <p className="text-sm text-zinc-500">Separado do funil: vende muito no Zap, mas não sabe o Lucro Real.</p>
               </div>
               <div className="bg-[#0a0a0a] border border-[#222] rounded-xl p-8 flex flex-col gap-4 text-center items-center hover:border-red-500/30 transition-colors lg:col-span-2">
                 <TargetIcon className="w-10 h-10 text-red-500" />
                 <h4 className="text-white font-bold text-lg">Cegueira Estratégica Completa</h4>
-                <p className="text-sm text-zinc-500">Você não sabe seu CAC, não mede LTV e nem faz ideia do que dá lucro real na operação.</p>
+                <p className="text-sm text-zinc-500">Você não controla seus custos fixos operacionais, não acompanha o lucro líquido e nem faz ideia do que gera resultado previsível na equipe.</p>
               </div>
             </div>
           </div>
@@ -133,10 +133,10 @@ export default function Home() {
           <div className="max-w-[1200px] mx-auto">
             <div className="text-center mb-20 max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
-                Um sistema único para organizar leads, automatizar conversas e <span className="text-[#ff7b00]">medir crescimento.</span>
+                Um sistema único para organizar leads, automatizar conversas e <span className="text-[#ff7b00]">lucrar com previsibilidade.</span>
               </h2>
               <p className="text-lg text-zinc-400">
-                FLY UP conecta seu funil de vendas ao WhatsApp Oficial e ao financeiro — com um dashboard premium que mostra, em tempo real, onde você está ganhando (ou perdendo) dinheiro.
+                FLY UP conecta seu funil de vendas ao WhatsApp Oficial e ao financeiro — com um dashboard premium que mostra, em tempo real, os negócios fechados, seus gastos fixos e sua real Receita de Caixa.
               </p>
             </div>
 
@@ -164,9 +164,9 @@ export default function Home() {
               </div>
               <div className="bg-[#0a0a0a] border border-white/5 p-10 rounded-2xl hover:border-[#ff7b00]/30 transition-all group shadow-xl">
                 <TrendingUp className="w-12 h-12 text-[#ff7b00] mb-6 group-hover:scale-110 transition-transform" />
-                <h3 className="text-2xl font-bold text-white mb-4">Financeiro & Métricas</h3>
+                <h3 className="text-2xl font-bold text-white mb-4">Financeiro & Lucro Líquido</h3>
                 <p className="text-zinc-400 leading-relaxed">
-                  MRR, churn, CAC e LTV sem “achismo”. Acompanhe crescimento, receita recorrente e eficiência comercial com gráficos e metas que impulsionam o seu time.
+                  Receita Gerada de Negócios Fechados menos Custos Fixos Operacionais. Acompanhe seus números absolutos e faturamento projetado sem planilhas arcaicas.
                 </p>
               </div>
             </div>
@@ -218,8 +218,8 @@ export default function Home() {
                 <li className="flex items-start gap-4">
                   <div className="mt-1 bg-[#ff7b00]/20 p-2 rounded-full"><TrendingUp className="w-5 h-5 text-[#ff7b00]" /></div>
                   <div>
-                    <strong className="text-white block text-lg mb-1">KPIs flutuantes 3D</strong>
-                    <span className="text-zinc-400">Leads, Conversão, Pipeline, MRR, Churn, CAC, LTV visuais.</span>
+                    <strong className="text-white block text-lg mb-1">Indicadores Financeiros Chave</strong>
+                    <span className="text-zinc-400">Receita Realizada, Lucro Líquido e Volume de Negócios fechados alimentados diretamente pelo CRM.</span>
                   </div>
                 </li>
                 <li className="flex items-start gap-4">
