@@ -5,10 +5,11 @@ import {
 } from 'lucide-react'
 
 const FAQS = [
-  { p: "Preciso ter domínio para usar?", r: "Não. Você pode usar por IP na VPS e depois migrar para domínio com SSL." },
-  { p: "O WhatsApp é oficial?", r: "A integração é preparada para a API oficial. No MVP, pode iniciar com modo 'mock' e plugar quando tiver as credenciais." },
-  { p: "Funciona no celular?", r: "Sim, design responsivo e dashboard adaptado." },
-  { p: "Dá para importar leads?", r: "Sim (CSV/planilha) e também via formulário." }
+  { p: "O WhatsApp é da API Oficial?", r: "Sim! A plataforma conecta ao Meta via API Oficial, permitindo que toda a sua equipe atenda no mesmo número simultaneamente, sem risco de banimentos bobos." },
+  { p: "Vocês rastreiam métricas financeiras?", r: "Com certeza. Nosso motor financeiro sincroniza automaticamente com o Funil Kanban. Quando você fecha uma venda, ele calcula a Receita, deduz seus Custos Fixos Operacionais e mostra o Lucro Líquido Real em tempo real." },
+  { p: "Como funciona The Inbox (Caixa de Entrada)?", r: "Todos os leads que entrarem em contato caem na nossa Inbox Central. Você consegue transferir conversas, classificar, adicionar notas e acionar automações tudo de uma mesma tela." },
+  { p: "Posso enviar campanhas em massa?", r: "Sim. O Módulo de Campanhas permite o disparo em lote de Templated-Messages pré-aprovadas (Meta) para reengajar sua base ou ofertar promoções com rapidez." },
+  { p: "Funciona no celular e computador?", r: "Sim, o sistema FLY UP roda 100% na nuvem com design flexível para funcionar perfeitamente em telas finas de smartphones ou Monitores Super Ultra-Wide." }
 ]
 
 export default function Home() {
@@ -430,7 +431,7 @@ export default function Home() {
                   </button>
                 </form>
                 <p className="text-xs text-zinc-600 mt-6 text-center leading-relaxed font-medium">
-                  Ao enviar, você concorda com nossa Política de Privacidade e uso dos dados para contato pela Equipe [NOME DO SAAS].
+                  Ao enviar, você concorda com nossa Política de Privacidade e uso dos dados para contato pela Equipe FLY UP.
                 </p>
               </div>
             </div>
