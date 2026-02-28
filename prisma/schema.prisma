@@ -20,10 +20,10 @@ model Organization {
   name     String
   planTier String @default("FREE") // FREE, PRO, ENTERPRISE
 
-  wabaId          String? // WhatsApp Business Account ID (Official - Meta)
-  wzapiInstanceId String? // WhatsApp Unofficial Account ID (WZAPI)
-  wzapiToken      String? // JWT Auth Secret do Cliente no WZAPI
-  wzapiStatus     String  @default("DISCONNECTED") // DISCONNECTED, QRCODE_READY, CONNECTED
+  wabaId             String? // WhatsApp Business Account ID (Official - Meta)
+  phoneNumberId      String? // WhatsApp Phone Number ID (Official - Meta)
+  metaAccessToken    String? // OAuth System User Token
+  metaOauthConnected Boolean @default(false) // Connected State
 
   welcomeMessage String? @db.Text
   closureMessage String? @db.Text

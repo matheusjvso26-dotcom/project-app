@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma"
 import { requireUser } from "@/lib/auth-utils"
 import { getWhatsAppProvider } from "@/lib/whatsapp/provider"
 import { processAgendaCommand } from "@/lib/whatsapp/agendaHandler"
+import { sendMetaTextMessage } from "@/lib/meta-whatsapp"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -115,8 +116,8 @@ export async function sendMessage(conversationId: string, content: string) {
         }
 
         const org = conversation.organization;
-        if (!org.wzapiInstanceId || org.wzapiStatus !== 'CONNECTED') {
-            throw new Error("Sua Agência não possui um Aparelho WhatsApp (WZAPI) conectado. Escaneie o QRCode em Configurações.");
+        if (!org.metaOauthConnected || !org.phoneNumberId || !org.metaAccessToken) {
+            throw new Error("Sua Agência não possui um Número de WhatsApp Atrelado via Meta Oficial. Conecte pelo Painel de Configurações Administrativas.");
         }
 
         // Interceptar comando "/agenda" antes de enviar para a API (Opcional Mantido)
@@ -130,14 +131,15 @@ export async function sendMessage(conversationId: string, content: string) {
             console.error("[AGENDA ERROR]", cmdErr)
         }
 
-        // 2. Disparar API do WZAPI
-        const result = await sendTextMessage(org.wzapiInstanceId, org.wzapiToken || '', {
+        // 2. Disparar API do Facebook Cloud API v20.0
+        const result = await sendMetaTextMessage(org.phoneNumberId, org.metaAccessToken, {
             number: conversation.lead.phone,
             text: messageContent
         })
 
         if (!result.success) {
-            console.error("[WZAPI HTTP ERROR]", result.error)
+            console.error("[META API HTTP ERROR]", result.error)
+            throw new Error(result.error || "A API do Facebook bloqueou este envio temporariamente.");
         }
 
         // 3. Registrar "Saída" no banco de dados
