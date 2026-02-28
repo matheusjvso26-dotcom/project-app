@@ -26,7 +26,7 @@ export async function updateDealStageAction(dealId: string, newStageId: string) 
         const isLastStage = stage.pipeline.stages[stage.pipeline.stages.length - 1].id === newStageId;
         const stageNameLower = stage.name.toLowerCase();
 
-        if (isLastStage || stageNameLower.includes('ganho') || stageNameLower.includes('won') || stageNameLower.includes('cliente')) {
+        if (isLastStage || stageNameLower.includes('ganho') || stageNameLower.includes('won') || stageNameLower.includes('cliente') || stageNameLower.includes('fechado')) {
             newStatus = "WON";
         } else if (stageNameLower.includes('perdido') || stageNameLower.includes('lost')) {
             newStatus = "LOST";

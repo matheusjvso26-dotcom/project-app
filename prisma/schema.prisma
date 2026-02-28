@@ -25,6 +25,10 @@ model Organization {
   metaAccessToken    String? // OAuth System User Token
   metaOauthConnected Boolean @default(false) // Connected State
 
+  wzapiInstanceId    String? // Evolution / Z-API Instance ID
+  wzapiToken         String? // Evolution / Z-API Token
+  wzapiStatus        String? @default("DISCONNECTED") // CONNECTED, DISCONNECTED
+
   welcomeMessage String? @db.Text
   closureMessage String? @db.Text
   closureMinutes Int     @default(240) // Fecha conversas sozinhas em 4 horas (default)

@@ -56,7 +56,7 @@ export async function createLeadWithDeal(data: { name: string, phone: string, do
                         { name: "1. Triagem", order: 1 },
                         { name: "2. Qualificação", order: 2 },
                         { name: "3. Negociação", order: 3 },
-                        { name: "4. Ganho", order: 4 }
+                        { name: "4. Fechado", order: 4 }
                     ]
                 }
             },
@@ -83,4 +83,23 @@ export async function createLeadWithDeal(data: { name: string, phone: string, do
     revalidatePath('/dashboard/kanban')
 
     return { success: true }
+}
+
+export async function deleteLeadAction(leadId: string) {
+    const user = await requireUser()
+    try {
+        await prisma.lead.delete({
+            where: {
+                id: leadId,
+                organizationId: user.organizationId
+            }
+        })
+        revalidatePath('/dashboard/contacts')
+        revalidatePath('/dashboard/kanban')
+        revalidatePath('/dashboard')
+        return { success: true }
+    } catch (error) {
+        console.error("Erro ao deletar lead:", error)
+        return { success: false, error: "Falha ao excluir." }
+    }
 }

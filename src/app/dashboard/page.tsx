@@ -100,10 +100,10 @@ export default function AnalyticsDashboard() {
 
             {/* Top Action Cards (Kpis Reais) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <KpiCard title="Receita Recorrente\n(MRR Geral)" value={formatBRL(currentMetrics.mrr)} icon={<DollarSign className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
+                <KpiCard title="Receita Total\n(Fechada)" value={formatBRL(currentMetrics.mrr)} icon={<DollarSign className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
                 <KpiCard title="Clientes CAtivos\nAtualmente" value={currentMetrics.activeClients.toString()} icon={<Users className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
-                <KpiCard title="Custo de Aquisição\n(CAC Médio)" value={formatBRL(currentMetrics.cac)} icon={<Target className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
-                <KpiCard title="Taxa de Cancelamento\n(Churn Rate Mensal)" value={currentMetrics.churn} icon={<Activity className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
+                <KpiCard title="Despesas Totais\n(Custos Fixos)" value={formatBRL(currentMetrics.cac)} icon={<Target className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
+                <KpiCard title="Taxa de Perda\n(Negócios Perdidos)" value={currentMetrics.churn} icon={<Activity className="w-6 h-6 text-[#ff7b00]" strokeWidth={1.5} />} />
             </div>
 
             {/* Middle Section: Chart & Operational Alerts */}
@@ -113,8 +113,8 @@ export default function AnalyticsDashboard() {
                 <div className="lg:col-span-2 bg-[#1c1c1c] rounded-2xl p-6 border border-white/5 flex flex-col">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <p className="text-sm font-semibold text-zinc-400 mb-1">Faturamento Bruto Gerado</p>
-                            <h2 className="text-3xl font-bold tracking-tight text-white">{formatBRL(currentMetrics.mrr * 1.35)}</h2>
+                            <p className="text-sm font-semibold text-zinc-400 mb-1">Faturamento Total Direto</p>
+                            <h2 className="text-3xl font-bold tracking-tight text-white">{formatBRL(currentMetrics.mrr)}</h2>
                         </div>
                         <div className="flex items-center gap-6 mt-2">
                             <div className="flex items-center gap-2">

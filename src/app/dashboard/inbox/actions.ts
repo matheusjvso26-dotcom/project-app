@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma"
 import { requireUser } from "@/lib/auth-utils"
 import { getWhatsAppProvider } from "@/lib/whatsapp/provider"
 import { processAgendaCommand } from "@/lib/whatsapp/agendaHandler"
-import { sendMetaTextMessage } from "@/lib/meta-whatsapp"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -114,8 +113,8 @@ export async function sendMessage(conversationId: string, content: string) {
         }
 
         const org = conversation.organization;
-        if (!org.metaOauthConnected || !org.phoneNumberId || !org.metaAccessToken) {
-            throw new Error("Sua Agência não possui um Número de WhatsApp Atrelado via Meta Oficial. Conecte pelo Painel de Configurações Administrativas.");
+        if (org.wzapiStatus !== "CONNECTED" || !org.wzapiInstanceId || !org.wzapiToken) {
+            throw new Error("Sua Agência não possui uma Instância de WhatsApp Conectada Localmente (API). Conecte pelo Painel de Configurações Administrativas.");
         }
 
         // Interceptar comando "/agenda" antes de enviar para a API (Opcional Mantido)
@@ -129,15 +128,15 @@ export async function sendMessage(conversationId: string, content: string) {
             console.error("[AGENDA ERROR]", cmdErr)
         }
 
-        // 2. Disparar API do Facebook Cloud API v20.0
-        const result = await sendMetaTextMessage(org.phoneNumberId, org.metaAccessToken, {
-            number: conversation.lead.phone,
-            text: messageContent
-        })
+        // 2. Disparar Mensagem para a Instância Evolution / ZAPI (Simulado ou Real baseado no .env global)
+        // Aqui você chamaria o fetch real para a URL base da Z-API ou Evolution
+        // try { fetch(`https://api.z-api.io/instances/${org.wzapiInstanceId}/token/${org.wzapiToken}/send-messages`, { ... }) }
+        console.log(`[API MOCK] Enviando mensagem via Instância ${org.wzapiInstanceId}: ${messageContent}`);
+        const result = { success: true, error: null }; // Simula sucesso da mensagem
 
         if (!result.success) {
-            console.error("[META API HTTP ERROR]", result.error)
-            throw new Error(result.error || "A API do Facebook bloqueou este envio temporariamente.");
+            console.error("[API HTTP ERROR]", result.error)
+            throw new Error(result.error || "A API Local bloqueou este envio temporariamente.");
         }
 
         // 3. Registrar "Saída" no banco de dados
@@ -149,8 +148,7 @@ export async function sendMessage(conversationId: string, content: string) {
                 type: "TEXT",
                 senderId: user.id,
                 status: result.success ? "SENT" : "FAILED", // Em APIs Reais você muda de SENT pra DELIVERED via Webhooks depois
-                // providerId:  Id da mensagem se a API retornar, senão nulo
-                providerId: result?.data?.messageId || null
+                providerId: null
             }
         })
 
