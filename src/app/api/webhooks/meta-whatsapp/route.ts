@@ -88,8 +88,7 @@ export async function POST(req: Request) {
                 data: {
                     organizationId: org.id,
                     name: senderName,
-                    phone: senderPhone,
-                    source: 'WHATSAPP_CLOUD'
+                    phone: senderPhone
                 }
             });
         }
@@ -97,8 +96,7 @@ export async function POST(req: Request) {
         let conversation = await prisma.conversation.findFirst({
             where: {
                 organizationId: org.id,
-                leadId: lead.id,
-                channel: 'WHATSAPP'
+                leadId: lead.id
             }
         });
 
@@ -107,7 +105,6 @@ export async function POST(req: Request) {
                 data: {
                     organizationId: org.id,
                     leadId: lead.id,
-                    channel: 'WHATSAPP',
                     status: 'OPEN' // Move para a Coluna do Kanban
                 }
             });
@@ -116,7 +113,7 @@ export async function POST(req: Request) {
         await prisma.message.create({
             data: {
                 conversationId: conversation.id,
-                senderType: 'LEAD',
+                direction: 'INBOUND',
                 content: messageText,
                 status: 'DELIVERED',
                 providerId: messageId,

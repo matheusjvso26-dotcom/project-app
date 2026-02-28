@@ -93,10 +93,8 @@ export async function toggleBotStatus(conversationId: string, isBotActive: boole
     return { success: true }
 }
 
-import { sendTextMessage } from "@/lib/wzapi"
-
 /**
- * Envia uma mensagem de um Atendente/Usuário para o Lead via WhatsApp (WZAPI)
+ * Envia uma mensagem de um Atendente/Usuário para o Lead via WhatsApp (Meta Graph API)
  */
 export async function sendMessage(conversationId: string, content: string) {
     try {
