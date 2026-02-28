@@ -29,12 +29,26 @@ export async function requireUser() {
 
 /**
  * Enforces Role-Based Access Control (RBAC).
- * Only returns if the user role is 'ADMIN', otherwise redirects.
+ * Only returns if the user role is 'ADMIN' or 'SUPERADMIN', otherwise redirects.
  */
 export async function requireAdmin() {
     const user = await requireUser()
 
-    if (user.role !== 'ADMIN') {
+    if (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN') {
+        redirect('/dashboard')
+    }
+
+    return user
+}
+
+/**
+ * Enforces Super-Admin Access (SaaS Master).
+ * Only returns if the user role is strictly 'SUPERADMIN'.
+ */
+export async function requireSuperAdmin() {
+    const user = await requireUser()
+
+    if (user.role !== 'SUPERADMIN') {
         redirect('/dashboard')
     }
 

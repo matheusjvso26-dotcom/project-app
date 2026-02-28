@@ -31,9 +31,15 @@ const mainMenuItems = [
     { icon: Settings, label: "Configurações", href: "/dashboard/settings" },
 ]
 
-export function AnimatedSidebar() {
+export function AnimatedSidebar({ userRole }: { userRole?: string }) {
     const pathname = usePathname()
     const [isHovered, setIsHovered] = React.useState(false)
+
+    // Agrega item SuperAdmin se necessário
+    const finalMenuItems = [...mainMenuItems];
+    if (userRole === 'SUPERADMIN') {
+        finalMenuItems.push({ icon: Hexagon, label: "Painel Super Admin", href: "/dashboard/super-admin" });
+    }
 
     return (
         <aside
@@ -64,7 +70,7 @@ export function AnimatedSidebar() {
                     <div className={cn("px-[4.5rem] mb-3 text-xs font-semibold text-muted-foreground transition-opacity duration-300", isHovered ? "opacity-100" : "opacity-0")}>
                         Main Menu
                     </div>
-                    {mainMenuItems.map((item) => {
+                    {finalMenuItems.map((item) => {
                         const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href))
                         return (
                             <Link
