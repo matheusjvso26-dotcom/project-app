@@ -17,18 +17,21 @@ export interface Contact {
     company: string
     email: string
     phone: string
-    status: 'Novo' | 'Qualificado' | 'Em Negociação' | 'Cliente' | 'Perdido'
+    status: string
     lastContact: string
 }
 
-const getStatusBadge = (status: Contact['status']) => {
-    switch (status) {
-        case 'Novo': return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Novo</span>
-        case 'Qualificado': return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Qualificado</span>
-        case 'Em Negociação': return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Em Negociação</span>
-        case 'Cliente': return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">Cliente</span>
-        case 'Perdido': return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Perdido</span>
-    }
+const getStatusBadge = (status: string) => {
+    const s = status.toLowerCase()
+
+    if (s.includes('novo') || s.includes('triagem')) return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">{status}</span>
+    if (s.includes('qualificado') || s.includes('qualificação')) return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">{status}</span>
+    if (s.includes('negociação')) return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">{status}</span>
+    if (s.includes('ganho') || s.includes('cliente') || s.includes('won')) return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">{status}</span>
+    if (s.includes('perdido') || s.includes('lost')) return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">{status}</span>
+
+    // Genérico caso usuário do CRM crie Etapa Inédita no Kanban
+    return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">{status}</span>
 }
 
 interface ContactsBoardProps {

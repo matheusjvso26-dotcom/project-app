@@ -30,27 +30,40 @@ export default function WhatsAppMetaSettings() {
         fetchStatus()
     }, [])
 
-    const handleFacebookLoginSimulator = async () => {
-        // Num cenário real, aqui seria acionado o Evento:
-        // window.FB.login((response) => {...}, {scope: 'whatsapp_business_management, whatsapp_business_messaging'})
+    const handleFacebookLoginOpen = () => {
+        setActionLoading(true);
 
-        setActionLoading(true)
-        setError(null)
-
-        // Simulando resposta de código criptografado do FB
-        const mockCode = "oauth_code_abc_123"
-        const res = await exchangeMetaCodeForToken(mockCode)
-
-        if (res.error) {
-            setError(res.error)
+        // Dispara SDK Login (Configurações baseadas no ID App Fornecido)
+        if (typeof window !== 'undefined' && (window as any).FB) {
+            (window as any).FB.login(async function (response: any) {
+                if (response.authResponse) {
+                    const accessToken = response.authResponse.accessToken;
+                    const res = await exchangeMetaCodeForToken(accessToken);
+                    if (res.error) {
+                        setError(res.error);
+                    } else if (res.data) {
+                        setWabaId(res.data.wabaId || '');
+                        setPhoneId(res.data.phoneNumberId || '');
+                        setStatus('CONNECTED');
+                    }
+                } else {
+                    setError("Autenticação Cancelada pelo Usuário.");
+                }
+                setActionLoading(false);
+            }, {
+                config_id: 'SEU_CONFIG_ID_(Opcional)', // Requer Painel
+                response_type: 'code',
+                override_default_response_type: true,
+                extras: {
+                    setup: {
+                        // Passando metadata da Sessão se necessário
+                    }
+                }
+            });
         } else {
-            // Recarrega status real
-            const update = await checkMetaConnectionStatus()
-            setStatus(update.status as StatusType)
-            if (update.wabaId) setWabaId(update.wabaId)
-            if (update.phoneNumberId) setPhoneId(update.phoneNumberId)
+            setError("Meta SDK não Inicializado... Verifique seu NEXT_PUBLIC_META_APP_ID.");
+            setActionLoading(false);
         }
-        setActionLoading(false)
     }
 
     const handleDisconnect = async () => {
@@ -126,7 +139,7 @@ export default function WhatsAppMetaSettings() {
                             </p>
 
                             <button
-                                onClick={handleFacebookLoginSimulator}
+                                onClick={handleFacebookLoginOpen}
                                 disabled={actionLoading}
                                 className="flex items-center gap-2 px-5 py-2.5 bg-[#1877F2] hover:bg-[#166fe5] text-white font-medium text-sm rounded transition-colors disabled:opacity-50"
                             >

@@ -69,8 +69,13 @@ export async function exchangeMetaCodeForToken(oauthCode: string) {
             metaOauthConnected: true
         }
     })
-
-    return { success: true }
+    return {
+        success: true,
+        data: {
+            wabaId: mockWabaId,
+            phoneNumberId: mockPhoneId
+        }
+    }
 }
 
 /**
