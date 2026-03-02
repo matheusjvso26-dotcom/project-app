@@ -1,28 +1,75 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Bot, Plus, Settings, MessageSquare, BrainCircuit, Activity, BookOpen, AlertCircle, Share2 } from 'lucide-react'
-import { FlowBuilder } from './FlowBuilder'
+import React, { useState, useEffect } from 'react'
+import { Bot, Plus, Settings, MessageSquare, BrainCircuit, Activity, BookOpen, AlertCircle, Share2, Trash2 } from 'lucide-react'
+import { FlowBuilder, initialNodes, initialEdges } from './FlowBuilder'
+import { getBots, createDefaultConsignadoBot, toggleBotActive, deleteBot } from './actions'
+import { toast } from 'sonner'
 
-// --- Mock Data ---
-interface BotConfig {
+export interface BotConfig {
     id: string
     name: string
     role: string
     status: 'active' | 'training' | 'offline'
     sessions: number
     resolutionRate: string
+    workflowJson?: string
 }
 
-const mockBots: BotConfig[] = [
-    { id: '1', name: 'FLY UP Bot BANT', role: 'SDR de Qualificação', status: 'active', sessions: 1245, resolutionRate: '68%' },
-    { id: '2', name: 'Suporte L1', role: 'Atendimento Dúvidas', status: 'training', sessions: 320, resolutionRate: '45%' },
-]
-
 export function ChatbotBoard() {
-    const [bots] = useState<BotConfig[]>(mockBots)
+    const [bots, setBots] = useState<BotConfig[]>([])
     const [viewMode, setViewMode] = useState<'list' | 'training' | 'flow'>('list')
     const [activeBot, setActiveBot] = useState<BotConfig | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+
+    const fetchBots = async () => {
+        try {
+            const data = await getBots()
+            setBots(data as BotConfig[])
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchBots()
+    }, [])
+
+    const handleCreateConsignado = async () => {
+        const toastId = toast.loading("Gerando Agente Consignado...")
+        try {
+            await createDefaultConsignadoBot(initialNodes, initialEdges)
+            await fetchBots()
+            toast.success("Bot de Consignado Oficial ativado!", { id: toastId })
+        } catch (error: any) {
+            toast.error(error.message || "Falha ao criar agente", { id: toastId })
+        }
+    }
+
+    const handleToggleStatus = async (botId: string, currentStatus: string) => {
+        try {
+            const isActive = currentStatus === 'active'
+            await toggleBotActive(botId, isActive)
+            await fetchBots()
+            toast.success(`Agente ${isActive ? 'desativado' : 'ativado'} com sucesso.`)
+        } catch (error) {
+            toast.error("Erro ao alterar status.")
+        }
+    }
+
+    const handleDelete = async (botId: string, e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (!confirm("Tem certeza que deseja apagar DEFINITIVAMENTE esta Automação e todos seus fluxos?")) return
+        try {
+            await deleteBot(botId)
+            await fetchBots()
+            toast.success("Automação excluída do banco.")
+        } catch (error) {
+            toast.error("Erro ao tentar excluir agente.")
+        }
+    }
 
     const openTraining = (bot: BotConfig) => {
         setActiveBot(bot)
@@ -35,7 +82,7 @@ export function ChatbotBoard() {
     }
 
     if (viewMode === 'flow' && activeBot) {
-        return <FlowBuilder botName={activeBot.name} onBack={() => setViewMode('list')} />
+        return <FlowBuilder botName={activeBot.name} workflowJsonStr={activeBot.workflowJson} onBack={() => setViewMode('list')} />
     }
 
     if (viewMode === 'training' && activeBot) {
@@ -137,8 +184,8 @@ export function ChatbotBoard() {
                     <h1 className="text-2xl font-bold text-white tracking-tight">Agentes de IA & Chatbots</h1>
                     <p className="text-sm text-zinc-400 mt-1">Configure seus agentes virtuais, gerencie bases de conhecimento e monitore as métricas de retenção antes do transbordo.</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-[#ff7b00] hover:bg-[#e66a00] text-white rounded-lg shadow-lg shadow-[#ff7b00]/20 transition-colors font-medium text-sm">
-                    <Plus className="w-4 h-4" /> Novo Agente
+                <button onClick={handleCreateConsignado} className="flex items-center gap-2 px-4 py-2 bg-[#ff7b00] hover:bg-[#e66a00] text-white rounded-lg shadow-lg shadow-[#ff7b00]/20 transition-colors font-medium text-sm">
+                    <Plus className="w-4 h-4" /> Novo Agente Consignado
                 </button>
             </div>
 
@@ -205,9 +252,17 @@ export function ChatbotBoard() {
                                     <p className="text-sm text-zinc-400">{bot.role}</p>
                                 </div>
                             </div>
-                            <div>
-                                {bot.status === 'active' && <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-wider">Online</span>}
-                                {bot.status === 'training' && <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-wider">Treinando</span>}
+                            <div className="flex gap-2 items-center">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleToggleStatus(bot.id, bot.status) }}
+                                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors hover:brightness-125
+                                    ${bot.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}
+                                >
+                                    {bot.status === 'active' ? 'Online' : 'Offline'}
+                                </button>
+                                <button onClick={(e) => handleDelete(bot.id, e)} className="text-zinc-500 hover:text-rose-500 transition-colors p-1 opacity-0 group-hover:opacity-100">
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
 
@@ -235,7 +290,10 @@ export function ChatbotBoard() {
                 ))}
 
                 {/* Empty State / Add New */}
-                <div className="bg-[#151515] border-2 border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#ff7b00]/30 hover:bg-[#1c1c1c] transition-colors min-h-[220px]">
+                <div
+                    onClick={handleCreateConsignado}
+                    className="bg-[#151515] border-2 border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#ff7b00]/30 hover:bg-[#1c1c1c] transition-colors min-h-[220px]"
+                >
                     <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center text-zinc-500 shadow-sm mb-3">
                         <Plus className="w-6 h-6" />
                     </div>

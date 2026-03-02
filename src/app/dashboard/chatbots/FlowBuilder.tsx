@@ -20,7 +20,7 @@ import { Save, ArrowLeft, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { saveVisualFlow } from './actions' // Criaremos essa action
 
-const initialNodes: Node[] = [
+export const initialNodes: Node[] = [
     {
         id: 'start',
         type: 'input',
@@ -78,7 +78,7 @@ const initialNodes: Node[] = [
     }
 ]
 
-const initialEdges: Edge[] = [
+export const initialEdges: Edge[] = [
     { id: 'e-start-menu', source: 'start', target: 'msg-menu', animated: true, style: { stroke: '#ff7b00', strokeWidth: 2 } },
     { id: 'e-menu-f1', source: 'msg-menu', target: 'f1-dados', animated: true, label: 'Se Opção 1', style: { stroke: '#10b981', strokeWidth: 2 } },
     { id: 'e-menu-f2', source: 'msg-menu', target: 'f2-dados', animated: true, label: 'Se Opção 2', style: { stroke: '#10b981', strokeWidth: 2 } },
@@ -96,9 +96,12 @@ const initialEdges: Edge[] = [
     { id: 'e-f6-act', source: 'f6-dados', target: 'act-humano', animated: true, style: { stroke: '#52525b', strokeWidth: 2 } }
 ]
 
-export function FlowBuilder({ botName, onBack }: { botName: string, onBack: () => void }) {
-    const [nodes, setNodes] = useState<Node[]>(initialNodes)
-    const [edges, setEdges] = useState<Edge[]>(initialEdges)
+export function FlowBuilder({ botName, workflowJsonStr, onBack }: { botName: string, workflowJsonStr?: string, onBack: () => void }) {
+    // Tenta montar do banco de dados, senao cai no Mock de Consignado
+    const parsedData = workflowJsonStr ? JSON.parse(workflowJsonStr) : null
+
+    const [nodes, setNodes] = useState<Node[]>(parsedData?.nodes || initialNodes)
+    const [edges, setEdges] = useState<Edge[]>(parsedData?.edges || initialEdges)
     const [isSaving, setIsSaving] = useState(false)
 
     const onNodesChange = useCallback(
