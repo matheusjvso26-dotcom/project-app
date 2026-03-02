@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus, Download, FileText, Image as ImageIcon, FileAudio, Video, Sparkles } from 'lucide-react'
+import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus, Download, FileText, Image as ImageIcon, FileAudio, Video, Sparkles, MessageCircle, Briefcase } from 'lucide-react'
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -79,25 +79,21 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                 const refreshedChats = (await getConversations(Date.now())) as Chat[]
 
                 // RAÇA (RACE CONDITION) CHECK:
-                // Se o usuário clicou em algo DURANTE os milissegundos que o banco demorou pra responder, 
-                // descartamos os dados velhos para não chover (overwrite) a UI do usuário.
                 if (isSendingRef.current) return
 
                 setChats((prevChats) => {
                     let hasNewAlert = false
 
-                    // Verifica se algo novo "INBOUND" das nuvens chegou (webhook salvou e a gente pegou no pool)
                     const mergedChats = refreshedChats.map(newChat => {
                         const oldChat = prevChats.find(c => c.id === newChat.id)
 
                         if (oldChat) {
-                            // Se a thread cresceu, pegar a ultima da ponta e ver se é do cliente
                             if (newChat.messages.length > oldChat.messages.length) {
                                 const lastTipMessage = newChat.messages[newChat.messages.length - 1]
                                 if (lastTipMessage?.sender === 'client') hasNewAlert = true
                             }
 
-                            // Blindagem de Optimistic Messages: Garante que "fantasmas" não sumam no pooling lento
+                            // Blindagem de Optimistic Messages
                             const optimisticMessages = oldChat.messages.filter(m => m.id.toString().startsWith('opt-'))
                             if (optimisticMessages.length > 0) {
                                 const mergedMessages = [...newChat.messages]
@@ -108,9 +104,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                 })
                                 return { ...newChat, messages: mergedMessages }
                             }
-
                         } else if (newChat.messages.length > 0) {
-                            // Chat inédito parindo na base (Lead recém chegado e engatilhou boas-vindas)
                             hasNewAlert = true
                         }
 
@@ -120,10 +114,9 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                     // Se a constou NOVIDADE DE FORA... PLIM!
                     if (hasNewAlert) {
                         try {
-                            // Toca arquivo mp3 de notificação limpo public-domain do mixkit
                             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3')
                             audio.volume = 0.6
-                            audio.play().catch(e => console.warn('Browser Safari/Chrome bloqueou Audio Autoplay sem interação', e))
+                            audio.play().catch(e => console.warn('Browser bloqueou Audio Autoplay sem interação'))
                         } catch (e) { }
                     }
 
@@ -134,12 +127,10 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             }
         }
 
-        // Polling super agressivo de 1.5s para emular Realtime perfeitamente no MVP B2B.
         const intervalId = setInterval(fetchMessages, 1500)
         return () => clearInterval(intervalId)
     }, [isSending])
 
-    // Create Deal State
     const [isAddDealOpen, setIsAddDealOpen] = useState(false)
     const [newDeal, setNewDeal] = useState({ title: '', value: 0 })
 
@@ -151,6 +142,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         const tempText = messageInput.trim()
         setMessageInput('') // Clear UI instantly
         setIsSending(true)
+        setShowEmojiPicker(false)
 
         // Optimistic UI Append
         const optimisticId = `opt-${Date.now()}`
@@ -175,10 +167,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         }))
 
         try {
-            // Wait for DB Transaction & WhatsApp Provider Post
             const realMessage = await sendMessage(activeChatId, tempText)
-
-            // Swap Optimistic ID with Real DB ID
             setChats(prev => prev.map(c => {
                 if (c.id === activeChatId) {
                     return {
@@ -188,10 +177,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                 }
                 return c
             }))
-
         } catch (error: any) {
             toast.error(error.message || "Erro no envio de mensagem WhatsApp.")
-            // Remove optimistic on failure
             setChats(prev => prev.map(c => {
                 if (c.id === activeChatId) {
                     return { ...c, messages: c.messages.filter(m => m.id !== optimisticId) }
@@ -246,13 +233,9 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             await updateDealValue(dealId, num)
             toast.success("Valor atualizado na esteira Kanban!")
 
-            // Atualiza de forma otimista localmente
             setChats(prev => prev.map(c => {
                 if (c.id === activeChatId) {
-                    return {
-                        ...c,
-                        deals: c.deals.map(d => d.id === dealId ? { ...d, value: num } : d)
-                    }
+                    return { ...c, deals: c.deals.map(d => d.id === dealId ? { ...d, value: num } : d) }
                 }
                 return c
             }))
@@ -267,7 +250,6 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         if (!activeChatId || !activeChat) return
 
         setIsSending(true)
-        // Optimistic toggle
         const newStatus = !activeChat.isBotHandling
         setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, isBotHandling: newStatus } : c))
 
@@ -276,7 +258,6 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             toast.success(newStatus ? "Robô reativado para esta conversa." : "Atendimento assumido pelo Humano.")
         } catch (error: any) {
             toast.error("Falha ao alterar controle do bot.")
-            // Rollback on fail
             setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, isBotHandling: !newStatus } : c))
         } finally {
             setIsSending(false)
@@ -290,7 +271,6 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         const currentTags = activeChat.tags || []
         const newTags = currentTags.includes(tag) ? currentTags.filter(t => t !== tag) : [...currentTags, tag]
 
-        // Optimistic toggle
         setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, tags: newTags } : c))
 
         try {
@@ -298,7 +278,6 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             toast.success(newTags.includes(tag) ? `Tag '${tag}' adicionada.` : `Tag '${tag}' removida.`)
         } catch (error: any) {
             toast.error("Falha ao atualizar tag.")
-            // Rollback on fail
             setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, tags: currentTags } : c))
         } finally {
             setIsSending(false)
@@ -313,7 +292,6 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         try {
             const aiResponse = await generateAiReply(activeChatId)
 
-            // Nova arquitetura segura contra Digest Errors
             if (aiResponse.error) {
                 toast.error(aiResponse.error, { id: toastId })
                 return
@@ -335,84 +313,84 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         : chats
 
     return (
-        <div className="flex h-full w-full bg-[#151515] relative z-10 border-l border-border/10">
-
-            {/* 1. Chats List Sidebar - SaaS Style */}
-            <div className="w-80 flex-shrink-0 flex flex-col bg-[#1c1c1c] border-r border-border/20">
-                <div className="p-3 bg-transparent flex items-center justify-between border-b border-border/10">
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-[#151515] text-[#ff7b00] border border-border/30 flex items-center justify-center font-bold text-sm">
-                            EU
-                        </div>
-                        <h2 className="text-sm font-bold text-white">Caixa de Entrada</h2>
+        <div className="flex h-full w-full bg-[#111b21] text-[#e9edef] overflow-hidden font-sans border-l border-white/5 relative z-10">
+            {/* 1. Sidebar (Esquerda, Lista de Chats) */}
+            <div className={`flex-shrink-0 flex flex-col border-r border-[#202c33] transition-all duration-300 ${activeChatId ? 'hidden lg:flex w-full lg:w-[32%]' : 'w-full lg:w-[32%]'}`}>
+                {/* Header Sidebar */}
+                <div className="h-[59px] flex items-center justify-between px-4 bg-[#202c33] shrink-0 border-b border-[#202c33]">
+                    <div className="w-10 h-10 rounded-full bg-[#6b7c85] text-white flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 border-2 border-transparent hover:border-[#00a884] cursor-pointer transition-colors shadow">
+                        <img src="https://ui-avatars.com/api/?name=EU&background=6b7c85&color=fff" alt="User" />
+                    </div>
+                    <div className="flex gap-2 text-[#aebac1]">
+                        <button title="Automações" className="p-1 hover:text-white transition-colors">
+                            <Bot className="w-[20px] h-[20px]" />
+                        </button>
+                        <button title="Limpar Filtro" onClick={() => setActiveTagFilter(null)} className="p-1 hover:text-white transition-colors">
+                            <MessageCircle className="w-[20px] h-[20px]" />
+                        </button>
+                        <button className="p-1 hover:text-white transition-colors">
+                            <MoreVertical className="w-[20px] h-[20px]" />
+                        </button>
                     </div>
                 </div>
 
-                <div className="p-2 border-b border-border/10">
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <Input
+                {/* Search Bar */}
+                <div className="p-[10px] border-b border-[#202c33] bg-[#111b21]">
+                    <div className="relative flex items-center bg-[#202c33] rounded-[8px] h-[35px] px-3">
+                        <Search className="w-4 h-4 text-[#aebac1] shrink-0" />
+                        <input
                             type="text"
-                            placeholder="Buscar conversas..."
-                            className="w-full pl-9 bg-[#151515] text-white border-border/20 rounded-lg h-9 placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-[#ff7b00]"
+                            placeholder="Pesquisar ou começar uma nova conversa"
+                            className="bg-transparent border-none outline-none text-[14px] ml-4 w-full placeholder:text-[#8696a0] text-[#e9edef] font-normal"
                         />
                     </div>
-
-                    {/* Tags Filer */}
-                    <div className="flex items-center gap-1.5 mt-3 overflow-x-auto scrollbar-none pb-1">
-                        <button
-                            onClick={() => setActiveTagFilter(null)}
-                            className={`text-[10px] whitespace-nowrap px-2.5 py-1 rounded-full font-medium transition-colors border ${!activeTagFilter ? 'bg-[#ff7b00] text-white border-[#ff7b00]' : 'bg-[#151515] text-zinc-400 border-white/5 hover:border-white/10'}`}
-                        >
-                            Todas
-                        </button>
-                        {AVAILABLE_TAGS.map(tag => (
-                            <button
-                                key={tag}
-                                onClick={() => setActiveTagFilter(tag)}
-                                className={`text-[10px] whitespace-nowrap px-2.5 py-1 rounded-full font-medium transition-colors border ${activeTagFilter === tag ? 'bg-orange-500 text-white border-orange-500' : 'bg-[#151515] text-zinc-400 border-white/5 hover:border-white/10'}`}
-                            >
-                                {tag}
-                            </button>
-                        ))}
-                    </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto scrollbar-thin">
+                {/* Filters Row */}
+                <div className="flex px-3 py-2.5 gap-[7px] border-b border-[#202c33] overflow-x-auto scrollbar-none">
+                    <button onClick={() => setActiveTagFilter(null)} className={`px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap ${!activeTagFilter ? 'bg-[#00a884]/20 text-[#00a884] hover:bg-[#00a884]/30' : 'bg-[#202c33] hover:bg-[#2a3942] text-[#aebac1]'}`}>
+                        Todas
+                    </button>
+                    {AVAILABLE_TAGS.map(tag => (
+                        <button key={tag} onClick={() => setActiveTagFilter(tag)} className={`px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap ${activeTagFilter === tag ? 'bg-[#00a884]/20 text-[#00a884] hover:bg-[#00a884]/30' : 'bg-[#202c33] hover:bg-[#2a3942] text-[#aebac1]'}`}>
+                            {tag}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Chat List */}
+                <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#202c33] scrollbar-track-transparent">
                     {filteredChats.map(chat => (
                         <div
                             key={chat.id}
                             onClick={() => setActiveChatId(chat.id)}
-                            className={`flex items-center gap-3 p-3 cursor-pointer transition-colors border-b border-border/5 ${activeChatId === chat.id ? 'bg-[#ff7b00]/10 border-l-2 border-l-[#ff7b00]' : 'hover:bg-white/5 border-l-2 border-l-transparent'}`}
+                            className={`flex items-center gap-[14px] pl-[13px] pr-4 cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-[#2a3942]' : 'hover:bg-[#202c33]'}`}
                         >
-                            <div className="relative">
-                                <div className="w-11 h-11 rounded-full bg-[#2a2a2a] flex items-center justify-center text-white/90 font-bold text-sm flex-shrink-0 border border-white/5">
+                            <div className="relative shrink-0 py-[11px]">
+                                <div className="w-[49px] h-[49px] rounded-full bg-[#dfe5e7] flex items-center justify-center text-[#111b21] font-semibold text-xl overflow-hidden shadow-sm">
                                     {chat.name.substring(0, 2).toUpperCase()}
                                 </div>
                                 {chat.isBotHandling && (
-                                    <div className="absolute -bottom-1 -right-1 bg-[#1c1c1c] rounded-full p-0.5 shadow-sm border border-border/30">
-                                        <Bot className="w-3.5 h-3.5 text-[#ff7b00]" />
+                                    <div className="absolute bottom-2.5 -right-0.5 bg-[#111b21] rounded-full p-0.5 shadow-sm border border-[#111b21]">
+                                        <Bot className="w-[14px] h-[14px] text-[#00a884]" />
                                     </div>
                                 )}
                             </div>
-
-                            <div className="flex-1 min-w-0 pr-1 pb-1">
-                                <div className="flex justify-between items-baseline mb-0.5">
-                                    <h3 className={`text-[14px] truncate font-medium ${activeChatId === chat.id ? 'text-[#ff7b00]' : 'text-zinc-200'}`}>
+                            <div className="flex-1 min-w-0 border-b border-[#202c33] py-[13px] h-full flex flex-col justify-center">
+                                <div className="flex justify-between items-center mb-[3px]">
+                                    <h3 className="text-[17px] leading-[21px] truncate text-[#e9edef] -mt-1 font-normal">
                                         {chat.name}
                                     </h3>
-                                    <span className={`text-[11px] whitespace-nowrap ml-2 ${chat.unread > 0 ? 'text-[#ff7b00] font-bold' : 'text-zinc-500'}`}>
+                                    <span className={`text-[12px] whitespace-nowrap ml-2 leading-[14px] -mt-1 ${chat.unread > 0 ? 'text-[#00a884] font-medium' : 'text-[#8696a0]'}`}>
                                         {chat.time}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center mt-1">
-                                    <p className={`text-[12px] truncate ${chat.unread > 0 ? 'text-zinc-300 font-medium' : 'text-zinc-500'}`}>
+                                <div className="flex justify-between items-center">
+                                    <p className="text-[14px] leading-[20px] truncate text-[#8696a0] font-normal tracking-wide">
                                         {chat.lastMessage}
                                     </p>
                                     {chat.unread > 0 && (
-                                        <div className="w-4 h-4 rounded-full bg-[#ff7b00] flex items-center justify-center text-white text-[9px] font-bold shadow-sm flex-shrink-0">
+                                        <div className="w-[18px] h-[18px] rounded-full bg-[#00a884] flex items-center justify-center text-[#111b21] text-[11px] font-bold shrink-0 ml-2">
                                             {chat.unread}
                                         </div>
                                     )}
@@ -420,64 +398,137 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             </div>
                         </div>
                     ))}
+                    {filteredChats.length === 0 && (
+                        <div className="text-center p-6 mt-10 text-[#8696a0] text-sm">
+                            Nenhuma conversa encontrada.
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* 2. Chat Area - Deep Dark SaaS Style */}
+            {/* 2. Chat Area Principal (Direita) */}
             {activeChat ? (
-                <div className="flex-1 flex flex-col bg-[#151515] relative overflow-hidden">
+                <div className={`flex-1 flex flex-col bg-[#0b141a] relative ${!activeChatId && 'hidden lg:flex'}`}>
+
+                    {/* Background Pattern WPP Overlay dark default WPP Doodles */}
+                    <div className="absolute inset-0 opacity-[0.06] pointer-events-none z-0 mix-blend-screen" style={{ backgroundImage: 'url("https://static.whatsapp.net/rsrc.php/v3/yl/r/r_QxIsuT8R4.png")', backgroundRepeat: 'repeat', backgroundSize: '400px' }}></div>
 
                     {/* Chat Header */}
-                    <div className="h-[60px] flex-shrink-0 flex items-center justify-between px-6 bg-[#1c1c1c] z-10 border-b border-border/10">
-                        <div className="flex items-center gap-4 cursor-pointer">
-                            <div className="w-10 h-10 rounded-full bg-[#2a2a2a] flex items-center justify-center font-bold text-sm text-white border border-white/5">
+                    <div className="h-[59px] flex items-center justify-between px-4 bg-[#202c33] z-10 shrink-0 shadow-sm border-l border-transparent">
+                        <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveChatId('')}>
+                            {/* Botão de voltar (mobile) */}
+                            <button className="lg:hidden text-[#aebac1] hover:text-white" title="Voltar para a lista">
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" className="fill-current"><path d="M12 4l1.4 1.4L7.8 11H20v2H7.8l5.6 5.6L12 20l-8-8 8-8z"></path></svg>
+                            </button>
+                            <div className="w-10 h-10 rounded-full bg-[#dfe5e7] flex items-center justify-center font-bold text-[#111b21] text-lg shrink-0 overflow-hidden shadow">
                                 {activeChat.name.substring(0, 2).toUpperCase()}
                             </div>
-                            <div className="flex flex-col justify-center">
-                                <h2 className="text-[15px] font-medium text-white tracking-wide">{activeChat.name}</h2>
-                                <p className="text-[12px] text-[#ff7b00] font-light mt-0.5">
+                            <div className="flex flex-col flex-1 min-w-0 pr-2">
+                                <h2 className="text-[16px] text-[#e9edef] font-normal truncate">{activeChat.name}</h2>
+                                <p className="text-[13px] text-[#8696a0] truncate mt-[1px]">
                                     {activeChat.isBotHandling ? (
-                                        <span className="flex items-center gap-1">
-                                            <Bot className="w-3 h-3" /> Em triagem automática
+                                        <span className="flex items-center gap-1.5 font-medium text-[#00a884]">
+                                            <Bot className="w-3.5 h-3.5" /> robô auto-piloto
                                         </span>
-                                    ) : 'online'}
+                                    ) : 'online... escrevendo sua mensagem'}
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <div className="flex gap-1.5 hidden md:flex mr-2">
-                                {AVAILABLE_TAGS.map(tag => {
-                                    const isActive = activeChat.tags?.includes(tag)
-                                    return (
-                                        <button
-                                            key={tag}
-                                            onClick={() => handleToggleTag(tag)}
-                                            className={`text-[10px] whitespace-nowrap px-2 py-0.5 rounded border transition-colors shadow-sm ${isActive ? 'bg-[#ff7b00]/20 text-[#ff7b00] border-[#ff7b00]/40' : 'bg-transparent text-zinc-500 border-white/5 hover:border-white/20'}`}
-                                        >
-                                            {tag}
-                                        </button>
-                                    )
-                                })}
-                            </div>
+
+                        <div className="flex items-center gap-[22px] text-[#aebac1]">
+
+                            {/* Modal de CRM Oculto no ícone de Sidebar (Listra) */}
+                            <Dialog open={isAddDealOpen} onOpenChange={setIsAddDealOpen}>
+                                <DialogTrigger asChild>
+                                    <button title="Gestão de Negócios / Painel Comercial" className="hover:text-white transition-colors">
+                                        <Briefcase className="w-[22px] h-[22px]" />
+                                    </button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px] bg-[#202c33] border border-white/10 text-[#e9edef] shadow-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-white text-lg font-medium">Perfil Comercial</DialogTitle>
+                                        <DialogDescription className="text-[#8696a0] text-sm mt-1">{activeChat.name} • {activeChat.phone}</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="py-2 flex flex-col gap-4">
+                                        <div className="bg-[#111b21] p-3.5 rounded-lg flex items-center justify-between border border-transparent">
+                                            <span className="text-sm font-semibold tracking-wide text-[#e9edef]">LGPD: Assinatura de Conversa</span>
+                                            <ShieldAlert className={`w-[18px] h-[18px] ${activeChat.lgpdConsent ? 'text-[#00a884]' : 'text-orange-500'}`} />
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-[12px] font-bold uppercase tracking-widest text-[#00a884] mb-2 px-1">Negócios no Kanban:</h4>
+                                            <div className="flex flex-col gap-2">
+                                                {activeChat.deals?.map(deal => (
+                                                    <div key={deal.id} className="bg-[#111b21] p-3.5 rounded-lg flex justify-between items-center cursor-pointer border border-[#202c33] hover:border-[#00a884]/40 transition-all shadow-sm" onClick={() => handleEditDealValue(deal.id, deal.value)}>
+                                                        <div>
+                                                            <p className="font-medium text-[15px] text-[#e9edef]">{deal.title}</p>
+                                                            <p className="text-[#00a884] text-[11px] font-bold uppercase mt-1 tracking-wider bg-[#00a884]/10 rounded px-1.5 py-0.5 inline-block">{deal.stageName}</p>
+                                                        </div>
+                                                        <span className="font-bold text-[16px] text-white">
+                                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.value)}
+                                                        </span>
+                                                    </div>
+                                                ))}
+
+                                                {(!activeChat.deals || activeChat.deals.length === 0) && (
+                                                    <div className="text-center p-5 bg-[#111b21] rounded-lg border border-[#202c33]">
+                                                        <p className="text-[13px] text-[#8696a0] font-medium">Você ainda não converteu negócios com este contato.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-[#111b21] p-3 rounded-lg border border-[#202c33] mt-2">
+                                            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#aebac1] mb-2">Criar Oportunidade</h4>
+                                            <div className="grid grid-cols-2 gap-2 mb-2">
+                                                <Input placeholder="Título Comercial" value={newDeal.title} onChange={e => setNewDeal({ ...newDeal, title: e.target.value })} className="bg-[#202c33] border-none text-[13px] h-[34px] text-white placeholder:text-[#8696a0]" />
+                                                <MoneyInput value={newDeal.value} onValueChange={val => setNewDeal({ ...newDeal, value: val })} className="bg-[#202c33] border-none text-[13px] h-[34px] text-white placeholder:text-[#8696a0]" />
+                                            </div>
+                                            <Button type="button" className="bg-[#00a884] hover:bg-[#00bfa5] text-[#111b21] font-bold h-9 w-full shadow border-none transition-colors" onClick={async () => {
+                                                if (!newDeal.title) return toast.error("Por favor dê um nome a Oportunidade Kanban.");
+                                                setIsSending(true)
+                                                try {
+                                                    const deal = await createDealFromInbox(activeChat.id, newDeal.title, newDeal.value || 0)
+                                                    setChats(prev => prev.map(c => c.id === activeChat.id ? { ...c, deals: [deal, ...c.deals] } : c))
+                                                    setNewDeal({ title: '', value: 0 })
+                                                    toast.success("Negócio Criado!")
+                                                } catch (e: any) { toast.error(e.message) }
+                                                finally { setIsSending(false) }
+                                            }}>
+                                                ENVIAR PARA KANBAN B2B
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+
+                            <Search className="w-5 h-5 cursor-pointer hover:text-white transition-colors" />
 
                             <button
                                 onClick={handleToggleBot}
-                                className={`text-[12px] font-bold px-3 py-1.5 rounded-md transition-colors border ${activeChat.isBotHandling ? 'text-zinc-300 border-white/20 hover:bg-white/10' : 'text-[#ff7b00] bg-[#ff7b00]/10 border-[#ff7b00]/30 hover:bg-[#ff7b00]/20'}`}
+                                className={`px-[10px] py-[4px] text-[11.5px] font-bold rounded flex items-center gap-1.5 uppercase tracking-wide transition-colors ${activeChat.isBotHandling ? 'text-[#8696a0] bg-[#111b21] border border-white/10 hover:bg-white/5' : 'bg-[#00a884] text-[#111b21] hover:bg-[#00bfa5] shadow'}`}
                             >
-                                {activeChat.isBotHandling ? "Assumir Conversa" : "Devolver ao Robô"}
+                                {activeChat.isBotHandling ? "Assumir" : <><Bot className="w-3.5 h-3.5" /> Automático</>}
                             </button>
+                            <MoreVertical className="w-5 h-5 cursor-pointer hover:text-white transition-colors" />
                         </div>
                     </div>
 
-                    {/* Messages Canvas */}
-                    <div className="flex-1 overflow-y-auto px-[10%] py-6 z-10 flex flex-col gap-4 scrollbar-thin">
-                        <div className="text-center mb-4">
-                            <span className="bg-[#1c1c1c] text-zinc-400 text-[11px] px-3 py-1 rounded-full border border-white/5 font-medium tracking-wide">Hoje</span>
+                    {/* Messages Window Layers */}
+                    <div className="flex-1 overflow-y-auto px-[5%] lg:px-[9%] py-[15px] z-10 flex flex-col gap-[2px] scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                        <div className="text-center mb-5 mt-2">
+                            <span className="bg-[#182229] text-[#8696a0] text-[12.5px] px-3 py-1.5 rounded-lg shadow-sm tracking-wide uppercase font-medium inline-block">Hoje</span>
                         </div>
 
-                        {activeChat.messages.map((message) => {
+                        {activeChat.messages.map((message, index) => {
                             const isMe = message.sender === 'me'
                             const isBot = message.sender === 'bot'
+
+                            // Agrupar balões consecutivos
+                            const prevMessage = activeChat.messages[index - 1]
+                            const nextMessage = activeChat.messages[index + 1]
+                            const isFirstInGroup = !prevMessage || prevMessage.sender !== message.sender
+                            const isLastInGroup = !nextMessage || nextMessage.sender !== message.sender
 
                             let displayContent = message.content
                             let isMedia = false
@@ -493,72 +544,89 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                 } catch (e) { }
                             }
 
-                            // High Contrast SaaS Dark Bubbles
-                            let bubbleClass = "px-4 py-2.5 shadow-md text-[13.5px] leading-relaxed max-w-[75%] lg:max-w-[65%] "
+                            // WPP Web Balões
+                            let bubbleClass = "relative px-2.5 py-1.5 text-[14.2px] leading-[19px] max-w-[85%] lg:max-w-[70%] min-w-[90px] text-[#e9edef] shadow-sm "
                             if (isMe || isBot) {
-                                bubbleClass += "bg-[#ff7b00] text-white rounded-2xl rounded-tr-sm ml-auto"
+                                bubbleClass += "bg-[#005c4b] ml-auto "
+                                bubbleClass += isFirstInGroup ? "rounded-l-[7.5px] rounded-bl-[7.5px] rounded-br-[7.5px] rounded-tr-none " : "rounded-[7.5px] "
                             } else {
-                                bubbleClass += "bg-[#222222] text-zinc-200 border border-white/5 rounded-2xl rounded-tl-sm mr-auto"
+                                bubbleClass += "bg-[#202c33] mr-auto "
+                                bubbleClass += isFirstInGroup ? "rounded-r-[7.5px] rounded-br-[7.5px] rounded-bl-[7.5px] rounded-tl-none " : "rounded-[7.5px] "
                             }
 
+                            // Adicionar espaçamento se for primeiro do grupo (exceto o 1o absoluto)
+                            const groupSpacing = isFirstInGroup && index !== 0 ? "mt-[9px]" : ""
+
                             return (
-                                <div key={message.id} className={`flex w-full`}>
+                                <div key={message.id} className={`flex w-full ${groupSpacing}`}>
                                     <div className={bubbleClass}>
-                                        {isBot && (
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/80 mb-1.5 tracking-wider uppercase">
-                                                <Bot className="w-3 h-3" /> FLY UP Bot
+
+                                        {/* Corner SVG emulation via Tailwind border trick or skipped for pure clean css */}
+
+                                        {isBot && isFirstInGroup && (
+                                            <div className="flex items-center gap-1.5 text-[12px] font-bold text-[#b1dfd6] mb-[2px] leading-none">
+                                                🤖 Atendente Virtual
                                             </div>
                                         )}
-                                        <div className="whitespace-pre-wrap">
+                                        {(!isBot && !isMe) && isFirstInGroup && (
+                                            <div className="text-[12.5px] font-bold text-[#25d366] mb-[2px] leading-[21px] flex justify-between">
+                                                <span>~ {activeChat.name.split(' ')[0]}</span>
+                                            </div>
+                                        )}
+
+                                        <div className="whitespace-pre-wrap relative pb-[12px]">
                                             {isMedia && (
-                                                <span className="flex items-center gap-2 mb-1 opacity-80 text-[11px] font-bold">
-                                                    {msgType === 'DOCUMENT' && <FileText className="w-3.5 h-3.5" />}
-                                                    {msgType === 'IMAGE' && <ImageIcon className="w-3.5 h-3.5" />}
-                                                    {msgType === 'AUDIO' && <FileAudio className="w-3.5 h-3.5" />}
-                                                    {msgType === 'VIDEO' && <Video className="w-3.5 h-3.5" />}
+                                                <span className="flex items-center gap-2 mb-1.5 opacity-80 text-[12px] font-bold text-white/60">
+                                                    {msgType === 'DOCUMENT' && <FileText className="w-4 h-4" />}
+                                                    {msgType === 'IMAGE' && <ImageIcon className="w-4 h-4" />}
+                                                    {msgType === 'AUDIO' && <FileAudio className="w-4 h-4" />}
+                                                    {msgType === 'VIDEO' && <Video className="w-4 h-4" />}
                                                 </span>
                                             )}
                                             {displayContent}
+                                            {/* Spacer so text doesn't overlap time absolute bottom */}
+                                            <span className="inline-block w-[38px] h-[1px]"></span>
                                         </div>
 
                                         {isMedia && mediaId && (
                                             msgType === 'IMAGE' ? (
-                                                <img src={`/api/whatsapp/media/${mediaId}`} className="max-w-full rounded-md mt-2 object-cover object-center max-h-[300px]" alt="Mídia Recebida" />
+                                                <img src={`/api/whatsapp/media/${mediaId}`} className="max-w-full rounded-[5px] mt-1 mb-3 object-cover object-center max-h-[300px]" alt="Mídia Recebida" />
                                             ) : msgType === 'AUDIO' ? (
-                                                <div className="flex flex-col gap-2 w-full mt-2">
-                                                    <audio src={`/api/whatsapp/media/${mediaId}`} controls className="w-full h-10" />
+                                                <div className="flex flex-col gap-2 w-full mt-1 mb-3 bg-[#111b21]/20 p-2 rounded-lg">
+                                                    <audio src={`/api/whatsapp/media/${mediaId}`} controls className="w-full h-10 grayscale invert hue-rotate-180 brightness-150" />
                                                     {message.transcription && (
-                                                        <div className="bg-black/20 p-2.5 rounded-lg border border-white/5 text-[12.5px] italic text-zinc-300 shadow-inner">
+                                                        <div className="bg-black/20 p-2 rounded-[5px] border border-transparent text-[13px] italic text-[#e9edef] mt-1">
                                                             <Mic className="w-3 h-3 inline mr-1 opacity-70" />
                                                             {message.transcription}
                                                         </div>
                                                     )}
                                                 </div>
                                             ) : msgType === 'VIDEO' ? (
-                                                <video src={`/api/whatsapp/media/${mediaId}`} controls className="w-full rounded-md mt-2 max-h-[250px]" />
+                                                <video src={`/api/whatsapp/media/${mediaId}`} controls className="w-full rounded-[5px] mt-1 mb-3 max-h-[250px]" />
                                             ) : (
-                                                <a href={`/api/whatsapp/media/${mediaId}`} target="_blank" rel="noreferrer" className="mt-2 text-[11px] flex items-center justify-center gap-1.5 bg-black/20 hover:bg-black/40 w-full px-3 py-2 rounded-md border border-white/10 transition-colors shadow-inner font-medium">
-                                                    <Download className="w-3.5 h-3.5 text-zinc-300" /> Baixar Anexo (Original)
+                                                <a href={`/api/whatsapp/media/${mediaId}`} target="_blank" rel="noreferrer" className="mt-1 mb-3 text-[13.5px] flex items-center justify-center gap-2 bg-[#111b21]/30 hover:bg-[#111b21]/50 w-full px-4 py-3 rounded-[5px] transition-colors font-semibold text-[#e9edef] border border-white/5">
+                                                    <Download className="w-4 h-4" /> Download Arquivo
                                                 </a>
                                             )
                                         )}
 
-                                        <div className={`text-[10px] text-right mt-1.5 flex items-center justify-end gap-1 float-right pl-4 pt-1 ${isMe || isBot ? 'text-white/70' : 'text-zinc-500'}`}>
-                                            {message.time}
-                                            {isMe && message.status === 'read' && <span className="text-white text-[10px] font-bold -ml-0.5">✓✓</span>}
-                                            {isMe && message.status !== 'read' && <span className="text-white/50 text-[10px] font-bold -ml-0.5">✓✓</span>}
+                                        <div className={`absolute right-1.5 bottom-1 text-[11px] flex items-center flex-row-reverse gap-1 leading-none ${isMe || isBot ? 'text-[#87bcab]' : 'text-[#8696a0]'}`}>
+                                            {isMe && message.status === 'read' && <span className="text-[#53bdeb] text-[13px] -ml-[2px] tracking-tighter mix-blend-screen brightness-125">✓✓</span>}
+                                            {isMe && message.status === 'delivered' && <span className="text-[13px] -ml-[2px] tracking-tighter opacity-80">✓✓</span>}
+                                            {isMe && message.status === 'sent' && <span className="text-[13px] -ml-[2px] tracking-tighter opacity-50">✓</span>}
+                                            <span className="pt-[1px] font-medium opacity-90">{message.time}</span>
                                         </div>
                                     </div>
                                 </div>
                             )
                         })}
-                        <div ref={messagesEndRef} />
+                        <div ref={messagesEndRef} className="h-2" />
                     </div>
 
-                    {/* Input Area */}
-                    <div className="min-h-[70px] flex-shrink-0 bg-[#1c1c1c] px-6 py-3 flex items-center gap-3 z-10 border-t border-border/10 relative">
+                    {/* Input Area (Bottom Bar) */}
+                    <div className="min-h-[62px] flex-shrink-0 bg-[#202c33] px-3 py-[10px] flex items-end gap-2.5 z-10 w-full relative border-t border-transparent">
                         {showEmojiPicker && (
-                            <div className="absolute bottom-[80px] left-6 z-50 shadow-2xl rounded-lg overflow-hidden border border-white/10">
+                            <div className="absolute bottom-[70px] left-4 z-50 shadow-2xl rounded-lg overflow-hidden border border-white/5">
                                 <EmojiPicker
                                     theme={Theme.DARK}
                                     onEmojiClick={(e: EmojiClickData) => setMessageInput(prev => prev + e.emoji)}
@@ -566,30 +634,32 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             </div>
                         )}
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*,audio/*,application/pdf" onChange={handleFileUpload} />
-                        <button onClick={() => fileInputRef.current?.click()} className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-full transition-colors shrink-0">
-                            <Paperclip className="w-4 h-4" />
-                        </button>
-                        <button
-                            className={`p-2 rounded-full transition-colors shrink-0 ${showEmojiPicker ? 'text-[#ff7b00] bg-white/5' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
-                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        >
-                            <Smile className="w-4 h-4" />
-                        </button>
 
-                        <button
-                            disabled={isGeneratingAi}
-                            onClick={handleAiSuggestion}
-                            title="Sugerir Resposta Mágica"
-                            className="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0 disabled:opacity-50"
-                        >
-                            <Sparkles className={`w-4 h-4 ${isGeneratingAi ? 'animate-pulse' : ''}`} />
-                        </button>
+                        <div className="flex gap-[6px] items-center h-[42px] shrink-0 pl-1">
+                            <button
+                                className={`p-1.5 transition-colors rounded-full ${showEmojiPicker ? 'text-[#00a884] bg-[#2a3942]' : 'text-[#aebac1] hover:text-[#d1d7db]'}`}
+                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            >
+                                <Smile className="w-[26px] h-[26px]" />
+                            </button>
+                            <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-[#aebac1] hover:text-[#d1d7db] transition-colors rounded-full" title="Anexar">
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" className="fill-current"><path d="M1.816 15.556v.002c0 1.502.584 2.912 1.646 3.972s2.472 1.647 3.974 1.647a5.58 5.58 0 0 0 3.972-1.645l9.547-9.548c.769-.768 1.147-1.767 1.058-2.817-.079-.968-.548-1.927-1.319-2.698-1.594-1.592-4.068-1.711-5.517-.262l-7.916 7.915c-.881.881-.792 2.25.214 3.261.959.958 2.423 1.053 3.263.215l5.511-5.512c.28-.28.267-.722.053-.936l-.244-.244c-.191-.191-.567-.349-.957.04l-5.506 5.506c-.18.18-.635.127-.976-.214-.098-.097-.576-.613-.213-.973l7.915-7.917c.818-.817 2.267-.699 3.23.262.5.501.802 1.1.849 1.685.051.573-.156 1.111-.589 1.543l-9.547 9.549a3.97 3.97 0 0 1-2.829 1.171 3.975 3.975 0 0 1-2.83-1.173 3.973 3.973 0 0 1-1.172-2.828c0-1.071.415-2.076 1.172-2.83l7.209-7.211c.157-.157.264-.579.028-.814L11.5 4.36a.57.57 0 0 0-.834.018l-7.205 7.207a5.577 5.577 0 0 0-1.645 3.971z"></path></svg>
+                            </button>
+                            <button
+                                disabled={isGeneratingAi}
+                                onClick={handleAiSuggestion}
+                                title="Sugerir Resposta Mágica da IA Gemini"
+                                className="p-1.5 text-indigo-400 hover:text-indigo-300 hover:bg-slate-800 rounded-full transition-colors disabled:opacity-50"
+                            >
+                                <Sparkles className={`w-[22px] h-[22px] ${isGeneratingAi ? 'animate-pulse' : ''}`} />
+                            </button>
+                        </div>
 
-                        <div className="flex-1 bg-[#151515] border border-border/20 focus-within:border-[#ff7b00]/50 rounded-full flex items-center px-4 shadow-inner overflow-hidden transition-colors">
+                        <div className="flex-1 bg-[#2a3942] rounded-[8px] min-h-[42px] flex items-center px-4 overflow-hidden mb-1 mx-1 border border-transparent focus-within:border-[#8696a0]/20 transition-colors">
                             <input
                                 type="text"
-                                placeholder={activeChat?.isBotHandling ? "O chatbot está atendendo. Digite para assumir..." : "Escreva sua mensagem..."}
-                                className="w-full py-2.5 bg-transparent text-[14px] outline-none placeholder:text-zinc-600 text-zinc-200"
+                                placeholder={activeChat?.isBotHandling ? "Robô online. Digite para invadir e pausá-lo..." : "Mensagem"}
+                                className="w-full bg-transparent text-[15px] outline-none placeholder:text-[#8696a0] text-[#e9edef] py-2.5 h-full"
                                 value={messageInput}
                                 onChange={(e) => setMessageInput(e.target.value)}
                                 onKeyDown={(e) => {
@@ -601,142 +671,45 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             />
                         </div>
 
-                        {messageInput.trim() || isSending ? (
-                            <button
-                                onClick={handleSendMessage}
-                                disabled={isSending}
-                                className="p-3 bg-[#ff7b00] text-white rounded-full hover:bg-[#e66a00] transition-colors active:scale-95 shadow-lg shadow-[#ff7b00]/20 flex items-center justify-center shrink-0 disabled:opacity-50"
-                            >
-                                <Send className="w-4 h-4 ml-0.5" />
-                            </button>
-                        ) : (
-                            <button className="p-3 bg-[#2a2a2a] text-zinc-400 rounded-full hover:bg-[#333] hover:text-white transition-colors shrink-0">
-                                <Mic className="w-4 h-4" />
-                            </button>
-                        )}
+                        <div className="flex items-center h-[42px] shrink-0 pr-1">
+                            {messageInput.trim() || isSending ? (
+                                <button
+                                    onClick={handleSendMessage}
+                                    disabled={isSending}
+                                    title="Enviar mensagem"
+                                    className="p-2 text-[#aebac1] hover:text-[#00a884] transition-colors rounded-full disabled:opacity-50"
+                                >
+                                    <Send className="w-[24px] h-[24px] ml-0.5" />
+                                </button>
+                            ) : (
+                                <button className="p-2 text-[#aebac1] hover:text-[#d1d7db] transition-colors rounded-full" title="Mensagem de voz">
+                                    <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" className="fill-current"><path d="M11.999 14.942c2.001 0 3.531-1.53 3.531-3.531V4.35c0-2.001-1.53-3.531-3.531-3.531S8.469 2.35 8.469 4.35v7.061c0 2.001 1.53 3.531 3.53 3.531zm6.238-3.53c0 3.531-2.942 6.002-6.237 6.002s-6.237-2.471-6.237-6.002H3.761c0 4.001 3.178 7.297 7.061 7.885v3.884h2.354v-3.884c3.884-.588 7.061-3.884 7.061-7.885h-2.002z"></path></svg>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             ) : (
-                <div className="flex-1 bg-[#151515] flex items-center justify-center flex-col text-center">
-                    <div className="rounded-full bg-[#1c1c1c] p-6 mb-6 shadow-xl border border-white/5">
-                        <Globe className="w-16 h-16 text-zinc-600" />
-                    </div>
-                    <h2 className="text-2xl font-semibold text-white tracking-tight">FLY UP Web</h2>
-                    <p className="text-zinc-500 mt-3 max-w-sm text-sm">Selecione uma conversa ao lado e inicie o atendimento integrado com o CRM.</p>
-                </div>
-            )}
-
-            {/* 3. Deal / Contact Info Sidebar - Dark Mode */}
-            {activeChat && (
-                <div className="w-80 flex-shrink-0 bg-[#1c1c1c] hidden lg:flex flex-col border-l border-border/20">
-                    <div className="p-8 flex flex-col items-center text-center bg-transparent border-b border-border/10 z-10">
-                        <div className="w-24 h-24 rounded-full bg-[#2a2a2a] border border-white/5 flex items-center justify-center text-white font-bold text-3xl shadow-xl mb-4">
-                            {activeChat.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <h2 className="text-lg font-semibold text-white tracking-wide">{activeChat.name}</h2>
-                        <p className="text-[13px] text-zinc-400 mt-1">{activeChat.phone}</p>
+                <div className="hidden lg:flex flex-1 bg-[#222e35] items-center justify-center flex-col text-center relative z-10 w-full">
+                    {/* WPP Img Cover Home Default */}
+                    <div className="w-full max-w-lg mb-8 bg-[#202c33] rounded-full p-1 border-4 border-transparent flex items-center justify-center h-64 overflow-hidden text-zinc-700 font-bold opacity-30 shadow-inner">
+                        <img src="https://static.whatsapp.net/rsrc.php/v3/y6/r/wa669aeJeom.png" alt="WhatsApp Immersive" className="object-cover w-full h-full scale-110" />
                     </div>
 
-                    <div className="flex-1 bg-[#151515] overflow-y-auto scrollbar-thin p-4 flex flex-col gap-4">
-                        <div className="bg-[#1c1c1c] rounded-xl p-5 border border-white/5 shadow-md">
-                            <h3 className="text-[12px] font-bold uppercase tracking-wider text-zinc-500 mb-4">Informações</h3>
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3 text-[14px] text-zinc-300">
-                                    <Phone className="w-4 h-4 text-[#ff7b00]" />
-                                    {activeChat.phone}
-                                </div>
-                                <div className="flex items-center gap-3 text-[14px] text-zinc-400 hover:text-white transition-colors cursor-pointer">
-                                    <Mail className="w-4 h-4 text-zinc-500" />
-                                    <span>Adicionar e-mail...</span>
-                                </div>
-                            </div>
+                    <h2 className="text-[32px] font-extralight text-[#e9edef] tracking-tight mb-4 mt-2">
+                        WhatsApp Desktop Clone
+                    </h2>
+                    <p className="text-[#8696a0] text-[14px] leading-[20px] max-w-[440px]">
+                        Envie e receba mensagens sem precisar manter o celular conectado.
+                        <br />
+                        A força e potência do Pipeline CRM integrados na interface mais familiar do mundo.
+                    </p>
+
+                    <div className="absolute xl:bottom-12 bottom-8 flex flex-col items-center justify-center text-[12.5px] text-[#8696a0]">
+                        <div className="flex items-center gap-1.5 opacity-90 mb-1">
+                            <ShieldAlert className="w-[14px] h-[14px]" /> Protegido com Criptografia e Consentimento LGPD Activo
                         </div>
-
-                        <div className="bg-[#1c1c1c] rounded-xl p-5 border border-white/5 shadow-md">
-                            <h3 className="text-[12px] font-bold uppercase tracking-wider text-zinc-500 mb-4">Segurança LGPD</h3>
-                            <div className="flex items-start gap-3">
-                                <ShieldAlert className={`w-4 h-4 mt-0.5 ${activeChat.lgpdConsent ? 'text-emerald-500' : 'text-[#ff7b00]'}`} />
-                                <div>
-                                    <p className="text-[14px] text-white font-medium">Opt-in via Webhook</p>
-                                    <p className="text-[12px] text-zinc-500 mt-0.5">{activeChat.lgpdConsent ? 'Consentimento Ativo' : 'Pendente verificação'}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-[#1c1c1c] rounded-xl p-5 border border-white/5 shadow-md mb-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-[12px] font-bold uppercase tracking-wider text-zinc-500">Pipeline</h3>
-                                <Dialog open={isAddDealOpen} onOpenChange={setIsAddDealOpen}>
-                                    <DialogTrigger asChild>
-                                        <button className="text-[12px] font-bold text-[#ff7b00] hover:text-[#ff7b00]/80 flex items-center gap-1 transition-colors">
-                                            <Plus className="w-3.5 h-3.5" /> NOVO
-                                        </button>
-                                    </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[425px] bg-[#1c1c1c] border-border text-white">
-                                        <DialogHeader>
-                                            <DialogTitle>Nova Oportunidade</DialogTitle>
-                                            <DialogDescription className="text-zinc-400">Criando card CRM para {activeChat.name}.</DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="titleDeal" className="text-right text-zinc-300">Título</Label>
-                                                <Input id="titleDeal" placeholder="Venda Produto B2B..." value={newDeal.title} onChange={e => setNewDeal({ ...newDeal, title: e.target.value })} className="col-span-3 bg-[#151515] border-border/30" />
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="valueDeal" className="text-right text-zinc-300">Valor</Label>
-                                                <MoneyInput id="valueDeal" value={newDeal.value} onValueChange={val => setNewDeal({ ...newDeal, value: val })} className="col-span-3 bg-[#151515] border-border/30" />
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <Button type="button" className="bg-[#ff7b00] hover:bg-[#e66a00] text-white" onClick={async () => {
-                                                if (!newDeal.title) {
-                                                    toast.error("O título não pode estar vazio.")
-                                                    return
-                                                }
-                                                try {
-                                                    const deal = await createDealFromInbox(activeChat.id, newDeal.title, newDeal.value || 0)
-
-                                                    setChats(prev => prev.map(c => {
-                                                        if (c.id === activeChat.id) {
-                                                            return { ...c, deals: [deal, ...c.deals] }
-                                                        }
-                                                        return c
-                                                    }))
-                                                    toast.success("Negócio Criado e Inserido no Kanban!")
-                                                    setIsAddDealOpen(false)
-                                                    setNewDeal({ title: '', value: 0 })
-                                                } catch (e: any) {
-                                                    toast.error(e.message || "Falha ao criar oportunidade.")
-                                                }
-                                            }}>
-                                                Confirmar
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-
-                            {/* Deals from DB */}
-                            <div className="flex flex-col gap-3 mt-4">
-                                {activeChat.deals && activeChat.deals.length > 0 ? (
-                                    activeChat.deals.map(deal => (
-                                        <div key={deal.id} onClick={() => handleEditDealValue(deal.id, deal.value)} className="bg-[#151515] rounded-xl p-3 border border-border/10 cursor-pointer shadow-inner hover:border-[#ff7b00]/30 transition-colors group">
-                                            <h4 className="font-medium text-white text-[13px] group-hover:text-[#ff7b00] transition-colors">{deal.title}</h4>
-                                            <div className="flex items-center justify-between mt-2">
-                                                <span className="text-[11px] font-medium text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase tracking-wider">{deal.stageName}</span>
-                                                <span className="text-[13px] font-bold text-zinc-300">
-                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.value)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="bg-[#151515] rounded-xl p-4 border border-border/10 text-center">
-                                        <p className="text-[12px] text-zinc-500 font-medium">Nenhuma oportunidade atrelada.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <p className="opacity-50">Flow SaaS | Advanced B2B Dashboard</p>
                     </div>
                 </div>
             )}

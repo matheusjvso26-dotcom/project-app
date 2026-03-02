@@ -201,32 +201,31 @@ export async function POST(request: Request) {
 
                                 // Agenda Interceptor Nativo (Inbound)
                                 if (textContent && textContent.trim().toLowerCase().startsWith('/agenda')) {
-                                    let confirmTxt = ""
-                                    try {
-                                        const agendaResult = await processAgendaCommand(lead.id, textContent)
-                                        if (agendaResult) confirmTxt = agendaResult
-                                    } catch (err: any) {
-                                        confirmTxt = err.message || "Erro no comando de agendamento."
-                                    }
-
-                                    if (confirmTxt) {
-                                        const providerConfirm = await provider.sendMessage({
-                                            to: leadPhone,
-                                            text: confirmTxt
-                                        })
-                                        await prisma.message.create({
-                                            data: {
-                                                conversationId: conversation.id,
-                                                direction: "OUTBOUND",
-                                                content: confirmTxt,
-                                                type: "TEXT",
-                                                status: providerConfirm.success ? "SENT" : "FAILED",
-                                                providerId: providerConfirm.messageId || null
+                                    processAgendaCommand(lead.id, textContent)
+                                        .then(async (confirmTxt) => {
+                                            if (confirmTxt) {
+                                                const providerConfirm = await provider.sendMessage({
+                                                    to: leadPhone,
+                                                    text: confirmTxt
+                                                })
+                                                await prisma.message.create({
+                                                    data: {
+                                                        conversationId: conversation.id,
+                                                        direction: "OUTBOUND",
+                                                        content: confirmTxt,
+                                                        type: "TEXT",
+                                                        status: providerConfirm.success ? "SENT" : "FAILED",
+                                                        providerId: providerConfirm.messageId || null
+                                                    }
+                                                })
                                             }
                                         })
-                                        // Pula o processamento do robô se foi um comando explícito
-                                        return NextResponse.json({ success: true })
-                                    }
+                                        .catch(err => {
+                                            console.error("[API/WhatsApp] Erro silencioso na agenda:", err.message)
+                                        })
+
+                                    // Pula o processamento do robô se foi um comando explícito, indo p/ a prox msg
+                                    continue
                                 }
 
                                 // Fazemos bump na updatedAt da thread para subir ela
@@ -254,15 +253,18 @@ export async function POST(request: Request) {
                                 // ======================================
 
                                 try {
-                                    await processBotFlow({
+                                    // Não damos await deliberadamente para responder HTTP 200 à Meta instantaneamente.
+                                    processBotFlow({
                                         conversationId: conversation.id,
                                         leadPhone,
                                         incomingText: textContent,
                                         incomingType: msgType,
                                         isNewLead
+                                    }).catch((botErr: any) => {
+                                        console.error("[API/WhatsApp/BotEngine] Falha disparada assincronamente pelo robô:", botErr)
                                     })
                                 } catch (botErr) {
-                                    console.error("[API/WhatsApp/BotEngine] Falha ao processar maquina de estado do robô:", botErr)
+                                    console.error("[API/WhatsApp/BotEngine] Falha síncrona ao invocar processBotFlow:", botErr)
                                 }
                             }
                         } // Fim for messages
