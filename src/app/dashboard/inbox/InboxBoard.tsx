@@ -72,12 +72,11 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     }, [activeChatId, chats])
 
     // --- REALTIME MOTOR (POLLING) --- 
-    // Usado como MVP simples para buscar os pushes novos do Webhook da Meta
     useEffect(() => {
         const fetchMessages = async () => {
             if (isSendingRef.current) return // pausa a varredura se estiver ocorrendo uma ação
             try {
-                const refreshedChats = await getConversations()
+                const refreshedChats = (await getConversations(Date.now())) as Chat[]
 
                 // RAÇA (RACE CONDITION) CHECK:
                 // Se o usuário clicou em algo DURANTE os milissegundos que o banco demorou pra responder, 
@@ -88,19 +87,34 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                     let hasNewAlert = false
 
                     // Verifica se algo novo "INBOUND" das nuvens chegou (webhook salvou e a gente pegou no pool)
-                    refreshedChats.forEach(newChat => {
+                    const mergedChats = refreshedChats.map(newChat => {
                         const oldChat = prevChats.find(c => c.id === newChat.id)
+
                         if (oldChat) {
                             // Se a thread cresceu, pegar a ultima da ponta e ver se é do cliente
                             if (newChat.messages.length > oldChat.messages.length) {
                                 const lastTipMessage = newChat.messages[newChat.messages.length - 1]
                                 if (lastTipMessage?.sender === 'client') hasNewAlert = true
                             }
+
+                            // Blindagem de Optimistic Messages: Garante que "fantasmas" não sumam no pooling lento
+                            const optimisticMessages = oldChat.messages.filter(m => m.id.toString().startsWith('opt-'))
+                            if (optimisticMessages.length > 0) {
+                                const mergedMessages = [...newChat.messages]
+                                optimisticMessages.forEach(optMsg => {
+                                    if (!mergedMessages.find(m => m.content === optMsg.content && m.status === 'sent')) {
+                                        mergedMessages.push(optMsg)
+                                    }
+                                })
+                                return { ...newChat, messages: mergedMessages }
+                            }
+
                         } else if (newChat.messages.length > 0) {
                             // Chat inédito parindo na base (Lead recém chegado e engatilhou boas-vindas)
-                            // Mesmo que a utima msg seja do bot respondendo, apitamos pro dono que tem lead novo na loja
                             hasNewAlert = true
                         }
+
+                        return newChat
                     })
 
                     // Se a constou NOVIDADE DE FORA... PLIM!
@@ -113,7 +127,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                         } catch (e) { }
                     }
 
-                    return refreshedChats
+                    return mergedChats
                 })
             } catch (error) {
                 console.error("[Polling] Erro ao sincronizar as conversas:", error)

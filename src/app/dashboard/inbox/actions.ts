@@ -4,12 +4,14 @@ import prisma from "@/lib/prisma"
 import { requireUser } from "@/lib/auth-utils"
 import { getWhatsAppProvider } from "@/lib/whatsapp/provider"
 import { processAgendaCommand } from "@/lib/whatsapp/agendaHandler"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, unstable_noStore as noStore } from "next/cache"
 
 /**
  * Busca todas as conversas da organização atual
  */
-export async function getConversations() {
+export async function getConversations(cacheBuster?: number) {
+    noStore()
+
     const user = await requireUser()
 
     const conversations = await prisma.conversation.findMany({
@@ -19,7 +21,10 @@ export async function getConversations() {
         include: {
             lead: true,
             messages: {
-                orderBy: { createdAt: 'desc' },
+                orderBy: [
+                    { createdAt: 'desc' },
+                    { id: 'desc' }
+                ],
                 take: 50
             }
         },
