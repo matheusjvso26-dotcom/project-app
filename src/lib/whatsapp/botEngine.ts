@@ -118,15 +118,79 @@ Valor desejado: (ou "melhor proposta"):
 
 📎 Opcional: holerite + comprovante de residência.`
 
+// MENUS INTERATIVOS M2R CRED
+const M2R_00_OPTIONS = {
+    type: 'list',
+    body: M2R_00_BOAS_VINDAS,
+    buttonText: "Ver Modalidades",
+    options: [
+        { id: "1", title: "Aposentados (INSS)" },
+        { id: "2", title: "Pensionistas (INSS)" },
+        { id: "3", title: "Militares Exército" },
+        { id: "4", title: "Servidores Públicos" },
+        { id: "5", title: "Antecipação FGTS" },
+        { id: "6", title: "Crédito CLT" },
+        { id: "7", title: "Me ajude a escolher" },
+        { id: "0", title: "Falar com atendente" }
+    ]
+}
+
+const M2R_01_OPTIONS = {
+    type: 'list',
+    body: M2R_01_AJUDA,
+    buttonText: "Opções",
+    options: [
+        { id: "a", title: "Recebo INSS" },
+        { id: "b", title: "Militar do Exército" },
+        { id: "c", title: "Servidor Público" },
+        { id: "d", title: "Antecipar FGTS" },
+        { id: "e", title: "Carteira (CLT)" }
+    ]
+}
+
+const M2R_02_OPTIONS = {
+    type: 'list',
+    body: M2R_02_TIPO,
+    buttonText: "Serviços",
+    options: [
+        { id: "novo", title: "Novo empréstimo" },
+        { id: "portabilidade", title: "Portabilidade" },
+        { id: "refinanciamento", title: "Refinanciamento" },
+        { id: "duvidas", title: "Tirar dúvidas" }
+    ]
+}
+
+const M2R_02_FGTS_OPTIONS = {
+    type: 'button',
+    body: M2R_02_TIPO_FGTS,
+    options: [
+        { id: "simular_fgts", title: "Simular FGTS" },
+        { id: "comparar", title: "Comparar proposta" },
+        { id: "duvidas_fgts", title: "Tirar dúvidas" }
+    ]
+}
+
+const M2R_03_OPTIONS = {
+    type: 'button',
+    body: M2R_03_MARGEM,
+    options: [
+        { id: "nao_sei", title: "NÃO SEI" }
+    ]
+}
+
 // EXCEÇÕES
 const EXC_01_MARGEM = `Sem problema 😊
-Me diga seu objetivo: você prefere menor parcela ou maior valor liberado?
+Me diga seu objetivo:`
 
-A) Menor parcela
-B) Maior valor liberado
-C) Melhor proposta (equilíbrio)
-
-✅ Responda com A, B ou C.`
+const EXC_01_OPTIONS = {
+    type: 'button',
+    body: EXC_01_MARGEM,
+    options: [
+        { id: "A", title: "Menor parcela" },
+        { id: "B", title: "Maior valor liberado" },
+        { id: "C", title: "Melhor proposta" }
+    ]
+}
 
 const EXC_02_DOCS = `Tranquilo 😊 Posso fazer uma pré-simulação.
 Me diga só:
@@ -159,6 +223,7 @@ type ProcessBotArgs = {
 export async function processBotFlow({ conversationId, leadPhone, incomingText, incomingType, isNewLead }: ProcessBotArgs) {
     const provider = getWhatsAppProvider()
     let responseText = ""
+    let interactiveOptions: any = undefined // Opções dinâmicas de Botões ou Listas
 
     const conversation = await prisma.conversation.findUnique({
         where: { id: conversationId },
@@ -266,7 +331,6 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                     }
 
                     // Se resolvemos qual o nó que deve ser enviado:
-                    let interactiveOptions: any = undefined
 
                     if (nodeToSend && nodeToSend.data?.label) {
                         let textCandidate = getCleanText(nodeToSend.data.label)
@@ -351,7 +415,7 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
 
     // --- NOVO MOTOR NATIVO M2R CRED ---
     if (isNewLead) {
-        responseText = M2R_00_BOAS_VINDAS
+        responseText = M2R_00_BOAS_VINDAS; interactiveOptions = M2R_00_OPTIONS;
     } else {
         // Encontrar a ÚLTIMA mensagem enviada PELO BOT (senderId === null && direction === OUTBOUND)
         const lastBotMessage = await prisma.message.findFirst({
@@ -370,7 +434,7 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             // Se não tem mensagem anterior do bot mas o lead digitou saudação
             const greetings = ['oi', 'olá', 'ola', 'oie', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start', 'iniciar'];
             if (greetings.some(g => userT.includes(g)) || userT === 'i') {
-                responseText = M2R_00_BOAS_VINDAS
+                responseText = M2R_00_BOAS_VINDAS; interactiveOptions = M2R_00_OPTIONS;
             } else {
                 return
             }
@@ -380,7 +444,7 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             const greetings = ['oi', 'olá', 'ola', 'oie', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start', 'iniciar'];
             // SE O USUÁRIO FORÇAR UMA SAUDAÇÃO, REINICIA A CONVERSA
             if (greetings.some(g => userT.includes(g)) || userT === 'i') {
-                responseText = M2R_00_BOAS_VINDAS
+                responseText = M2R_00_BOAS_VINDAS; interactiveOptions = M2R_00_OPTIONS;
             }
             // ATALHO UNIVERSAL PARA FALAR COM ATENDENTE (0)
             else if (userT === '0' || userT === '0️⃣' || userT.includes('atendente') || userT.includes('falar com humano')) {
@@ -392,35 +456,38 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
 
             // 00 BOAS VINDAS -> 02 TIPO (ou 01 AJUDA)
             else if (botContext.includes("Em qual opção você se enquadra?")) {
-                if (userT.includes('1') || userT.includes('aposentado')) responseText = M2R_02_TIPO
-                else if (userT.includes('2') || userT.includes('pensionista')) responseText = M2R_02_TIPO
-                else if (userT.includes('3') || userT.includes('militar')) responseText = M2R_02_TIPO
-                else if (userT.includes('4') || userT.includes('servidor')) responseText = M2R_02_TIPO
-                else if (userT.includes('5') || userT.includes('fgts')) responseText = M2R_02_TIPO_FGTS
-                else if (userT.includes('6') || userT.includes('clt') || userT.includes('carteira')) responseText = M2R_02_TIPO
-                else if (userT.includes('7') || userT.includes('ajude') || userT.includes('sei')) responseText = M2R_01_AJUDA
+                if (userT.includes('1') || userT.includes('aposentado') || userT.includes('2') || userT.includes('pensionista') || userT.includes('3') || userT.includes('militar') || userT.includes('4') || userT.includes('servidor') || userT.includes('6') || userT.includes('clt') || userT.includes('carteira')) {
+                    responseText = M2R_02_TIPO; interactiveOptions = M2R_02_OPTIONS;
+                }
+                else if (userT.includes('5') || userT.includes('fgts')) {
+                    responseText = M2R_02_TIPO_FGTS; interactiveOptions = M2R_02_FGTS_OPTIONS;
+                }
+                else if (userT.includes('7') || userT.includes('ajude') || userT.includes('sei')) {
+                    responseText = M2R_01_AJUDA; interactiveOptions = M2R_01_OPTIONS;
+                }
                 else responseText = EXC_03_INVALIDO
             }
 
             // 01 AJUDA -> 02 TIPO
             else if (botContext.includes("qual opção se parece mais com você:")) {
-                if (userT === 'a' || userT.includes('inss') || userT.includes('aposentado')) responseText = M2R_02_TIPO
-                else if (userT === 'b' || userT.includes('militar')) responseText = M2R_02_TIPO
-                else if (userT === 'c' || userT.includes('servidor')) responseText = M2R_02_TIPO
-                else if (userT === 'd' || userT.includes('fgts')) responseText = M2R_02_TIPO_FGTS
-                else if (userT === 'e' || userT.includes('clt') || userT.includes('carteira')) responseText = M2R_02_TIPO
+                if (userT === 'a' || userT.includes('inss') || userT.includes('aposentado') || userT === 'b' || userT.includes('militar') || userT === 'c' || userT.includes('servidor') || userT === 'e' || userT.includes('clt') || userT.includes('carteira')) {
+                    responseText = M2R_02_TIPO; interactiveOptions = M2R_02_OPTIONS;
+                }
+                else if (userT === 'd' || userT.includes('fgts')) {
+                    responseText = M2R_02_TIPO_FGTS; interactiveOptions = M2R_02_FGTS_OPTIONS;
+                }
                 else responseText = "Por favor, responda com A, B, C, D ou E."
             }
 
             // 02 TIPO SERVICO -> 03 MARGEM
             else if (botContext.includes("tipo de serviço que você deseja") || botContext.includes("Agora me diga o que você deseja:")) {
-                responseText = M2R_03_MARGEM
+                responseText = M2R_03_MARGEM; interactiveOptions = M2R_03_OPTIONS;
             }
 
             // 03 MARGEM -> 04 DOCUMENTOS (ou EXC_01_MARGEM)
             else if (botContext.includes("Você possui margem disponível?")) {
-                if (userT.includes("não sei") || userT.includes("nao sei") || userT === 'nao' || userT === 'não') {
-                    responseText = EXC_01_MARGEM
+                if (userT.includes("não sei") || userT.includes("nao sei") || userT === 'nao' || userT === 'não' || userT === 'nao_sei') {
+                    responseText = EXC_01_MARGEM; interactiveOptions = EXC_01_OPTIONS;
                 } else {
                     responseText = M2R_04_DOCUMENTOS
                 }
@@ -491,10 +558,15 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
         console.log(`[BotEngine] Respondendo para ${leadPhone} -> ${responseText.substring(0, 30)}...`)
 
         // 1. Disparar o Request HTTP para a Meta/Cloud API
-        const res = await provider.sendMessage({
+        const payloadToSend: any = {
             to: leadPhone,
             text: responseText
-        })
+        }
+        if (interactiveOptions) {
+            payloadToSend.interactiveOptions = interactiveOptions
+        }
+
+        const res = await provider.sendMessage(payloadToSend)
 
         // 2. Salvar no Banco
         await prisma.message.create({
