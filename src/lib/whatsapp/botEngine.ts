@@ -366,7 +366,8 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
 
         if (!lastBotMessage) {
             // Se não tem mensagem anterior do bot mas o lead digitou saudação
-            if (['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start'].includes(userT)) {
+            const greetings = ['oi', 'olá', 'ola', 'oie', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start', 'iniciar'];
+            if (greetings.some(g => userT.includes(g)) || userT === 'i') {
                 responseText = M2R_00_BOAS_VINDAS
             } else {
                 return
@@ -374,8 +375,9 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
         } else {
             const botContext = lastBotMessage.content || ""
 
+            const greetings = ['oi', 'olá', 'ola', 'oie', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start', 'iniciar'];
             // SE O USUÁRIO FORÇAR UMA SAUDAÇÃO, REINICIA A CONVERSA
-            if (['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start'].includes(userT)) {
+            if (greetings.some(g => userT.includes(g)) || userT === 'i') {
                 responseText = M2R_00_BOAS_VINDAS
             }
             // ATALHO UNIVERSAL PARA FALAR COM ATENDENTE (0)
