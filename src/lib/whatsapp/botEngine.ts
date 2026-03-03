@@ -171,7 +171,9 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             orderBy: { updatedAt: 'desc' }
         })
 
-        if (automation && automation.workflowJson && automation.workflowJson.length > 5) {
+        const forceNativeEngine = true; // [MOD M2R] Bypass the Visual Engine
+
+        if (!forceNativeEngine && automation && automation.workflowJson && automation.workflowJson.length > 5) {
             try {
                 const flow = JSON.parse(automation.workflowJson)
                 const nodes: any[] = flow.nodes || []
