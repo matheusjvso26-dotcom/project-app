@@ -6,52 +6,17 @@ import prisma from "@/lib/prisma"
 const M2R_00_BOAS_VINDAS = `🤖 Atendente Virtual — M2R Cred
 Olá! Vou te ajudar com sua simulação 😊
 
-Trabalhamos com as modalidades:
-1️⃣ Aposentados (INSS)
-2️⃣ Pensionistas (INSS)
-3️⃣ Militares do Exército
-4️⃣ Servidores Públicos
-5️⃣ Antecipação do FGTS
-6️⃣ Crédito CLT
+Trabalhamos com diversas modalidades.
+📌 Para começarmos, em qual opção você se enquadra?`
 
-📌 Em qual opção você se enquadra?
-Responda com 1 a 6
+const M2R_01_AJUDA = `Sem problema 😊 
+Me diga qual destas opções se parece mais com o seu perfil atual:`
 
-Atalhos:
-0️⃣ Falar com atendente
-7️⃣ Não sei / Me ajude a escolher`
+const M2R_02_TIPO = `Perfeito! Agora me diga o tipo de serviço que você deseja:`
 
-const M2R_01_AJUDA = `Sem problema 😊 Me diga qual opção se parece mais com você:
+const M2R_02_TIPO_FGTS = `Agora me diga o serviço exato que você deseja:`
 
-A) Recebo INSS (aposentadoria ou pensão)
-B) Sou militar do Exército
-C) Sou servidor público
-D) Quero antecipar FGTS
-E) Tenho carteira assinada (CLT)
-
-✅ Responda com A, B, C, D ou E.`
-
-const M2R_02_TIPO = `Perfeito! Agora me diga o tipo de serviço que você deseja:
-
-A) Simulação de novo empréstimo
-B) Portabilidade (trazer de outro banco com melhores condições)
-C) Refinanciamento (renovar contrato e liberar troco)
-D) Apenas tirar dúvidas
-
-✅ Responda com A, B, C ou D.`
-
-const M2R_02_TIPO_FGTS = `Agora me diga o que você deseja:
-
-A) Simular antecipação do FGTS
-B) Já tenho proposta e quero comparar
-C) Tirar dúvidas
-
-✅ Responda com A, B ou C.`
-
-const M2R_03_MARGEM = `Ótimo ✅ Você possui margem disponível?
-
-✅ Se souber, informe assim: MARGEM R$ 350,00
-Se não souber, responda: NÃO SEI`
+const M2R_03_MARGEM = `Ótimo ✅ Você já possui uma margem disponível e pré-aprovada? Ou ainda não sabe o valor?`
 
 const M2R_04_DOCUMENTOS = `Para dar andamento, me envie por favor:
 
