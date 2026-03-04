@@ -434,7 +434,7 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             }
 
             // 01 AJUDA -> 02 TIPO
-            else if (botContext.includes("qual opção se parece mais com você:")) {
+            else if (botContext.includes("Me diga qual destas opções se parece mais com o seu perfil atual:")) {
                 if (userT === 'a' || userT.includes('inss') || userT.includes('aposentado') || userT === 'b' || userT.includes('militar') || userT === 'c' || userT.includes('servidor') || userT === 'e' || userT.includes('clt') || userT.includes('carteira')) {
                     responseText = M2R_02_TIPO; interactiveOptions = M2R_02_OPTIONS;
                 }
@@ -445,12 +445,12 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             }
 
             // 02 TIPO SERVICO -> 03 MARGEM
-            else if (botContext.includes("tipo de serviço que você deseja") || botContext.includes("Agora me diga o que você deseja:")) {
+            else if (botContext.includes("Agora me diga o tipo de serviço que você deseja") || botContext.includes("Agora me diga o serviço exato que você deseja")) {
                 responseText = M2R_03_MARGEM; interactiveOptions = M2R_03_OPTIONS;
             }
 
             // 03 MARGEM -> 04 DOCUMENTOS (ou EXC_01_MARGEM)
-            else if (botContext.includes("Você possui margem disponível?")) {
+            else if (botContext.includes("Você já possui uma margem disponível e pré-aprovada")) {
                 if (userT.includes("não sei") || userT.includes("nao sei") || userT === 'nao' || userT === 'não' || userT === 'nao_sei') {
                     responseText = EXC_01_MARGEM; interactiveOptions = EXC_01_OPTIONS;
                 } else {
@@ -459,7 +459,7 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             }
 
             // EXC_01_MARGEM -> 04 DOCUMENTOS
-            else if (botContext.includes("você prefere menor parcela ou maior valor liberado")) {
+            else if (botContext.includes("Me diga seu objetivo:")) {
                 responseText = M2R_04_DOCUMENTOS
             }
 
