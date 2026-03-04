@@ -420,7 +420,7 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             // ----------------------------------------------------
 
             // 00 BOAS VINDAS -> 02 TIPO (ou 01 AJUDA)
-            else if (botContext.includes("Em qual opção você se enquadra?")) {
+            else if (botContext.includes("qual opção você se enquadra?")) {
                 if (userT.includes('1') || userT.includes('aposentado') || userT.includes('2') || userT.includes('pensionista') || userT.includes('3') || userT.includes('militar') || userT.includes('4') || userT.includes('servidor') || userT.includes('6') || userT.includes('clt') || userT.includes('carteira')) {
                     responseText = M2R_02_TIPO; interactiveOptions = M2R_02_OPTIONS;
                 }
@@ -513,7 +513,11 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                 responseText = FECHAMENTO
             }
             else {
-                // Se não caiu em nenhuma ramificação (ex: já passou pelo fechamento ou erro estranho)
+                // Se não caiu em nenhuma ramificação
+                console.warn(`[BotEngine M2R] FALHA NO MATCH DE CONTEXTO! 
+                    - Mensagem do Lead: "${userT}"
+                    - Contexto lido do banco (Resumo 100 chars): "${botContext.substring(0, 100)}"
+                    - Condições testadas e falharam para avançar.`);
                 return
             }
         }
