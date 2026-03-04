@@ -105,11 +105,11 @@ const M2R_01_OPTIONS = {
     body: M2R_01_AJUDA,
     buttonText: "Opções",
     options: [
-        { id: "a", title: "Recebo INSS" },
-        { id: "b", title: "Militar do Exército" },
-        { id: "c", title: "Servidor Público" },
-        { id: "d", title: "Antecipar FGTS" },
-        { id: "e", title: "Carteira (CLT)" }
+        { id: "ajuda_a", title: "Recebo INSS" },
+        { id: "ajuda_b", title: "Militar do Exército" },
+        { id: "ajuda_c", title: "Servidor Público" },
+        { id: "ajuda_d", title: "Antecipar FGTS" },
+        { id: "ajuda_e", title: "Carteira (CLT)" }
     ]
 }
 
@@ -151,9 +151,9 @@ const EXC_01_OPTIONS = {
     type: 'button',
     body: EXC_01_MARGEM,
     options: [
-        { id: "A", title: "Menor parcela" },
-        { id: "B", title: "Maior valor liberado" },
-        { id: "C", title: "Melhor proposta" }
+        { id: "obj_a", title: "Menor parcela" },
+        { id: "obj_b", title: "Maior valor liberado" },
+        { id: "obj_c", title: "Melhor proposta" }
     ]
 }
 
@@ -435,18 +435,31 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
 
             // 01 AJUDA -> 02 TIPO
             else if (botContext.includes("Me diga qual destas opções se parece mais com o seu perfil atual:")) {
-                if (userT === 'a' || userT.includes('inss') || userT.includes('aposentado') || userT === 'b' || userT.includes('militar') || userT === 'c' || userT.includes('servidor') || userT === 'e' || userT.includes('clt') || userT.includes('carteira')) {
+                if (userT === 'ajuda_a' || userT === 'a' || userT.includes('inss') || userT.includes('aposentado') || userT === 'ajuda_b' || userT === 'b' || userT.includes('militar') || userT === 'ajuda_c' || userT === 'c' || userT.includes('servidor') || userT === 'ajuda_e' || userT === 'e' || userT.includes('clt') || userT.includes('carteira')) {
                     responseText = M2R_02_TIPO; interactiveOptions = M2R_02_OPTIONS;
                 }
-                else if (userT === 'd' || userT.includes('fgts')) {
+                else if (userT === 'ajuda_d' || userT === 'd' || userT.includes('fgts')) {
                     responseText = M2R_02_TIPO_FGTS; interactiveOptions = M2R_02_FGTS_OPTIONS;
                 }
                 else responseText = "Por favor, responda com A, B, C, D ou E."
             }
 
-            // 02 TIPO SERVICO -> 03 MARGEM
-            else if (botContext.includes("Agora me diga o tipo de serviço que você deseja") || botContext.includes("Agora me diga o serviço exato que você deseja")) {
-                responseText = M2R_03_MARGEM; interactiveOptions = M2R_03_OPTIONS;
+            // 02 TIPO SERVICO -> 03 MARGEM ou EXC_04_HUMANO
+            else if (botContext.includes("Agora me diga o tipo de serviço que você deseja")) {
+                if (userT.includes('duvidas') || userT === 'd') {
+                    responseText = EXC_04_HUMANO;
+                } else {
+                    responseText = M2R_03_MARGEM; interactiveOptions = M2R_03_OPTIONS;
+                }
+            }
+
+            // 02 TIPO_FGTS -> 04 DOCUMENTOS (PULA MARGEM)
+            else if (botContext.includes("Agora me diga o serviço exato que você deseja")) {
+                if (userT.includes('duvidas')) {
+                    responseText = EXC_04_HUMANO;
+                } else {
+                    responseText = M2R_04_DOCUMENTOS;
+                }
             }
 
             // 03 MARGEM -> 04 DOCUMENTOS (ou EXC_01_MARGEM)
@@ -481,11 +494,11 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
                     for (const msg of history) {
                         if (msg.direction === 'INBOUND' && msg.type === 'TEXT' && msg.content) {
                             const c = msg.content.toLowerCase().trim()
-                            if (c === '1' || c === 'a' || c.includes('aposentado') || c === '2' || c.includes('pensionista')) { detectedModality = 'INSS'; break; }
-                            if (c === '3' || c === 'b' || c.includes('militar')) { detectedModality = 'MILITAR'; break; }
-                            if (c === '4' || c === 'c' || c.includes('servidor')) { detectedModality = 'SERVIDOR'; break; }
-                            if (c === '5' || c === 'd' || c.includes('fgts')) { detectedModality = 'FGTS'; break; }
-                            if (c === '6' || c === 'e' || c.includes('clt')) { detectedModality = 'CLT'; break; }
+                            if (c === '1' || c === 'ajuda_a' || c === 'a' || c.includes('aposentado') || c === '2' || c.includes('pensionista')) { detectedModality = 'INSS'; break; }
+                            if (c === '3' || c === 'ajuda_b' || c === 'b' || c.includes('militar')) { detectedModality = 'MILITAR'; break; }
+                            if (c === '4' || c === 'ajuda_c' || c === 'c' || c.includes('servidor')) { detectedModality = 'SERVIDOR'; break; }
+                            if (c === '5' || c === 'ajuda_d' || c === 'd' || c.includes('fgts') || c === 'simular_fgts' || c === 'comparar') { detectedModality = 'FGTS'; break; }
+                            if (c === '6' || c === 'ajuda_e' || c === 'e' || c.includes('clt') || c.includes('carteira')) { detectedModality = 'CLT'; break; }
                         }
                     }
 
