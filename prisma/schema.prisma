@@ -25,6 +25,7 @@ model Organization {
   closureMessage String?  @db.Text
   closureMinutes Int      @default(240) // Fecha conversas sozinhas em 4 horas (default)
   fixedCosts     Float    @default(0)   // Para o CFO Module (Phase 10)
+  tagsConfig     Json?    @default("[]")// Configuração global das Cores das Etiquetas [{id, name, color}]
   
   status         String   @default("PENDING") // PENDING, ACTIVE, SUSPENDED
   trialEndsAt    DateTime?

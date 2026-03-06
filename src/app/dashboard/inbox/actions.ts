@@ -447,3 +447,50 @@ export async function generateAiReply(conversationId: string) {
         return { error: error.message || "Erro inesperado ao gerar reposta com o Gemini." }
     }
 }
+
+/**
+ * Busca a Configuração Global de Etiquetas (Tags) com Cores
+ */
+export async function getTagsConfig() {
+    const user = await requireUser()
+    const org = await prisma.organization.findUnique({
+        where: { id: user.organizationId },
+        select: { tagsConfig: true }
+    })
+    return (org?.tagsConfig as any) || []
+}
+
+/**
+ * Atualiza a Configuração Global de Etiquetas (Tags) com Cores
+ */
+export async function updateTagsConfig(tags: Array<{ id: string, name: string, color: string }>) {
+    const user = await requireUser()
+    await prisma.organization.update({
+        where: { id: user.organizationId },
+        data: { tagsConfig: tags }
+    })
+    return { success: true }
+}
+
+/**
+ * Arquiva / "Exclui" uma conversa (Move para Lixeira/Arquivados)
+ */
+export async function archiveConversation(conversationId: string, archive: boolean = true) {
+    const user = await requireUser()
+    
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId }
+    })
+
+    if (!conversation || conversation.organizationId !== user.organizationId) {
+        throw new Error("Chat não encontrado ou permissão negada.")
+    }
+
+    await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { status: archive ? 'ARCHIVED' : 'OPEN' }
+    })
+
+    revalidatePath('/dashboard/inbox')
+    return { success: true }
+}

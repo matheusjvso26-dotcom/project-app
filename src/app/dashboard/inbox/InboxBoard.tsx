@@ -1,17 +1,15 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus, Download, FileText, Image as ImageIcon, FileAudio, Video, Sparkles, MessageCircle, Briefcase } from 'lucide-react'
+import { Search, MoreVertical, Phone, Mail, Globe, Send, Paperclip, Smile, Mic, ShieldAlert, Bot, Plus, Download, FileText, Image as ImageIcon, FileAudio, Video, Sparkles, MessageCircle, Briefcase, Settings, Archive, Trash2, X } from 'lucide-react'
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MoneyInput } from "@/components/ui/masked-input"
-import { sendMessage, getConversations, updateDealValue, sendMediaMessage, createDealFromInbox, toggleBotStatus, generateAiReply, toggleTag } from './actions'
+import { sendMessage, getConversations, updateDealValue, sendMediaMessage, createDealFromInbox, toggleBotStatus, generateAiReply, toggleTag, getTagsConfig, updateTagsConfig, archiveConversation } from './actions'
 import { toast } from 'sonner'
-
-const AVAILABLE_TAGS = ['Urgente', 'Reclamação', 'Dúvida']
 
 // --- Interfaces ---
 export interface Message {
@@ -31,10 +29,17 @@ export interface ChatDeal {
     stageName: string
 }
 
+export interface CustomTag { 
+    id: string
+    name: string
+    color: string 
+}
+
 export interface Chat {
     id: string
     name: string
     phone: string
+    status: string
     lastMessage: string
     time: string
     unread: number
@@ -57,9 +62,20 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null)
     const [isGeneratingAi, setIsGeneratingAi] = useState(false)
+    const [customTags, setCustomTags] = useState<CustomTag[]>([])
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+    const [editingTags, setEditingTags] = useState<CustomTag[]>([])
+    const [activeTab, setActiveTab] = useState<'OPEN'|'ARCHIVED'>('OPEN')
+
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const isSendingRef = useRef(false)
+
+    useEffect(() => {
+        getTagsConfig().then(res => {
+            if(Array.isArray(res)) setCustomTags(res)
+        }).catch(console.error)
+    }, [])
 
     // Sincronizando o estado isSending com o Ref para acesso síncrono no Polling
     useEffect(() => {
@@ -135,6 +151,33 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     const [newDeal, setNewDeal] = useState({ title: '', value: 0 })
 
     const activeChat = chats.find(c => c.id === activeChatId)
+
+    const handleSaveTags = async () => {
+        setIsSending(true)
+        try {
+            await updateTagsConfig(editingTags)
+            setCustomTags(editingTags)
+            setIsSettingsOpen(false)
+            toast.success("Etiquetas coloridas salvas!")
+        } catch(e: any) { toast.error(e.message) }
+        finally { setIsSending(false) }
+    }
+
+    const handleArchive = async (id: string, archive: boolean) => {
+        if(confirm(archive ? "Deseja arquivar/excluir esta conversa? Ela sairá da sua lista de ativas." : "Deseja restaurar esta conversa? Ela voltará para as ativas.")) {
+            // Optimistic UI Update
+            setChats(prev => prev.map(c => c.id === id ? {...c, status: archive ? 'ARCHIVED' : 'OPEN'} : c))
+            if(id === activeChatId) setActiveChatId('')
+            
+            try {
+                await archiveConversation(id, archive)
+            } catch(e) {
+                toast.error("Erro ao modificar status da conversa")
+                // Rollback em caso de erro
+                setChats(prev => prev.map(c => c.id === id ? {...c, status: !archive ? 'ARCHIVED' : 'OPEN'} : c))
+            }
+        }
+    }
 
     const handleSendMessage = async () => {
         if (!messageInput.trim() || !activeChatId || isSending) return
@@ -308,12 +351,53 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         }
     }
 
+    const baseChats = chats.filter(c => activeTab === 'ARCHIVED' ? c.status === 'ARCHIVED' : c.status !== 'ARCHIVED')
     const filteredChats = activeTagFilter
-        ? chats.filter(c => c.tags?.includes(activeTagFilter))
-        : chats
+        ? baseChats.filter(c => c.tags?.includes(activeTagFilter))
+        : baseChats
 
     return (
         <div className="flex h-full w-full bg-[#111b21] text-[#e9edef] overflow-hidden font-sans border-l border-white/5 relative z-10">
+            {/* TAGS SETTINGS MODAL */}
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                <DialogContent className="sm:max-w-[500px] bg-[#202c33] border border-[#2a3942] text-[#e9edef] shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-white text-lg font-medium">Configurar Etiquetas</DialogTitle>
+                        <DialogDescription className="text-[#8696a0] text-sm mt-1">
+                            Crie etiquetas customizadas com cores M2R para classificar suas conversas.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-2 flex flex-col gap-3 min-h-[150px] max-h-[350px] overflow-y-auto scrollbar-thin">
+                        {editingTags.map((tag, idx) => (
+                            <div key={tag.id} className="flex items-center gap-2 bg-[#111b21] p-2 rounded border border-[#2a3942]">
+                                <input type="color" value={tag.color} onChange={e => {
+                                    const newTags = [...editingTags];
+                                    newTags[idx].color = e.target.value;
+                                    setEditingTags(newTags);
+                                }} className="w-8 h-8 rounded shrink-0 cursor-pointer border-0 p-0 bg-transparent" />
+                                <Input value={tag.name} onChange={e => {
+                                    const newTags = [...editingTags];
+                                    newTags[idx].name = e.target.value;
+                                    setEditingTags(newTags);
+                                }} className="bg-transparent border-none text-[14px] flex-1 text-white h-8 focus-visible:ring-0 px-2" placeholder="Ex: INSS Aposentado..." />
+                                <button onClick={() => setEditingTags(editingTags.filter(t => t.id !== tag.id))} className="p-1 hover:bg-white/10 rounded">
+                                    <X className="w-4 h-4 text-red-400" />
+                                </button>
+                            </div>
+                        ))}
+                        <button onClick={() => setEditingTags([...editingTags, { id: 'tag-'+Date.now(), name: 'Nova Etiqueta', color: '#00a884' }])}
+                            className="bg-[#2a3942] hover:bg-[#30424d] text-white py-2 rounded-lg text-sm font-medium transition-colors border border-dashed border-[#8696a0]/50 flex items-center justify-center gap-2 mt-2">
+                            <Plus className="w-4 h-4" /> Adicionar Etiqueta
+                        </button>
+                    </div>
+                    <DialogFooter className="mt-4">
+                        <Button variant="outline" className="text-white border-white/20 hover:bg-white/10" onClick={() => setIsSettingsOpen(false)}>Cancelar</Button>
+                        <Button className="bg-[#00a884] hover:bg-[#00bfa5] text-[#111b21] font-bold" disabled={isSending} onClick={handleSaveTags}>
+                            Salvar Alterações
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             {/* 1. Sidebar (Esquerda, Lista de Chats) */}
             <div className={`flex-shrink-0 flex flex-col border-r border-[#202c33] transition-all duration-300 ${activeChatId ? 'hidden lg:flex w-full lg:w-[32%]' : 'w-full lg:w-[32%]'}`}>
                 {/* Header Sidebar */}
@@ -322,14 +406,14 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                         <img src="https://ui-avatars.com/api/?name=EU&background=6b7c85&color=fff" alt="User" />
                     </div>
                     <div className="flex gap-2 text-[#aebac1]">
-                        <button title="Automações" className="p-1 hover:text-white transition-colors">
-                            <Bot className="w-[20px] h-[20px]" />
-                        </button>
-                        <button title="Limpar Filtro" onClick={() => setActiveTagFilter(null)} className="p-1 hover:text-white transition-colors">
+                        <button title="Conversas Abertas" onClick={() => setActiveTab('OPEN')} className={`p-1 transition-colors ${activeTab === 'OPEN' ? 'text-white' : 'hover:text-white'}`}>
                             <MessageCircle className="w-[20px] h-[20px]" />
                         </button>
-                        <button className="p-1 hover:text-white transition-colors">
-                            <MoreVertical className="w-[20px] h-[20px]" />
+                        <button title="Excluídas / Arquivadas" onClick={() => setActiveTab('ARCHIVED')} className={`p-1 transition-colors ${activeTab === 'ARCHIVED' ? 'text-white' : 'hover:text-white'}`}>
+                            <Archive className="w-[20px] h-[20px]" />
+                        </button>
+                        <button title="Configurar Etiquetas" onClick={() => { setEditingTags(customTags); setIsSettingsOpen(true); }} className="p-1 hover:text-white transition-colors">
+                            <Settings className="w-[20px] h-[20px]" />
                         </button>
                     </div>
                 </div>
@@ -349,11 +433,18 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                 {/* Filters Row */}
                 <div className="flex px-3 py-2.5 gap-[7px] border-b border-[#202c33] overflow-x-auto scrollbar-none">
                     <button onClick={() => setActiveTagFilter(null)} className={`px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap ${!activeTagFilter ? 'bg-[#00a884]/20 text-[#00a884] hover:bg-[#00a884]/30' : 'bg-[#202c33] hover:bg-[#2a3942] text-[#aebac1]'}`}>
-                        Todas
+                        Todas do {activeTab === 'OPEN' ? 'Inbox' : 'Lixo'}
                     </button>
-                    {AVAILABLE_TAGS.map(tag => (
-                        <button key={tag} onClick={() => setActiveTagFilter(tag)} className={`px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap ${activeTagFilter === tag ? 'bg-[#00a884]/20 text-[#00a884] hover:bg-[#00a884]/30' : 'bg-[#202c33] hover:bg-[#2a3942] text-[#aebac1]'}`}>
-                            {tag}
+                    {customTags.map(tag => (
+                        <button key={tag.id} onClick={() => setActiveTagFilter(tag.name)} 
+                            style={{ 
+                                backgroundColor: activeTagFilter === tag.name ? tag.color + '33' : '#202c33', 
+                                color: activeTagFilter === tag.name ? tag.color : '#aebac1',
+                                border: `1px solid ${activeTagFilter === tag.name ? tag.color + '55' : 'transparent'}`
+                            }}
+                            className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors whitespace-nowrap overflow-hidden flex items-center gap-1.5 ${activeTagFilter !== tag.name && 'hover:bg-[#2a3942]'}`}>
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }}></span>
+                            {tag.name}
                         </button>
                     ))}
                 </div>
@@ -378,8 +469,16 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             </div>
                             <div className="flex-1 min-w-0 border-b border-[#202c33] py-[13px] h-full flex flex-col justify-center">
                                 <div className="flex justify-between items-center mb-[3px]">
-                                    <h3 className="text-[17px] leading-[21px] truncate text-[#e9edef] -mt-1 font-normal">
+                                    <h3 className="text-[17px] leading-[21px] truncate text-[#e9edef] -mt-1 font-normal flex items-center gap-2">
                                         {chat.name}
+                                        {chat.tags && chat.tags.length > 0 && (
+                                            <div className="flex gap-1 overflow-hidden">
+                                                {chat.tags.slice(0, 2).map(tagStr => {
+                                                    const tagData = customTags.find(t => t.name === tagStr)
+                                                    return tagData ? <span key={tagStr} className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: tagData.color }} title={tagStr}></span> : null
+                                                })}
+                                            </div>
+                                        )}
                                     </h3>
                                     <span className={`text-[12px] whitespace-nowrap ml-2 leading-[14px] -mt-1 ${chat.unread > 0 ? 'text-[#00a884] font-medium' : 'text-[#8696a0]'}`}>
                                         {chat.time}
@@ -510,7 +609,49 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             >
                                 {activeChat.isBotHandling ? "Assumir" : <><Bot className="w-3.5 h-3.5" /> Automático</>}
                             </button>
-                            <MoreVertical className="w-5 h-5 cursor-pointer hover:text-white transition-colors" />
+                            {/* TAGS Selector In-Chat */}
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <button title="Adicionar Etiqueta ao Cliente" className="px-2.5 py-1 bg-[#202c33] border border-white/10 rounded hover:bg-white/5 text-[12.5px] font-medium flex items-center gap-1.5 text-[#e9edef]">
+                                        {activeChat.tags && activeChat.tags.length > 0 ? (
+                                            <>
+                                                <div className="flex gap-0.5">
+                                                    {activeChat.tags.slice(0, 3).map(tagStr => {
+                                                        const color = customTags.find(t => t.name === tagStr)?.color || '#00a884'
+                                                        return <span key={tagStr} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></span>
+                                                    })}
+                                                </div>
+                                            </>
+                                        ) : "+ Tags"}
+                                    </button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px] bg-[#202c33] border border-white/10 text-[#e9edef] shadow-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-white text-lg font-medium">Classificar Cliente ({activeChat.name})</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex flex-col gap-2 py-4">
+                                        {customTags.map(tag => {
+                                            const isActive = activeChat.tags?.includes(tag.name)
+                                            return (
+                                                <button key={tag.id} onClick={() => handleToggleTag(tag.name)}
+                                                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${isActive ? 'bg-[#111b21]' : 'bg-[#111b21]/50 hover:bg-[#111b21]'}`}
+                                                    style={{ borderColor: isActive ? tag.color : '#30424d' }}>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: tag.color }}></span>
+                                                        <span className="font-medium text-[14px]" style={{ color: isActive ? tag.color : '#e9edef' }}>{tag.name}</span>
+                                                    </div>
+                                                    {isActive && <span className="text-[12px] text-white/50 bg-[#2a3942] px-2 py-0.5 rounded">Aplicada</span>}
+                                                </button>
+                                            )
+                                        })}
+                                        {customTags.length === 0 && <p className="text-center text-[#8696a0] text-sm">Nenhuma etiqueta cadastrada na Organização. Acesse as Configurações ⚙️</p>}
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+
+                            <button onClick={() => handleArchive(activeChat.id, activeChat.status !== 'ARCHIVED')} title={activeChat.status === 'ARCHIVED' ? "Restaurar Cliente" : "Excluir/Arquivar"} className="hover:text-red-400 text-[#aebac1] transition-colors bg-transparent border-0 p-1">
+                                {activeChat.status === 'ARCHIVED' ? <MessageCircle className="w-[20px] h-[20px] text-[#00a884]"/> : <Trash2 className="w-[20px] h-[20px]" />}
+                            </button>
                         </div>
                     </div>
 

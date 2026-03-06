@@ -3,7 +3,7 @@
 // ---------------------------------------------------------
 
 // BLOCO 00 — Boas-vindas + Consentimento (LGPD)
-export const BLOCO_00_TEXT = `Olá! 👋 Tudo bem? Eu sou o atendimento da M2R Cred.
+export const BLOCO_00_TEXT = `Olá! 👋 Tudo bem? Eu sou o atendimente da M2R Cred.
 Para te ajudar com a simulação, vou precisar de alguns dados e documentos (somente para análise de crédito).
 ✅ Você autoriza o uso dessas informações para simulação e atendimento?`;
 
