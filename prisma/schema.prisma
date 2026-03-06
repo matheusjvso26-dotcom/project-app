@@ -71,6 +71,7 @@ model Lead {
   email          String?
   name           String?
   tags           String[]     @default([])
+  customData     Json?        @default("{}") // Armazena CPF, Banco, Órgão, Salário do M2R V2
   lgpdConsent    Boolean      @default(false)
   createdAt      DateTime     @default(now())
 
@@ -163,6 +164,7 @@ model Conversation {
   leadId         String
   status         String       @default("OPEN") // OPEN, CLOSED, BOT_HANDLING
   tags           String[]     @default([]) // e.g. "VIP", "Reclamação", "Pensionista"
+  botState       Json?        @default("{}") // Tracking do Mega Funil (passo atual)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 

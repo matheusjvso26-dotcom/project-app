@@ -1,181 +1,7 @@
 import { getWhatsAppProvider } from "./provider"
 import prisma from "@/lib/prisma"
 
-// --- TEXTOS CONSTANTES DO FUNIL M2R CRED ---
-
-const M2R_00_BOAS_VINDAS = `🤖 Atendente Virtual — M2R Cred
-Olá! Vou te ajudar com sua simulação 😊
-
-Trabalhamos com diversas modalidades.
-📌 Para começarmos, em qual opção você se enquadra?`
-
-const M2R_01_AJUDA = `Sem problema 😊 
-Me diga qual destas opções se parece mais com o seu perfil atual:`
-
-const M2R_02_TIPO = `Perfeito! Agora me diga o tipo de serviço que você deseja:`
-
-const M2R_02_TIPO_FGTS = `Agora me diga o serviço exato que você deseja:`
-
-const M2R_03_MARGEM = `Ótimo ✅ Você já possui uma margem disponível e pré-aprovada? Ou ainda não sabe o valor?`
-
-const M2R_04_DOCUMENTOS = `Para dar andamento, me envie por favor:
-
-Nome completo:
-CPF (somente números):
-
-Documento:
-📸 RG (frente e verso) + CPF OU CNH (frente e verso)
-
-✅ Envie fotos nítidas, com boa iluminação.
-
-🔒 Segurança (LGPD): seus dados serão usados apenas para simulação e atendimento.
-⚠️ Nunca solicitamos senhas (Gov.br, Meu INSS, banco).`
-
-const M2R_05A_INSS = `Perfeito ✅
-Agora só me confirme:
-
-Número do Benefício (NB) (se tiver):
-Banco onde recebe o benefício:
-Você já tem consignado ativo? (SIM/NÃO):
-Qual valor você deseja liberar? (ou "melhor proposta"):
-
-📎 Opcional (acelera): extrato de consignados / HISCON ou extrato de pagamento.`
-
-const M2R_05B_MILITAR = `Show ✅
-Confirma pra mim:
-
-Você é ATIVO / INATIVO / PENSIONISTA?
-Banco onde recebe:
-Possui consignado ativo? (SIM/NÃO):
-Valor desejado: (ou "melhor proposta"):
-
-📎 Opcional: contracheque/holerite mais recente.`
-
-const M2R_05C_SERVIDOR = `Perfeito ✅
-Me informe:
-
-Órgão / Prefeitura / Estado:
-UF:
-Vínculo: ATIVO / APOSENTADO / PENSIONISTA:
-Banco onde recebe:
-Possui consignado ativo? (SIM/NÃO):
-Valor desejado: (ou "melhor proposta"):
-
-📎 Opcional: contracheque atualizado.`
-
-const M2R_05D_FGTS = `Certo ✅ Só confirmar:
-
-Você está no Saque-Aniversário? (SIM/NÃO/NÃO SEI):
-Mês de nascimento:
-Saldo aproximado do FGTS: (ou "não sei"):
-Quer antecipar quantos anos? (ex.: 3, 5, "melhor oferta"):
-
-📎 Opcional: print do saldo do FGTS (sem dados sensíveis).`
-
-const M2R_05E_CLT = `Perfeito ✅
-Me diga:
-
-Empresa onde trabalha:
-Tempo de carteira assinada:
-Salário líquido aproximado:
-Possui restrição no CPF? (SIM/NÃO/NÃO SEI):
-Valor desejado: (ou "melhor proposta"):
-
-📎 Opcional: holerite + comprovante de residência.`
-
-// MENUS INTERATIVOS M2R CRED
-const M2R_00_OPTIONS = {
-    type: 'list',
-    body: M2R_00_BOAS_VINDAS,
-    buttonText: "Ver Modalidades",
-    options: [
-        { id: "1", title: "Aposentados (INSS)" },
-        { id: "2", title: "Pensionistas (INSS)" },
-        { id: "3", title: "Militares Exército" },
-        { id: "4", title: "Servidores Públicos" },
-        { id: "5", title: "Antecipação FGTS" },
-        { id: "6", title: "Crédito CLT" },
-        { id: "7", title: "Me ajude a escolher" },
-        { id: "0", title: "Falar com atendente" }
-    ]
-}
-
-const M2R_01_OPTIONS = {
-    type: 'list',
-    body: M2R_01_AJUDA,
-    buttonText: "Opções",
-    options: [
-        { id: "ajuda_a", title: "Recebo INSS" },
-        { id: "ajuda_b", title: "Militar do Exército" },
-        { id: "ajuda_c", title: "Servidor Público" },
-        { id: "ajuda_d", title: "Antecipar FGTS" },
-        { id: "ajuda_e", title: "Carteira (CLT)" }
-    ]
-}
-
-const M2R_02_OPTIONS = {
-    type: 'list',
-    body: M2R_02_TIPO,
-    buttonText: "Serviços",
-    options: [
-        { id: "novo", title: "Novo empréstimo" },
-        { id: "portabilidade", title: "Portabilidade" },
-        { id: "refinanciamento", title: "Refinanciamento" },
-        { id: "duvidas", title: "Tirar dúvidas" }
-    ]
-}
-
-const M2R_02_FGTS_OPTIONS = {
-    type: 'button',
-    body: M2R_02_TIPO_FGTS,
-    options: [
-        { id: "simular_fgts", title: "Simular FGTS" },
-        { id: "comparar", title: "Comparar proposta" },
-        { id: "duvidas_fgts", title: "Tirar dúvidas" }
-    ]
-}
-
-const M2R_03_OPTIONS = {
-    type: 'button',
-    body: M2R_03_MARGEM,
-    options: [
-        { id: "nao_sei", title: "NÃO SEI" }
-    ]
-}
-
-// EXCEÇÕES
-const EXC_01_MARGEM = `Sem problema 😊
-Me diga seu objetivo:`
-
-const EXC_01_OPTIONS = {
-    type: 'button',
-    body: EXC_01_MARGEM,
-    options: [
-        { id: "obj_a", title: "Menor parcela" },
-        { id: "obj_b", title: "Maior valor liberado" },
-        { id: "obj_c", title: "Melhor proposta" }
-    ]
-}
-
-const EXC_02_DOCS = `Tranquilo 😊 Posso fazer uma pré-simulação.
-Me diga só:
-
-Valor que você quer liberar:
-Você tem margem? (valor ou "não sei")
-
-Quando puder, você envia RG+CPF ou CNH para concluir.`
-
-const EXC_03_INVALIDO = `Só para eu seguir certinho ✅
-
-Modalidade: responda 1 a 6
-Tipo de serviço: A/B/C/D
-Se preferir: digite 0 para atendente.`
-
-const EXC_04_HUMANO = `Certo ✅ Vou te direcionar para um atendente agora.
-Para agilizar, envie nome + CPF (se ainda não enviou).`
-
-const FECHAMENTO = `Perfeito ✅ Já tenho as informações necessárias.
-Vou encaminhar sua simulação e te retorno com as melhores condições.`
+import * as script from './m2r-script'
 
 type ProcessBotArgs = {
     conversationId: string;
@@ -378,163 +204,276 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
         }
     }
 
-    // --- NOVO MOTOR NATIVO M2R CRED ---
+    // --- NOVO MOTOR NATIVO M2R CRED (V2) ---
+    // Recarregando Conversa com Lead e Metadados atualizados
+    const convData = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        include: { lead: true }
+    });
+
+    if (!convData) return;
+
+    // Desempacotando Estado Atual (botState -> State Machine)
+    let state = (convData.botState as any) || {};
+    if (!state.currentBlock) {
+        state = { currentBlock: 'BLOCO_00', vars: {} };
+    }
+    
+    // Tratativa para Novos Leads que ativam o bot do zero sem estado pre-existente
     if (isNewLead) {
-        responseText = M2R_00_BOAS_VINDAS; interactiveOptions = M2R_00_OPTIONS;
-    } else {
-        // Encontrar a ÚLTIMA mensagem enviada PELO BOT (senderId === null && direction === OUTBOUND)
-        const lastBotMessage = await prisma.message.findFirst({
-            where: {
-                conversationId,
-                direction: 'OUTBOUND',
-                senderId: null
-            },
-            orderBy: { createdAt: 'desc' }
-        })
+        state.currentBlock = 'BLOCO_00';
+    }
 
-        const userT = incomingText.trim().toLowerCase()
-        const isMedia = incomingType === 'document' || incomingType === 'image' || incomingType === 'audio' || incomingType === 'video'
+    const leadId = convData.lead.id;
+    let customData = (convData.lead.customData as any) || {};
+    
+    const userT = incomingText.trim().toLowerCase();
+    const isMedia = incomingType === 'document' || incomingType === 'image' || incomingType === 'audio' || incomingType === 'video';
 
-        if (!lastBotMessage) {
-            // Se não tem mensagem anterior do bot mas o lead digitou saudação
-            const greetings = ['oi', 'olá', 'ola', 'oie', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start', 'iniciar'];
-            if (greetings.some(g => userT.includes(g)) || userT === 'i') {
-                responseText = M2R_00_BOAS_VINDAS; interactiveOptions = M2R_00_OPTIONS;
-            } else {
-                return
-            }
-        } else {
-            const botContext = lastBotMessage.content || ""
-
-            const greetings = ['oi', 'olá', 'ola', 'oie', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'start', 'iniciar'];
-            // SE O USUÁRIO FORÇAR UMA SAUDAÇÃO, REINICIA A CONVERSA
-            if (greetings.some(g => userT.includes(g)) || userT === 'i') {
-                responseText = M2R_00_BOAS_VINDAS; interactiveOptions = M2R_00_OPTIONS;
-            }
-            // ATALHO UNIVERSAL PARA FALAR COM ATENDENTE (0)
-            else if (userT === '0' || userT === '0️⃣' || userT.includes('atendente') || userT.includes('falar com humano')) {
-                responseText = EXC_04_HUMANO
-            }
-            // ----------------------------------------------------
-            // STATE MACHINE M2R CRED
-            // ----------------------------------------------------
-
-            // 00 BOAS VINDAS -> 02 TIPO (ou 01 AJUDA)
-            else if (botContext.includes("qual opção você se enquadra?")) {
-                if (userT.includes('1') || userT.includes('aposentado') || userT.includes('2') || userT.includes('pensionista') || userT.includes('3') || userT.includes('militar') || userT.includes('4') || userT.includes('servidor') || userT.includes('6') || userT.includes('clt') || userT.includes('carteira')) {
-                    responseText = M2R_02_TIPO; interactiveOptions = M2R_02_OPTIONS;
-                }
-                else if (userT.includes('5') || userT.includes('fgts')) {
-                    responseText = M2R_02_TIPO_FGTS; interactiveOptions = M2R_02_FGTS_OPTIONS;
-                }
-                else if (userT.includes('7') || userT.includes('ajude') || userT.includes('sei')) {
-                    responseText = M2R_01_AJUDA; interactiveOptions = M2R_01_OPTIONS;
-                }
-                else responseText = EXC_03_INVALIDO
-            }
-
-            // 01 AJUDA -> 02 TIPO
-            else if (botContext.includes("Me diga qual destas opções se parece mais com o seu perfil atual:")) {
-                if (userT === 'ajuda_a' || userT === 'a' || userT.includes('inss') || userT.includes('aposentado') || userT === 'ajuda_b' || userT === 'b' || userT.includes('militar') || userT === 'ajuda_c' || userT === 'c' || userT.includes('servidor') || userT === 'ajuda_e' || userT === 'e' || userT.includes('clt') || userT.includes('carteira')) {
-                    responseText = M2R_02_TIPO; interactiveOptions = M2R_02_OPTIONS;
-                }
-                else if (userT === 'ajuda_d' || userT === 'd' || userT.includes('fgts')) {
-                    responseText = M2R_02_TIPO_FGTS; interactiveOptions = M2R_02_FGTS_OPTIONS;
-                }
-                else responseText = "Por favor, responda com A, B, C, D ou E."
-            }
-
-            // 02 TIPO SERVICO -> 03 MARGEM ou EXC_04_HUMANO
-            else if (botContext.includes("Agora me diga o tipo de serviço que você deseja")) {
-                if (userT.includes('duvidas') || userT === 'd') {
-                    responseText = EXC_04_HUMANO;
+    // ATALHO UNIVERSAL PARA FALAR COM ATENDENTE (0)
+    if (userT === '0' || userT === '0️⃣' || userT === 'atendente' || userT.includes('falar com humano') || userT.includes('falar com atendente')) {
+        responseText = script.BLOCO_90_TEXT;
+        state.currentBlock = 'BLOCO_90';
+        await prisma.conversation.update({
+            where: { id: conversationId },
+            data: { tags: { push: 'LEAD QUALIFICADO' } } // Tag Opcional
+        });
+    } 
+    // REINÍCIO FORÇADO
+    else if (userT === 'menu' || userT === 'start' || userT === 'iniciar') {
+        responseText = script.BLOCO_00_TEXT;
+        interactiveOptions = script.BLOCO_00_OPTIONS;
+        state.currentBlock = 'BLOCO_00';
+    }
+    // MAQUINA DE ESTADOS (V2)
+    else {
+        switch (state.currentBlock) {
+            case 'BLOCO_00': // LGPD
+                if (userT.includes('sim') || userT === 'b00_sim') {
+                    // Update Consent
+                    await prisma.lead.update({ where: { id: leadId }, data: { lgpdConsent: true } });
+                    responseText = script.BLOCO_01_TEXT;
+                    interactiveOptions = script.BLOCO_01_OPTIONS;
+                    state.currentBlock = 'BLOCO_01';
+                } else if (userT.includes('não') || userT.includes('nao') || userT === 'b00_nao') {
+                    responseText = script.BLOCO_00B_TEXT;
+                    state.currentBlock = 'BLOCO_00B';
                 } else {
-                    responseText = M2R_03_MARGEM; interactiveOptions = M2R_03_OPTIONS;
+                    // Se digitou qualquer oi, manda consentimento de novo
+                    responseText = script.BLOCO_00_TEXT;
+                    interactiveOptions = script.BLOCO_00_OPTIONS;
                 }
-            }
+                break;
 
-            // 02 TIPO_FGTS -> 04 DOCUMENTOS (PULA MARGEM)
-            else if (botContext.includes("Agora me diga o serviço exato que você deseja")) {
-                if (userT.includes('duvidas')) {
-                    responseText = EXC_04_HUMANO;
+            case 'BLOCO_01': // MODALIDADES
+            case 'BLOCO_01F':
+            case 'BLOCO_00B': // Se estava encerrado e chamou de novo
+                if (userT === '1' || userT === 'b01_1' || userT.includes('aposentado')) {
+                    state.vars.modalidade = "INSS Aposentado";
+                    responseText = script.BLOCO_10_TEXT;
+                    state.currentBlock = 'BLOCO_10';
+                } else if (userT === '2' || userT === 'b01_2' || userT.includes('pensionista')) {
+                    state.vars.modalidade = "INSS Pensionista";
+                    responseText = script.BLOCO_20_TEXT;
+                    state.currentBlock = 'BLOCO_20';
+                } else if (userT === '3' || userT === 'b01_3' || userT.includes('militar')) {
+                    state.vars.modalidade = "Militar do Exército";
+                    responseText = script.BLOCO_30_TEXT;
+                    state.currentBlock = 'BLOCO_30';
+                } else if (userT === '4' || userT === 'b01_4' || userT.includes('servidor')) {
+                    state.vars.modalidade = "Servidor Público";
+                    responseText = script.BLOCO_40_TEXT;
+                    state.currentBlock = 'BLOCO_40';
+                } else if (userT === '5' || userT === 'b01_5' || userT.includes('fgts')) {
+                    state.vars.modalidade = "Antecipação FGTS";
+                    responseText = script.BLOCO_50_TEXT;
+                    interactiveOptions = script.BLOCO_50_OPTIONS;
+                    state.currentBlock = 'BLOCO_50';
+                } else if (userT === '6' || userT === 'b01_6' || userT.includes('clt') || userT.includes('carteira')) {
+                    state.vars.modalidade = "Crédito CLT";
+                    responseText = script.BLOCO_60_TEXT;
+                    state.currentBlock = 'BLOCO_60';
                 } else {
-                    responseText = M2R_04_DOCUMENTOS;
-                }
-            }
-
-            // 03 MARGEM -> 04 DOCUMENTOS (ou EXC_01_MARGEM)
-            else if (botContext.includes("Você já possui uma margem disponível e pré-aprovada")) {
-                if (userT.includes("não sei") || userT.includes("nao sei") || userT === 'nao' || userT === 'não' || userT === 'nao_sei') {
-                    responseText = EXC_01_MARGEM; interactiveOptions = EXC_01_OPTIONS;
-                } else {
-                    responseText = M2R_04_DOCUMENTOS
-                }
-            }
-
-            // EXC_01_MARGEM -> 04 DOCUMENTOS
-            else if (botContext.includes("Me diga seu objetivo:")) {
-                responseText = M2R_04_DOCUMENTOS
-            }
-
-            // 04 DOCUMENTOS -> 05 RAMIFICAÇÕES
-            else if (botContext.includes("Para dar andamento, me envie por favor:") || botContext.includes("Quando puder, você envia RG+CPF")) {
-
-                // Cliente deu uma desculpa para não mandar doc agora
-                if (!isMedia && (userT.includes("não quero") || userT.includes("depois") || userT.includes("agora não") || userT.includes("agora nao"))) {
-                    responseText = EXC_02_DOCS
-                } else {
-                    // Cliente enviou os dados ou fotos. Vamos descobrir a modalidade lendo o histórico recente.
-                    const history = await prisma.message.findMany({
-                        where: { conversationId },
-                        orderBy: { createdAt: 'desc' },
-                        take: 15
-                    })
-
-                    let detectedModality = 'INSS' // Fallback padrão
-                    for (const msg of history) {
-                        if (msg.direction === 'INBOUND' && msg.type === 'TEXT' && msg.content) {
-                            const c = msg.content.toLowerCase().trim()
-                            if (c === '1' || c === 'ajuda_a' || c === 'a' || c.includes('aposentado') || c === '2' || c.includes('pensionista')) { detectedModality = 'INSS'; break; }
-                            if (c === '3' || c === 'ajuda_b' || c === 'b' || c.includes('militar')) { detectedModality = 'MILITAR'; break; }
-                            if (c === '4' || c === 'ajuda_c' || c === 'c' || c.includes('servidor')) { detectedModality = 'SERVIDOR'; break; }
-                            if (c === '5' || c === 'ajuda_d' || c === 'd' || c.includes('fgts') || c === 'simular_fgts' || c === 'comparar') { detectedModality = 'FGTS'; break; }
-                            if (c === '6' || c === 'ajuda_e' || c === 'e' || c.includes('clt') || c.includes('carteira')) { detectedModality = 'CLT'; break; }
-                        }
+                    if (state.currentBlock === 'BLOCO_00B' && !isMedia) {
+                        // Tava encerrado, volta pro Boas Vindas
+                        responseText = script.BLOCO_00_TEXT;
+                        interactiveOptions = script.BLOCO_00_OPTIONS;
+                        state.currentBlock = 'BLOCO_00';
+                    } else if (!isMedia) {
+                        responseText = script.BLOCO_01F_TEXT;
+                        interactiveOptions = script.BLOCO_01F_OPTIONS;
+                        state.currentBlock = 'BLOCO_01F';
                     }
-
-                    if (detectedModality === 'INSS') responseText = M2R_05A_INSS
-                    else if (detectedModality === 'MILITAR') responseText = M2R_05B_MILITAR
-                    else if (detectedModality === 'SERVIDOR') responseText = M2R_05C_SERVIDOR
-                    else if (detectedModality === 'FGTS') responseText = M2R_05D_FGTS
-                    else if (detectedModality === 'CLT') responseText = M2R_05E_CLT
                 }
-            }
+                break;
 
-            // EXC_02_DOCS (Pré Simulação) -> FECHAMENTO
-            else if (botContext.includes("Tranquilo 😊 Posso fazer uma pré-simulação.")) {
-                responseText = FECHAMENTO
-            }
+            // --- INSS APOSENTADO ---
+            case 'BLOCO_10': // Coletou Dados (Aposentado)
+                if (incomingText.length > 5 && !isMedia) {
+                    state.vars.dadosIniciais = incomingText; // Guarda tudo que digitou
+                    responseText = script.BLOCO_11_TEXT;
+                    state.currentBlock = 'BLOCO_11';
+                } else {
+                    responseText = script.BLOCO_10_TEXT; // Pede dados de novo
+                }
+                break;
+            case 'BLOCO_11': // Aguardando Extrato (Aposentado)
+               if (isMedia) {
+                    state.vars.docStatus = "recebido";
+                    responseText = script.BLOCO_12_TEXT;
+                    state.currentBlock = 'BLOCO_12';
+               } else {
+                    if (userT.includes('difícil') || userT.includes('ajuda')) {
+                        responseText = script.BLOCO_91_TEXT;
+                    } else {
+                        responseText = "Por favor, me envie a foto ou PDF do extrato aqui pelo WhatsApp para continuarmos. 😊";
+                    }
+               }
+               break;
 
-            // 05 ETAPAS FINAIS -> FECHAMENTO
-            else if (
-                botContext.includes("Número do Benefício (NB)") ||
-                botContext.includes("Você é ATIVO / INATIVO / PENSIONISTA?") ||
-                botContext.includes("Órgão / Prefeitura / Estado:") ||
-                botContext.includes("Você está no Saque-Aniversário?") ||
-                botContext.includes("Empresa onde trabalha:")
-            ) {
-                responseText = FECHAMENTO
-            }
-            else {
-                // Se não caiu em nenhuma ramificação
-                console.warn(`[BotEngine M2R] FALHA NO MATCH DE CONTEXTO! 
-                    - Mensagem do Lead: "${userT}"
-                    - Contexto lido do banco (Resumo 100 chars): "${botContext.substring(0, 100)}"
-                    - Condições testadas e falharam para avançar.`);
-                return
-            }
+            // --- INSS PENSIONISTA ---
+            case 'BLOCO_20':
+                if (incomingText.length > 5 && !isMedia) {
+                    state.vars.dadosIniciais = incomingText; 
+                    responseText = script.BLOCO_21_TEXT;
+                    state.currentBlock = 'BLOCO_21';
+                } else {
+                    responseText = script.BLOCO_20_TEXT; 
+                }
+                break;
+            case 'BLOCO_21':
+               if (isMedia) {
+                    state.vars.docStatus = "recebido";
+                    responseText = script.BLOCO_22_TEXT;
+                    state.currentBlock = 'BLOCO_22';
+               } else {
+                    if (userT.includes('difícil') || userT.includes('ajuda')) {
+                        responseText = script.BLOCO_91_TEXT;
+                    } else {
+                        responseText = "Para calcularmos certinho, preciso mesmo ver a foto ou PDF do extrato, me mande por aqui! 😉";
+                    }
+               }
+               break;
+
+            // --- MILITARES DO EXÉRCITO ---
+            case 'BLOCO_30':
+                if (incomingText.length > 5 && !isMedia) {
+                    state.vars.dadosIniciais = incomingText; 
+                    responseText = script.BLOCO_31_TEXT;
+                    state.currentBlock = 'BLOCO_31';
+                } else {
+                    responseText = script.BLOCO_30_TEXT; 
+                }
+                break;
+            case 'BLOCO_31':
+               if (isMedia) {
+                    state.vars.docStatus = "recebido";
+                    responseText = script.BLOCO_32_TEXT;
+                    state.currentBlock = 'BLOCO_32';
+               } else {
+                    responseText = "Preciso do contracheque para validarmos suas taxas exclusivas de Militar. Consegue anexar a foto ou PDF?";
+               }
+               break;
+
+            // --- SERVIDOR PÚBLICO ---
+            case 'BLOCO_40':
+                if (incomingText.length > 5 && !isMedia) {
+                    state.vars.dadosIniciais = incomingText; 
+                    responseText = script.BLOCO_41_TEXT;
+                    state.currentBlock = 'BLOCO_41';
+                } else {
+                    responseText = script.BLOCO_40_TEXT; 
+                }
+                break;
+            case 'BLOCO_41':
+               if (isMedia) {
+                    state.vars.docStatus = "recebido";
+                    responseText = script.BLOCO_42_TEXT;
+                    state.currentBlock = 'BLOCO_42';
+               } else {
+                    responseText = "Para liberar, me envie a foto/PDF do Extrato de Consignações e o Contracheque. 😊";
+               }
+               break;
+
+            // --- FGTS ---
+            case 'BLOCO_50': // Coletou CPF e Pergunta de App
+                if (userT === 'b50_sim' || userT.includes('sim')) {
+                    responseText = script.BLOCO_51_TEXT;
+                    state.currentBlock = 'BLOCO_51';
+                } else if (userT === 'b50_nao' || userT.includes('não')) {
+                    responseText = "Para prosseguirmos, você precisa baixar o aplicativo 'Meu FGTS' no seu celular. Assim que baixar e acessar, me avise!";
+                } else if (incomingText.length >= 10 && incomingText.match(/\d/g)?.length! >= 11) {
+                    // Ele apenas enviou o CPF
+                    state.vars.dadosIniciais = incomingText;
+                    responseText = script.BLOCO_51_TEXT;
+                    state.currentBlock = 'BLOCO_51';
+                } else {
+                    responseText = script.BLOCO_50_TEXT;
+                    interactiveOptions = script.BLOCO_50_OPTIONS;
+                }
+                break;
+            case 'BLOCO_51': 
+               if (isMedia || userT.includes('pronto') || userT.includes('feito') || userT.includes('autorizei')) {
+                    state.vars.docStatus = "recebido";
+                    responseText = script.BLOCO_52_TEXT;
+                    state.currentBlock = 'BLOCO_52';
+               } else {
+                    responseText = "Assim que autorizar as instituições no aplicativo do FGTS, escreva 'Pronto' ou envie um Print da tela para eu avançar!";
+               }
+               break;
+
+            // --- CLT ---
+            case 'BLOCO_60':
+                if (incomingText.length > 5 && !isMedia) {
+                    state.vars.dadosIniciais = incomingText; 
+                    responseText = script.BLOCO_61_TEXT;
+                    state.currentBlock = 'BLOCO_61';
+                } else {
+                    responseText = script.BLOCO_60_TEXT; 
+                }
+                break;
+            case 'BLOCO_61':
+               if (isMedia) {
+                    state.vars.docStatus = "recebido";
+                    responseText = script.BLOCO_62_TEXT;
+                    state.currentBlock = 'BLOCO_62';
+               } else {
+                    responseText = "Envie foto nítida do seu Holerite por aqui para continuarmos. 😊";
+               }
+               break;
+
+            // --- PÓS-FINALIZAÇÃO ---
+            case 'BLOCO_12': case 'BLOCO_22': case 'BLOCO_32': case 'BLOCO_42': case 'BLOCO_52': case 'BLOCO_62':
+            case 'BLOCO_90':
+                responseText = script.BLOCO_90_TEXT;
+                state.currentBlock = 'BLOCO_90';
+                await prisma.conversation.update({
+                    where: { id: conversationId },
+                    data: { tags: { push: 'LEAD QUALIFICADO' } } // Tag Opcional
+                });
+                break;
+                
+            default:
+                responseText = script.BLOCO_01F_TEXT;
+                interactiveOptions = script.BLOCO_01F_OPTIONS;
+                state.currentBlock = 'BLOCO_01F';
+                break;
         }
     }
+
+    // Encerrando - Atualizar a Memória no Banco
+    customData = { ...customData, ...state.vars };
+
+    await prisma.$transaction([
+        prisma.conversation.update({
+            where: { id: conversationId },
+            data: { botState: state }
+        }),
+        prisma.lead.update({
+            where: { id: leadId },
+            data: { customData }
+        })
+    ]);
 
     if (responseText !== "") {
         console.log(`[BotEngine] Respondendo para ${leadPhone} -> ${responseText.substring(0, 30)}...`)
