@@ -165,7 +165,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
 
     const handleArchive = async (id: string, archive: boolean) => {
         if(confirm(archive ? "Deseja arquivar/excluir esta conversa? Ela sairá da sua lista de ativas." : "Deseja restaurar esta conversa? Ela voltará para as ativas.")) {
-            // Optimistic UI Update
+            // Optimistic UI Update - Força que ActiveChat mude instantaneamente
             setChats(prev => prev.map(c => c.id === id ? {...c, status: archive ? 'ARCHIVED' : 'OPEN'} : c))
             if(id === activeChatId) setActiveChatId('')
             
@@ -656,7 +656,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                     </div>
 
                     {/* Messages Window Layers */}
-                    <div className="flex-1 overflow-y-auto px-[5%] lg:px-[9%] py-[15px] z-10 flex flex-col gap-[2px] scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                    <div className="flex-1 overflow-y-auto px-[5%] lg:px-[9%] py-[15px] z-20 flex flex-col gap-[2px] scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                         <div className="text-center mb-5 mt-2">
                             <span className="bg-[#182229] text-[#8696a0] text-[12.5px] px-3 py-1.5 rounded-lg shadow-sm tracking-wide uppercase font-medium inline-block">Hoje</span>
                         </div>
@@ -765,7 +765,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                     </div>
 
                     {/* Input Area (Bottom Bar) */}
-                    <div className="min-h-[62px] flex-shrink-0 bg-[#202c33] px-3 py-[10px] flex items-end gap-2.5 z-10 w-full relative border-t border-transparent">
+                    <div className="min-h-[62px] flex-shrink-0 bg-[#202c33] px-3 py-[10px] flex items-end gap-2.5 z-30 w-full relative border-t border-transparent">
                         {showEmojiPicker && (
                             <div className="absolute bottom-[70px] left-4 z-50 shadow-2xl rounded-lg overflow-hidden border border-white/5">
                                 <EmojiPicker

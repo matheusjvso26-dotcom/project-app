@@ -57,7 +57,7 @@ export async function getConversations(cacheBuster?: number) {
                 value: d.value ? Number(d.value) : 0,
                 stageName: d.stage?.name || 'Sem Etapa'
             })),
-            time: c.updatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            time: c.updatedAt.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }),
             lastMessage: c.messages[0]?.content || 'Nova conversa',
             isBotHandling: c.status === 'BOT_HANDLING',
             unread: 0,
@@ -67,7 +67,7 @@ export async function getConversations(cacheBuster?: number) {
                 type: m.type,
                 transcription: m.transcription || null,
                 sender: (m.direction === 'OUTBOUND' ? (m.senderId ? 'me' : 'bot') : 'client') as "me" | "bot" | "client",
-                time: m.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                time: m.createdAt.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }),
                 status: (m.status === 'READ' ? 'read' : (m.status === 'DELIVERED' ? 'delivered' : 'sent')) as "read" | "delivered" | "sent"
             }))
         }
@@ -161,7 +161,7 @@ export async function sendMessage(conversationId: string, content: string) {
             id: novaMensagem.id,
             content: novaMensagem.content,
             sender: 'me' as const,
-            time: novaMensagem.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            time: novaMensagem.createdAt.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }),
             status: 'sent' as const
         }
     } catch (error: any) {
@@ -325,7 +325,7 @@ export async function sendMediaMessage(conversationId: string, formData: FormDat
         id: msg.id,
         content: finalContent,
         type: msg.type,
-        time: msg.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        time: msg.createdAt.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }),
         sender: 'me' as const,
         status: 'sent' as const
     }
