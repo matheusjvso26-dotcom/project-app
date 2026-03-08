@@ -43,14 +43,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         // Criar resposta proxy mantendo os headers originais de MimeType (PDF, Images, etc)
         const contentType = mediaRes.headers.get('content-type') || 'application/octet-stream'
 
-        const disposition = contentType.startsWith('image/') || contentType.startsWith('audio/') || contentType.startsWith('video/')
+        const disposition = contentType.startsWith('image/') || contentType.startsWith('audio/') || contentType.startsWith('video/') || contentType === 'application/pdf'
             ? 'inline'
             : 'attachment'
+
+        let extension = ''
+        if (contentType === 'application/pdf') extension = '.pdf'
+        else if (contentType.includes('jpeg') || contentType.includes('jpg')) extension = '.jpg'
+        else if (contentType.includes('png')) extension = '.png'
+        else if (contentType.includes('mp4')) extension = '.mp4'
+        else if (contentType.includes('ogg')) extension = '.ogg'
+        else if (contentType.includes('msword')) extension = '.doc'
+        else if (contentType.includes('officedocument.wordprocessingml')) extension = '.docx'
 
         return new NextResponse(mediaRes.body, {
             headers: {
                 'Content-Type': contentType,
-                'Content-Disposition': `${disposition}; filename="whatsapp-media-${mediaId}"`,
+                'Content-Disposition': `${disposition}; filename="whatsapp-media-${mediaId}${extension}"`,
                 'Cache-Control': 'public, max-age=86400' // Cache na cloudflare/browser por 1 dia
             }
         })

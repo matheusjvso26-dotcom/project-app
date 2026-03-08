@@ -59,8 +59,8 @@ export function FinanceChart({ data }: FinanceChartProps) {
                         content={({ active, payload, label }) => {
                             if (active && payload && payload.length) {
                                 return (
-                                    <div className="bg-[#1c1c1c] border border-border/20 p-3 rounded-lg shadow-xl">
-                                        <p className="text-zinc-400 text-xs mb-1 font-medium">{label}</p>
+                                    <div className="bg-card border border-border p-3 rounded-lg shadow-xl">
+                                        <p className="text-muted-foreground text-xs mb-1 font-medium">{label}</p>
                                         <p className="text-emerald-500 font-bold text-sm">
                                             {formatCurrency(payload[0].value as number)}
                                         </p>

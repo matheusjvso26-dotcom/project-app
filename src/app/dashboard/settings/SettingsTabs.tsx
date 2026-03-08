@@ -169,7 +169,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-semibold text-foreground/90 mb-2">Endereço de E-mail</label>
                                     <input type="email" className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors opacity-50 cursor-not-allowed" defaultValue={initialUser.email} disabled />
-                                    <p className="text-xs text-zinc-500 mt-2">O e-mail não pode ser alterado por aqui no momento.</p>
+                                    <p className="text-xs text-muted-foreground mt-2">O e-mail não pode ser alterado por aqui no momento.</p>
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-semibold text-foreground/90 mb-2">Fuso Horário Local</label>
@@ -190,7 +190,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                 <h2 className="text-lg font-bold text-foreground">Robôs e Automações WhatsApp</h2>
                                 <p className="text-sm text-muted-foreground mt-1">Defina mensagens automáticas para otimizar o atendimento de novos Leads e encerramentos.</p>
                             </div>
-                            <button form="settings-bots-form" type="submit" disabled={isLoading} className="flex items-center gap-2 px-4 py-2 bg-primary text-foreground rounded-lg shadow-sm hover:bg-[#e66a00] transition-colors font-medium text-sm disabled:opacity-50">
+                            <button form="settings-bots-form" type="submit" disabled={isLoading} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow-sm hover:bg-[#e66a00] transition-colors font-medium text-sm disabled:opacity-50">
                                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
                             </button>
                         </div>
@@ -215,13 +215,13 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                 <div>
                                     <label className="block text-sm font-semibold text-foreground/90 mb-2">Mensagem de Recepção (First Contact)</label>
                                     <textarea name="welcomeMessage" rows={3} className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none mb-1" placeholder="Ex: Olá! Seja muito bem-vindo ao nosso atendimento." defaultValue={initialOrg.welcomeMessage || ''} />
-                                    <p className="text-xs text-zinc-500">O funil responderá instantaneamente essa mensagem para Leads não cadastrados ao primeiro oi.</p>
+                                    <p className="text-xs text-muted-foreground">O funil responderá instantaneamente essa mensagem para Leads não cadastrados ao primeiro oi.</p>
                                 </div>
                                 <hr className="border-border" />
                                 <div>
                                     <label className="block text-sm font-semibold text-foreground/90 mb-2">Mensagem de Encerramento Automático (Inatividade)</label>
                                     <textarea name="closureMessage" rows={3} className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none mb-1" placeholder="Ex: Devido à falta de comunicação nas últimas horas, estamos encerrando esse chat." defaultValue={initialOrg.closureMessage || ''} />
-                                    <p className="text-xs text-zinc-500">Texto amigável disparado automaticamente quando o Lead sumir no meio do atendimento de longo prazo.</p>
+                                    <p className="text-xs text-muted-foreground">Texto amigável disparado automaticamente quando o Lead sumir no meio do atendimento de longo prazo.</p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-foreground/90 mb-2">Tempo Limite de Inatividade (Minutos Mínimo de 15)</label>
@@ -269,7 +269,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                                         <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs border border-[#ff7b00]/30">
                                                             {member.name.substring(0, 2).toUpperCase()}
                                                         </div>
-                                                        <span className="text-foreground font-medium">{member.name} {member.id === initialUser.id && <span className="text-xs ml-1 text-zinc-500">(Você)</span>}</span>
+                                                        <span className="text-foreground font-medium">{member.name} {member.id === initialUser.id && <span className="text-xs ml-1 text-muted-foreground">(Você)</span>}</span>
                                                     </td>
                                                     <td className="px-6 py-4 text-muted-foreground">{member.email}</td>
                                                     <td className="px-6 py-4">
@@ -282,7 +282,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                                             {member.role}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-zinc-500">{new Date(member.createdAt).toLocaleDateString('pt-BR')}</td>
+                                                    <td className="px-6 py-4 text-muted-foreground">{new Date(member.createdAt).toLocaleDateString('pt-BR')}</td>
                                                 </tr>
                                             ))}
                                         </tbody>

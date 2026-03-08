@@ -13,7 +13,7 @@ export async function Topbar() {
     const firstName = user.name ? user.name.split(' ')[0] : 'Usuário'
 
     return (
-        <header className="h-[5.5rem] flex-shrink-0 flex items-center justify-between px-8 sticky top-0 z-10 w-full bg-[#151515]">
+        <header className="h-[5.5rem] flex-shrink-0 flex items-center justify-between px-8 sticky top-0 z-10 w-full bg-background">
             {/* Left side: Greeting */}
             <div className="flex flex-col justify-center flex-1">
                 <div className="flex items-center gap-2">

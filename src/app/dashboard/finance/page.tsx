@@ -84,7 +84,7 @@ export default async function FinancePage() {
                             </div>
                             <div className="flex-1 space-y-4">
                                 {metrics.recentWons.length === 0 ? (
-                                    <p className="text-sm text-zinc-500 text-center py-10">Nenhum contrato fechado no Kanban ainda.</p>
+                                    <p className="text-sm text-muted-foreground text-center py-10">Nenhum contrato fechado no Kanban ainda.</p>
                                 ) : metrics.recentWons.map((tx: any) => (
                                     <div key={tx.id} className="flex items-center justify-between p-3 rounded-xl bg-background border border-border/50 hover:border-primary/30 transition-colors">
                                         <div className="flex items-center gap-3">

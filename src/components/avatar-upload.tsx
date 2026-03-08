@@ -79,10 +79,10 @@ export function AvatarUpload({ currentAvatarUrl, userName, onUploadSuccess }: Av
                         <img
                             src={currentAvatarUrl}
                             alt="Avatar"
-                            className="w-20 h-20 rounded-full object-cover border border-white/10 shadow-lg"
+                            className="w-20 h-20 rounded-full object-cover border border-border shadow-lg"
                         />
                     ) : (
-                        <div className="w-20 h-20 rounded-full bg-[#252525] border border-white/10 shadow-lg flex items-center justify-center text-white text-3xl font-bold uppercase">
+                        <div className="w-20 h-20 rounded-full bg-[#252525] border border-border shadow-lg flex items-center justify-center text-white text-3xl font-bold uppercase">
                             {userName.charAt(0)}
                         </div>
                     )}
@@ -115,17 +115,17 @@ export function AvatarUpload({ currentAvatarUrl, userName, onUploadSuccess }: Av
                         type="button"
                         disabled={isUploading}
                         onClick={() => fileInputRef.current?.click()}
-                        className="px-5 py-2.5 border border-white/10 bg-[#151515] text-white font-semibold text-sm rounded-lg hover:bg-white/5 transition-colors mb-2 block disabled:opacity-50 shadow-sm"
+                        className="px-5 py-2.5 border border-border bg-background text-white font-semibold text-sm rounded-lg hover:bg-white/5 transition-colors mb-2 block disabled:opacity-50 shadow-sm"
                     >
                         {isUploading ? 'Enviando foto...' : 'Fazer Upload de Foto'}
                     </button>
-                    <p className="text-xs text-zinc-500 font-medium">Recomendado: 500x500px. Máximo 2MB (GPG, GIF, PNG)</p>
+                    <p className="text-xs text-muted-foreground font-medium">Recomendado: 500x500px. Máximo 2MB (GPG, GIF, PNG)</p>
                 </div>
             </div>
 
             {/* Quick Select Avatars */}
             <div className="pt-2">
-                <p className="text-sm font-semibold text-zinc-300 mb-3">Ou escolha um avatar pronto:</p>
+                <p className="text-sm font-semibold text-foreground mb-3">Ou escolha um avatar pronto:</p>
                 <div className="flex flex-wrap gap-3">
                     {[
                         'https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0',

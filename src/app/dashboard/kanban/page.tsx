@@ -63,12 +63,12 @@ export default async function KanbanPage() {
     }
 
     return (
-        <div className="flex flex-col h-full bg-[#151515]">
-            <div className="p-6 border-b border-border bg-[#151515]">
-                <h1 className="text-2xl font-bold text-white tracking-tight">Pipeline de Vendas</h1>
+        <div className="flex flex-col h-full bg-background">
+            <div className="p-6 border-b border-border bg-background">
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">Pipeline de Vendas</h1>
                 <p className="text-sm text-muted-foreground mt-1">Gerencie oportunidades e arraste os cards pelas etapas do funil.</p>
             </div>
-            <div className="flex-1 overflow-hidden p-6 bg-[#151515]">
+            <div className="flex-1 overflow-hidden p-6 bg-background">
                 <KanbanBoard initialData={initialData} />
             </div>
         </div>

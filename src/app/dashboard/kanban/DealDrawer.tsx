@@ -55,7 +55,7 @@ export function DealDrawer({ dealId, isOpen, onClose }: DealDrawerProps) {
                     </div>
                 ) : (
                     <div className="flex flex-col h-full">
-                        <SheetHeader className="pb-6 border-b border-border/20">
+                        <SheetHeader className="pb-6 border-b border-border">
                             <SheetTitle className="text-2xl font-bold flex items-center gap-2">
                                 {deal.title}
                             </SheetTitle>
@@ -111,7 +111,7 @@ export function DealDrawer({ dealId, isOpen, onClose }: DealDrawerProps) {
 
                             <TabsContent value="timeline" className="mt-6">
                                 <div className="flex flex-col gap-6 relative md:before:mx-auto mt-4 items-center text-center">
-                                    <p className="text-zinc-500 text-sm">O histórico cronológico rastreado aparecerá aqui em breve.</p>
+                                    <p className="text-muted-foreground text-sm">O histórico cronológico rastreado aparecerá aqui em breve.</p>
                                 </div>
                             </TabsContent>
                         </Tabs>
