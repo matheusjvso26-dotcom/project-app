@@ -71,6 +71,7 @@ model Lead {
   phone          String       // Primary identifier for WhatsApp
   email          String?
   name           String?
+  profilePictureUrl String?
   tags           String[]     @default([])
   customData     Json?        @default("{}") // Armazena CPF, Banco, Órgão, Salário do M2R V2
   lgpdConsent    Boolean      @default(false)

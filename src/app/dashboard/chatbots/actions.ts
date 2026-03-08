@@ -117,3 +117,51 @@ export async function deleteBot(botId: string) {
     revalidatePath('/dashboard/chatbots')
     return { success: true }
 }
+
+/**
+ * Gera os nós e arestas de um fluxo usando o Google Gemini
+ */
+export async function generateFlowWithGemini(prompt: string) {
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) throw new Error("GEMINI_API_KEY não configurada no servidor (.env).")
+
+    const systemPrompt = `Você é um especialista em criar fluxos conversacionais (Chatbots).
+O usuário vai pedir uma automação por texto.
+Você precisa retornar puramente um JSON válido contendo os arrays 'nodes' e 'edges' necessários para ser renderizado no React Flow.
+Sempre inclua um node gatilho no topo:
+[
+  { "id": "1", "type": "trigger", "position": { "x": 250, "y": 50 }, "data": { "label": "Gatilho Inicial", "description": "Início da Conversa" } }
+]
+Depois insira os nodes tipo "message", "action", ou "condition" conectando uns aos outros.
+Exemplo de message node:
+  { "id": "2", "type": "message", "position": { "x": 250, "y": 200 }, "data": { "label": "Enviar Mensagem", "content": "Olá! Bem vindo." } }
+
+Exemplo de connection edge:
+  { "id": "e1-2", "source": "1", "target": "2" }
+
+Return APENAS o JSON com a raiz: {"nodes": [...], "edges": [...]}. Espace os Y em 150 pixels um do outro para ficar organizado visualmente.`
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                system_instruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
+            })
+        })
+
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error?.message || "Erro retornado da API do Gemini.")
+
+        const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text
+        if (!jsonText) throw new Error("IA não retornou um formato de texto válido.")
+
+        const parsed = JSON.parse(jsonText.trim())
+        return { success: true, nodes: parsed.nodes || [], edges: parsed.edges || [] }
+    } catch (e: any) {
+        console.error("Gemini Error:", e)
+        throw new Error(e.message || "Erro no processamento da Inteligência Artificial.")
+    }
+}

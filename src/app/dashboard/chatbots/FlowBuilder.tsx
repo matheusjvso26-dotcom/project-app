@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
+
 import {
     ReactFlow,
     Controls,
@@ -16,9 +17,12 @@ import {
     Connection
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Save, ArrowLeft, Plus } from 'lucide-react'
+import { Save, ArrowLeft, Plus, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
-import { saveVisualFlow } from './actions' // Criaremos essa action
+import { saveVisualFlow, generateFlowWithGemini } from './actions'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 export const initialNodes: Node[] = [
     {
@@ -103,6 +107,29 @@ export function FlowBuilder({ botName, workflowJsonStr, onBack }: { botName: str
     const [nodes, setNodes] = useState<Node[]>(parsedData?.nodes || initialNodes)
     const [edges, setEdges] = useState<Edge[]>(parsedData?.edges || initialEdges)
     const [isSaving, setIsSaving] = useState(false)
+    
+    // AI State
+    const [isPromptOpen, setIsPromptOpen] = useState(false)
+    const [prompt, setPrompt] = useState('')
+    const [isGenerating, setIsGenerating] = useState(false)
+
+    const handleGenerateAI = async () => {
+        if (!prompt) return toast.error("Descreva o que deseja no fluxo.")
+        setIsGenerating(true)
+        const toastId = toast.loading("🪄 Gemini processando o fluxo...")
+        try {
+            const result = await generateFlowWithGemini(prompt)
+            setNodes(result.nodes)
+            setEdges(result.edges)
+            setIsPromptOpen(false)
+            setPrompt('')
+            toast.success("Design criado com Inteligência Artificial!", { id: toastId })
+        } catch(e: any) {
+            toast.error(e.message || "Erro na I.A.", { id: toastId })
+        } finally {
+            setIsGenerating(false)
+        }
+    }
 
     const onNodesChange = useCallback(
         (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -153,26 +180,29 @@ export function FlowBuilder({ botName, workflowJsonStr, onBack }: { botName: str
     }
 
     return (
-        <div className="flex flex-col h-full bg-[#151515]">
+        <div className="flex flex-col h-full bg-background">
             {/* Header */}
-            <div className="h-16 flex-shrink-0 bg-[#1c1c1c] border-b border-white/10 flex items-center justify-between px-6 z-10">
+            <div className="h-16 flex-shrink-0 bg-card border-b border-border flex items-center justify-between px-6 z-10">
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-1">
+                    <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                         <ArrowLeft className="w-4 h-4" /> Voltar
                     </button>
                     <div className="h-4 w-px bg-white/10"></div>
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                         Árvore Interativa [{botName}]
                     </h2>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={addMessageNode} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-[#2a2a2a] hover:bg-[#333] border border-white/10 rounded-md transition-colors">
+                    <button onClick={() => setIsPromptOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-md transition-colors shadow">
+                        <Sparkles className="w-3.5 h-3.5" /> IA Gemini
+                    </button>
+                    <button onClick={addMessageNode} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-foreground bg-muted hover:bg-accent border border-border rounded-md transition-colors">
                         <Plus className="w-3 h-3" /> Nó de Mensagem
                     </button>
-                    <button onClick={addOptionNode} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-[#1e3a8a] hover:bg-[#1e40af] border border-blue-500/20 rounded-md transition-colors">
+                    <button onClick={addOptionNode} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-foreground bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 rounded-md transition-colors">
                         <Plus className="w-3 h-3" /> Nó de Condição
                     </button>
-                    <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-[#ff7b00] hover:bg-[#e66a00] rounded-md shadow-lg shadow-[#ff7b00]/20 transition-colors ml-2 disabled:opacity-50">
+                    <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-foreground bg-primary hover:bg-[#e66a00] rounded-md shadow-lg shadow-[#ff7b00]/20 transition-colors ml-2 disabled:opacity-50">
                         <Save className="w-4 h-4" />
                         {isSaving ? 'Salvando...' : 'Salvar Fluxo'}
                     </button>
@@ -196,6 +226,32 @@ export function FlowBuilder({ botName, workflowJsonStr, onBack }: { botName: str
                     <Controls />
                 </ReactFlow>
             </div>
+
+            <Dialog open={isPromptOpen} onOpenChange={setIsPromptOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-indigo-500" /> Criar Fluxo com Google Gemini</DialogTitle>
+                        <DialogDescription>
+                            Descreva como você quer que o chatbot se comporte. O modelo Gemini-2.5-Flash criará as etapas visuais pra você.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Input
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            placeholder="Ex: Crie um bot que pede nome, telefone e depois dá 3 opções de produto..."
+                            className="bg-card w-full text-sm"
+                            onKeyDown={(e) => { if(e.key === 'Enter') handleGenerateAI() }}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsPromptOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleGenerateAI} disabled={isGenerating} className="bg-indigo-600 text-white hover:bg-indigo-700">
+                            {isGenerating ? 'Mágica Acontecendo...' : 'Construir Agora'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

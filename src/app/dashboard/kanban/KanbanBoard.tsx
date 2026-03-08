@@ -44,6 +44,18 @@ const getStatusColor = (status: DealStatus) => {
     }
 }
 
+const getStageColor = (index: number) => {
+    const colors = [
+        'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+        'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+        'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+        'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+        'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+    ]
+    return colors[index % colors.length]
+}
+
 interface KanbanBoardProps {
     initialData: Stage[]
 }
@@ -115,14 +127,14 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
         <>
             <DragDropContext onDragEnd={onDragEnd}>
                 <div className="flex h-full w-full gap-6 overflow-x-auto p-2 pb-8 scrollbar-thin">
-                    {data.map((stage) => (
-                        <div key={stage.id} className="flex min-w-[320px] max-w-[320px] flex-col rounded-2xl glass-card border border-border/50 p-3 h-fit shadow-xs">
+                    {data.map((stage, index) => (
+                        <div key={stage.id} className={`flex min-w-[320px] max-w-[320px] flex-col rounded-2xl bg-card border ${getStageColor(index).split(' ')[2]} p-3 h-fit shadow-sm`}>
                             {/* Stage Header */}
                             <div className="flex items-center justify-between mb-4 px-1">
                                 <div className="flex flex-col gap-0.5">
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-semibold text-foreground text-[15px]">{stage.name}</h3>
-                                        <span className="flex h-[20px] px-2 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                                        <span className={`flex h-[20px] px-2 items-center justify-center rounded-full text-[11px] font-bold ${getStageColor(index).split(' ').slice(0, 2).join(' ')}`}>
                                             {stage.deals.length}
                                         </span>
                                     </div>
@@ -144,7 +156,7 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.droppableProps}
-                                        className={`flex flex-col gap-3 p-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? 'bg-[#222]/80' : 'bg-transparent'
+                                        className={`flex flex-col gap-3 p-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? 'bg-muted/50 rounded-lg' : 'bg-transparent'
                                             }`}
                                     >
                                         {stage.deals.map((deal, index) => (
@@ -156,15 +168,15 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
                                                         {...provided.dragHandleProps}
                                                         onClick={() => handleDealClick(deal.id)}
                                                         className={`p-4 rounded-xl border flex flex-col gap-3 group transition-all shadow-sm ${snapshot.isDragging
-                                                            ? 'bg-[#1c1c1c] border-primary/50 shadow-xl scale-[1.02] cursor-grabbing rotate-1 z-50'
-                                                            : 'bg-[#1c1c1c] border-white/5 hover:border-primary/30 cursor-grab hover:shadow-md'
+                                                            ? 'bg-card border-primary/50 shadow-xl scale-[1.02] cursor-grabbing rotate-1 z-50'
+                                                            : 'bg-card border-border hover:border-primary/40 cursor-grab hover:shadow-md'
                                                             }`}
                                                         style={provided.draggableProps.style}
                                                     >
                                                         {/* Titulo e Ações */}
                                                         <div className="flex justify-between items-start gap-2">
-                                                            <h4 className="font-semibold text-white text-[15px] leading-snug line-clamp-2 pr-4">{deal.title}</h4>
-                                                            <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/5 rounded text-muted-foreground hover:text-white transition-all shrink-0">
+                                                            <h4 className="font-semibold text-foreground text-[15px] leading-snug line-clamp-2 pr-4">{deal.title}</h4>
+                                                            <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-all shrink-0">
                                                                 <MoreHorizontal className="w-4 h-4" />
                                                             </button>
                                                         </div>
@@ -176,11 +188,11 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
                                                         </div>
 
                                                         {/* Valor e Status */}
-                                                        <div className="flex items-center justify-between mt-1 pt-3 border-t border-white/5">
-                                                            <span className="text-[15px] font-bold text-[#ff7b00]">
+                                                        <div className="flex items-center justify-between mt-1 pt-3 border-t border-border">
+                                                            <span className="text-[15px] font-bold text-primary">
                                                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.value / 100)}
                                                             </span>
-                                                            <Badge variant="secondary" className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors">
+                                                            <Badge variant="secondary" className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
                                                                 {deal.status}
                                                             </Badge>
                                                         </div>

@@ -60,7 +60,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                         onClick={() => setActiveTab('profile')}
                         className={cn(
                             "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                            activeTab === 'profile' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                            activeTab === 'profile' ? "bg-card text-primary border border-border/50" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                         )}>
                         <User className="w-4 h-4" /> Perfil Pessoal
                     </button>
@@ -68,7 +68,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                         onClick={() => setActiveTab('org')}
                         className={cn(
                             "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                            activeTab === 'org' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                            activeTab === 'org' ? "bg-card text-primary border border-border/50" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                         )}>
                         <Building className="w-4 h-4" /> Organização e Faturamento
                     </button>
@@ -76,7 +76,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                         onClick={() => setActiveTab('team')}
                         className={cn(
                             "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                            activeTab === 'team' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                            activeTab === 'team' ? "bg-card text-primary border border-border/50" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                         )}>
                         <Users className="w-4 h-4" /> Minha Equipe
                     </button>
@@ -84,7 +84,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                         onClick={() => setActiveTab('notifications')}
                         className={cn(
                             "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                            activeTab === 'notifications' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                            activeTab === 'notifications' ? "bg-card text-primary border border-border/50" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                         )}>
                         <Bell className="w-4 h-4" /> Notificações
                     </button>
@@ -92,7 +92,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                         onClick={() => setActiveTab('bots')}
                         className={cn(
                             "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                            activeTab === 'bots' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                            activeTab === 'bots' ? "bg-card text-primary border border-border/50" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                         )}>
                         <Bot className="w-4 h-4" /> WhatsApp Automaker
                     </button>
@@ -100,7 +100,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                         onClick={() => setActiveTab('security')}
                         className={cn(
                             "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                            activeTab === 'security' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                            activeTab === 'security' ? "bg-card text-primary border border-border/50" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                         )}>
                         <Lock className="w-4 h-4" /> Segurança e Acesso
                     </button>
@@ -108,7 +108,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                         onClick={() => setActiveTab('api')}
                         className={cn(
                             "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                            activeTab === 'api' ? "bg-[#1c1c1c] text-[#ff7b00] border border-white/5" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                            activeTab === 'api' ? "bg-card text-primary border border-border/50" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                         )}>
                         <Zap className="w-4 h-4" /> Integrações (API)
                     </button>
@@ -116,12 +116,12 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 bg-[#1c1c1c] border border-white/10 rounded-xl shadow-sm overflow-hidden min-h-[500px]">
+            <div className="flex-1 bg-card border border-border rounded-xl shadow-sm overflow-hidden min-h-[500px]">
                 {activeTab === 'profile' && (
                     <>
-                        <div className="p-6 border-b border-white/10">
-                            <h2 className="text-lg font-bold text-white">Perfil Pessoal</h2>
-                            <p className="text-sm text-zinc-400 mt-1">Atualize suas informações pessoais e email de login.</p>
+                        <div className="p-6 border-b border-border">
+                            <h2 className="text-lg font-bold text-foreground">Perfil Pessoal</h2>
+                            <p className="text-sm text-muted-foreground mt-1">Atualize suas informações pessoais e email de login.</p>
                         </div>
 
                         <div className="p-6 space-y-6">
@@ -144,7 +144,7 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                 }}
                             />
 
-                            <hr className="border-white/10" />
+                            <hr className="border-border" />
 
                             {message && (
                                 <div className={cn(
@@ -158,22 +158,22 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                             {/* Form */}
                             <form id="settings-profile-form" action={handleProfileSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Nome Completo</label>
-                                    <input name="name" type="text" className="w-full bg-[#151515] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors" defaultValue={initialUser.name} required />
+                                    <label className="block text-sm font-semibold text-foreground/90 mb-2">Nome Completo</label>
+                                    <input name="name" type="text" className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" defaultValue={initialUser.name} required />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Cargo / Função</label>
+                                    <label className="block text-sm font-semibold text-foreground/90 mb-2">Cargo / Função</label>
                                     {/* Notice we are saving role on Prisma only if it's enum ADMIN/SDR, so maybe it's better to leave this as readonly for now or manage properly */}
-                                    <input type="text" className="w-full bg-[#151515] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors opacity-50 cursor-not-allowed" defaultValue={initialUser.role} disabled />
+                                    <input type="text" className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors opacity-50 cursor-not-allowed" defaultValue={initialUser.role} disabled />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Endereço de E-mail</label>
-                                    <input type="email" className="w-full bg-[#151515] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors opacity-50 cursor-not-allowed" defaultValue={initialUser.email} disabled />
+                                    <label className="block text-sm font-semibold text-foreground/90 mb-2">Endereço de E-mail</label>
+                                    <input type="email" className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors opacity-50 cursor-not-allowed" defaultValue={initialUser.email} disabled />
                                     <p className="text-xs text-zinc-500 mt-2">O e-mail não pode ser alterado por aqui no momento.</p>
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Fuso Horário Local</label>
-                                    <select className="w-full bg-[#151515] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors appearance-none">
+                                    <label className="block text-sm font-semibold text-foreground/90 mb-2">Fuso Horário Local</label>
+                                    <select className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors appearance-none">
                                         <option>Horário de Brasília (BRT) - UTC-3</option>
                                         <option>Horário do Amazonas (AMT) - UTC-4</option>
                                     </select>
@@ -185,12 +185,12 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
 
                 {activeTab === 'bots' && (
                     <>
-                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                        <div className="p-6 border-b border-border flex items-center justify-between">
                             <div>
-                                <h2 className="text-lg font-bold text-white">Robôs e Automações WhatsApp</h2>
-                                <p className="text-sm text-zinc-400 mt-1">Defina mensagens automáticas para otimizar o atendimento de novos Leads e encerramentos.</p>
+                                <h2 className="text-lg font-bold text-foreground">Robôs e Automações WhatsApp</h2>
+                                <p className="text-sm text-muted-foreground mt-1">Defina mensagens automáticas para otimizar o atendimento de novos Leads e encerramentos.</p>
                             </div>
-                            <button form="settings-bots-form" type="submit" disabled={isLoading} className="flex items-center gap-2 px-4 py-2 bg-[#ff7b00] text-white rounded-lg shadow-sm hover:bg-[#e66a00] transition-colors font-medium text-sm disabled:opacity-50">
+                            <button form="settings-bots-form" type="submit" disabled={isLoading} className="flex items-center gap-2 px-4 py-2 bg-primary text-foreground rounded-lg shadow-sm hover:bg-[#e66a00] transition-colors font-medium text-sm disabled:opacity-50">
                                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
                             </button>
                         </div>
@@ -213,19 +213,19 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                 setIsLoading(false)
                             }} className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Mensagem de Recepção (First Contact)</label>
-                                    <textarea name="welcomeMessage" rows={3} className="w-full bg-[#151515] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors resize-none mb-1" placeholder="Ex: Olá! Seja muito bem-vindo ao nosso atendimento." defaultValue={initialOrg.welcomeMessage || ''} />
+                                    <label className="block text-sm font-semibold text-foreground/90 mb-2">Mensagem de Recepção (First Contact)</label>
+                                    <textarea name="welcomeMessage" rows={3} className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none mb-1" placeholder="Ex: Olá! Seja muito bem-vindo ao nosso atendimento." defaultValue={initialOrg.welcomeMessage || ''} />
                                     <p className="text-xs text-zinc-500">O funil responderá instantaneamente essa mensagem para Leads não cadastrados ao primeiro oi.</p>
                                 </div>
-                                <hr className="border-white/10" />
+                                <hr className="border-border" />
                                 <div>
-                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Mensagem de Encerramento Automático (Inatividade)</label>
-                                    <textarea name="closureMessage" rows={3} className="w-full bg-[#151515] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors resize-none mb-1" placeholder="Ex: Devido à falta de comunicação nas últimas horas, estamos encerrando esse chat." defaultValue={initialOrg.closureMessage || ''} />
+                                    <label className="block text-sm font-semibold text-foreground/90 mb-2">Mensagem de Encerramento Automático (Inatividade)</label>
+                                    <textarea name="closureMessage" rows={3} className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none mb-1" placeholder="Ex: Devido à falta de comunicação nas últimas horas, estamos encerrando esse chat." defaultValue={initialOrg.closureMessage || ''} />
                                     <p className="text-xs text-zinc-500">Texto amigável disparado automaticamente quando o Lead sumir no meio do atendimento de longo prazo.</p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-zinc-300 mb-2">Tempo Limite de Inatividade (Minutos Mínimo de 15)</label>
-                                    <input name="closureMinutes" type="number" min="15" className="w-full max-w-[200px] bg-[#151515] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#ff7b00]/20 focus:border-[#ff7b00] transition-colors" defaultValue={initialOrg.closureMinutes} />
+                                    <label className="block text-sm font-semibold text-foreground/90 mb-2">Tempo Limite de Inatividade (Minutos Mínimo de 15)</label>
+                                    <input name="closureMinutes" type="number" min="15" className="w-full max-w-[200px] bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" defaultValue={initialOrg.closureMinutes} />
                                 </div>
                             </form>
                         </div>
@@ -234,27 +234,27 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
 
                 {activeTab === 'org' && (
                     <div className="p-6">
-                        <h2 className="text-lg font-bold text-white">Organização e Faturamento</h2>
-                        <p className="text-sm text-zinc-400 mt-1 mb-6">Em breve: gerencie a assinatura e os dados da sua empresa aqui.</p>
+                        <h2 className="text-lg font-bold text-foreground">Organização e Faturamento</h2>
+                        <p className="text-sm text-muted-foreground mt-1 mb-6">Em breve: gerencie a assinatura e os dados da sua empresa aqui.</p>
                     </div>
                 )}
 
                 {activeTab === 'team' && (
                     <>
-                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                        <div className="p-6 border-b border-border flex items-center justify-between">
                             <div>
-                                <h2 className="text-lg font-bold text-white">Membros da Equipe</h2>
-                                <p className="text-sm text-zinc-400 mt-1">Gerencie acessos e adicione novos consultores/vendedores na organização.</p>
+                                <h2 className="text-lg font-bold text-foreground">Membros da Equipe</h2>
+                                <p className="text-sm text-muted-foreground mt-1">Gerencie acessos e adicione novos consultores/vendedores na organização.</p>
                             </div>
                         </div>
 
                         <div className="p-6">
                             {/* Listagem de Membros */}
                             <div className="mb-8">
-                                <h3 className="text-sm font-semibold text-zinc-300 mb-4">Usuários Ativos ({initialTeam.length})</h3>
-                                <div className="border border-white/5 rounded-xl overflow-hidden">
+                                <h3 className="text-sm font-semibold text-foreground/90 mb-4">Usuários Ativos ({initialTeam.length})</h3>
+                                <div className="border border-border/50 rounded-xl overflow-hidden">
                                     <table className="w-full text-left text-sm whitespace-nowrap">
-                                        <thead className="bg-white/5 text-zinc-400 border-b border-white/5">
+                                        <thead className="bg-white/5 text-muted-foreground border-b border-border/50">
                                             <tr>
                                                 <th className="px-6 py-3 font-medium">Nome</th>
                                                 <th className="px-6 py-3 font-medium">Email</th>
@@ -262,16 +262,16 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                                 <th className="px-6 py-3 font-medium">Entrada</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-white/5 bg-[#151515]">
+                                        <tbody className="divide-y divide-white/5 bg-background">
                                             {initialTeam.map(member => (
                                                 <tr key={member.id} className="hover:bg-white/5 transition-colors">
                                                     <td className="px-6 py-4 flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-[#ff7b00]/20 text-[#ff7b00] flex items-center justify-center font-bold text-xs border border-[#ff7b00]/30">
+                                                        <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs border border-[#ff7b00]/30">
                                                             {member.name.substring(0, 2).toUpperCase()}
                                                         </div>
-                                                        <span className="text-white font-medium">{member.name} {member.id === initialUser.id && <span className="text-xs ml-1 text-zinc-500">(Você)</span>}</span>
+                                                        <span className="text-foreground font-medium">{member.name} {member.id === initialUser.id && <span className="text-xs ml-1 text-zinc-500">(Você)</span>}</span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-zinc-400">{member.email}</td>
+                                                    <td className="px-6 py-4 text-muted-foreground">{member.email}</td>
                                                     <td className="px-6 py-4">
                                                         <span className={cn(
                                                             "px-2.5 py-1 rounded-full text-xs font-medium border",
@@ -292,9 +292,9 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
 
                             {/* Formulário de Convite (Vísível só pra Admin teoricamente, mas Action bloqueia caso masquem frontend) */}
                             {initialUser.role === 'ADMIN' && (
-                                <div className="border border-white/10 rounded-xl bg-[#1c1c1c] p-6">
-                                    <h3 className="text-md font-bold text-white mb-1">Adicionar novo Membro</h3>
-                                    <p className="text-xs text-zinc-400 mb-6">Convide um usuário preenchendo os dados abaixo. Eles poderão acessar com esse e-mail e senha formatada.</p>
+                                <div className="border border-border rounded-xl bg-card p-6">
+                                    <h3 className="text-md font-bold text-foreground mb-1">Adicionar novo Membro</h3>
+                                    <p className="text-xs text-muted-foreground mb-6">Convide um usuário preenchendo os dados abaixo. Eles poderão acessar com esse e-mail e senha formatada.</p>
 
                                     {teamMessage && (
                                         <div className={cn(
@@ -317,24 +317,24 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
                                         setIsLoading(false)
                                     }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Nome Completo</label>
-                                            <input name="name" type="text" required className="w-full bg-[#151515] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-[#ff7b00]" placeholder="Marcos Silva" />
+                                            <label className="block text-xs font-semibold text-foreground/90 mb-1.5">Nome Completo</label>
+                                            <input name="name" type="text" required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary" placeholder="Marcos Silva" />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">E-mail Comercial</label>
-                                            <input name="email" type="email" required className="w-full bg-[#151515] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-[#ff7b00]" placeholder="marcos@empresa.com" />
+                                            <label className="block text-xs font-semibold text-foreground/90 mb-1.5">E-mail Comercial</label>
+                                            <input name="email" type="email" required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary" placeholder="marcos@empresa.com" />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Cargo / Hierarquia</label>
-                                            <select name="role" required className="w-full bg-[#151515] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-[#ff7b00] appearance-none">
+                                            <label className="block text-xs font-semibold text-foreground/90 mb-1.5">Cargo / Hierarquia</label>
+                                            <select name="role" required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary appearance-none">
                                                 <option value="SDR">SDR (Pré-vendas)</option>
                                                 <option value="CLOSER">Closer (Vendedor Master)</option>
                                                 <option value="ADMIN">Administrador (Total Acesso)</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Senha Provisória</label>
-                                            <input name="password" type="text" required minLength={6} className="w-full bg-[#151515] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-[#ff7b00]" placeholder="Ex: Mudar123!" />
+                                            <label className="block text-xs font-semibold text-foreground/90 mb-1.5">Senha Provisória</label>
+                                            <input name="password" type="text" required minLength={6} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary" placeholder="Ex: Mudar123!" />
                                         </div>
                                         <div className="md:col-span-2 mt-2">
                                             <button type="submit" disabled={isLoading} className="px-4 py-2 bg-white text-black font-semibold rounded-lg text-sm hover:bg-zinc-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
@@ -350,22 +350,22 @@ export function SettingsTabs({ initialUser, initialOrg, initialTeam }: SettingsT
 
                 {activeTab === 'notifications' && (
                     <div className="p-6">
-                        <h2 className="text-lg font-bold text-white">Notificações</h2>
-                        <p className="text-sm text-zinc-400 mt-1 mb-6">Em breve: defina quais alertas você deseja receber por e-mail ou WhatsApp.</p>
+                        <h2 className="text-lg font-bold text-foreground">Notificações</h2>
+                        <p className="text-sm text-muted-foreground mt-1 mb-6">Em breve: defina quais alertas você deseja receber por e-mail ou WhatsApp.</p>
                     </div>
                 )}
 
                 {activeTab === 'security' && (
                     <div className="p-6">
-                        <h2 className="text-lg font-bold text-white">Segurança e Acesso</h2>
-                        <p className="text-sm text-zinc-400 mt-1 mb-6">Em breve: altere sua senha e configure a autenticação em duas etapas.</p>
+                        <h2 className="text-lg font-bold text-foreground">Segurança e Acesso</h2>
+                        <p className="text-sm text-muted-foreground mt-1 mb-6">Em breve: altere sua senha e configure a autenticação em duas etapas.</p>
                     </div>
                 )}
 
                 {activeTab === 'api' && (
                     <div className="p-6">
-                        <h2 className="text-lg font-bold text-white">Integrações (API)</h2>
-                        <p className="text-sm text-zinc-400 mt-1 mb-6">Em breve: gerencie seus tokens de API e webhooks do sistema.</p>
+                        <h2 className="text-lg font-bold text-foreground">Integrações (API)</h2>
+                        <p className="text-sm text-muted-foreground mt-1 mb-6">Em breve: gerencie seus tokens de API e webhooks do sistema.</p>
                     </div>
                 )}
             </div>

@@ -46,6 +46,7 @@ export interface Chat {
     isBotHandling: boolean
     lgpdConsent: boolean
     tags: string[] // Custom Tags
+    profilePictureUrl?: string | null
     messages: Message[]
     deals: ChatDeal[]
 }
@@ -84,8 +85,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
 
     // Auto-scroll messages
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [activeChatId, chats])
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+    }, [activeChatId]) // Only auto scroll on chat change, not on background poll 'chats' update
 
     // --- REALTIME MOTOR (POLLING) --- 
     useEffect(() => {
@@ -165,6 +166,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
 
     const handleArchive = async (id: string, archive: boolean) => {
         if(confirm(archive ? "Deseja arquivar/excluir esta conversa? Ela sairá da sua lista de ativas." : "Deseja restaurar esta conversa? Ela voltará para as ativas.")) {
+            setIsSending(true)
             // Optimistic UI Update - Força que ActiveChat mude instantaneamente
             setChats(prev => prev.map(c => c.id === id ? {...c, status: archive ? 'ARCHIVED' : 'OPEN'} : c))
             if(id === activeChatId) setActiveChatId('')
@@ -175,6 +177,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                 toast.error("Erro ao modificar status da conversa")
                 // Rollback em caso de erro
                 setChats(prev => prev.map(c => c.id === id ? {...c, status: !archive ? 'ARCHIVED' : 'OPEN'} : c))
+            } finally {
+                setIsSending(false)
             }
         }
     }
@@ -357,19 +361,19 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
         : baseChats
 
     return (
-        <div className="flex h-full w-full bg-[#111b21] text-[#e9edef] overflow-hidden font-sans border-l border-white/5 relative z-10">
+        <div className="flex h-full w-full bg-background text-foreground overflow-hidden font-sans border-l border-border/50 relative z-10">
             {/* TAGS SETTINGS MODAL */}
             <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                <DialogContent className="sm:max-w-[500px] bg-[#202c33] border border-[#2a3942] text-[#e9edef] shadow-2xl">
+                <DialogContent className="sm:max-w-[500px] bg-card border border-border text-foreground shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-white text-lg font-medium">Configurar Etiquetas</DialogTitle>
-                        <DialogDescription className="text-[#8696a0] text-sm mt-1">
+                        <DialogTitle className="text-foreground text-lg font-medium">Configurar Etiquetas</DialogTitle>
+                        <DialogDescription className="text-muted-foreground text-sm mt-1">
                             Crie etiquetas customizadas com cores M2R para classificar suas conversas.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-2 flex flex-col gap-3 min-h-[150px] max-h-[350px] overflow-y-auto scrollbar-thin">
                         {editingTags.map((tag, idx) => (
-                            <div key={tag.id} className="flex items-center gap-2 bg-[#111b21] p-2 rounded border border-[#2a3942]">
+                            <div key={tag.id} className="flex items-center gap-2 bg-background p-2 rounded border border-border">
                                 <input type="color" value={tag.color} onChange={e => {
                                     const newTags = [...editingTags];
                                     newTags[idx].color = e.target.value;
@@ -379,60 +383,60 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                     const newTags = [...editingTags];
                                     newTags[idx].name = e.target.value;
                                     setEditingTags(newTags);
-                                }} className="bg-transparent border-none text-[14px] flex-1 text-white h-8 focus-visible:ring-0 px-2" placeholder="Ex: INSS Aposentado..." />
-                                <button onClick={() => setEditingTags(editingTags.filter(t => t.id !== tag.id))} className="p-1 hover:bg-white/10 rounded">
+                                }} className="bg-transparent border-none text-[14px] flex-1 text-foreground h-8 focus-visible:ring-0 px-2" placeholder="Ex: INSS Aposentado..." />
+                                <button onClick={() => setEditingTags(editingTags.filter(t => t.id !== tag.id))} className="p-1 hover:bg-accent rounded">
                                     <X className="w-4 h-4 text-red-400" />
                                 </button>
                             </div>
                         ))}
                         <button onClick={() => setEditingTags([...editingTags, { id: 'tag-'+Date.now(), name: 'Nova Etiqueta', color: '#00a884' }])}
-                            className="bg-[#2a3942] hover:bg-[#30424d] text-white py-2 rounded-lg text-sm font-medium transition-colors border border-dashed border-[#8696a0]/50 flex items-center justify-center gap-2 mt-2">
+                            className="bg-accent hover:bg-accent text-foreground py-2 rounded-lg text-sm font-medium transition-colors border border-dashed border-[#8696a0]/50 flex items-center justify-center gap-2 mt-2">
                             <Plus className="w-4 h-4" /> Adicionar Etiqueta
                         </button>
                     </div>
                     <DialogFooter className="mt-4">
-                        <Button variant="outline" className="text-white border-white/20 hover:bg-white/10" onClick={() => setIsSettingsOpen(false)}>Cancelar</Button>
-                        <Button className="bg-[#00a884] hover:bg-[#00bfa5] text-[#111b21] font-bold" disabled={isSending} onClick={handleSaveTags}>
+                        <Button variant="outline" className="text-foreground border-border hover:bg-accent" onClick={() => setIsSettingsOpen(false)}>Cancelar</Button>
+                        <Button className="bg-[#00a884] hover:bg-[#00bfa5] text-primary-foreground font-bold" disabled={isSending} onClick={handleSaveTags}>
                             Salvar Alterações
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
             {/* 1. Sidebar (Esquerda, Lista de Chats) */}
-            <div className={`flex-shrink-0 flex flex-col border-r border-[#202c33] transition-all duration-300 ${activeChatId ? 'hidden lg:flex w-full lg:w-[32%]' : 'w-full lg:w-[32%]'}`}>
+            <div className={`flex-shrink-0 flex flex-col border-r border-border transition-all duration-300 ${activeChatId ? 'hidden lg:flex w-full lg:w-[32%]' : 'w-full lg:w-[32%]'}`}>
                 {/* Header Sidebar */}
-                <div className="h-[59px] flex items-center justify-between px-4 bg-[#202c33] shrink-0 border-b border-[#202c33]">
-                    <div className="w-10 h-10 rounded-full bg-[#6b7c85] text-white flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 border-2 border-transparent hover:border-[#00a884] cursor-pointer transition-colors shadow">
+                <div className="h-[59px] flex items-center justify-between px-4 bg-card shrink-0 border-b border-border">
+                    <div className="w-10 h-10 rounded-full bg-[#6b7c85] text-foreground flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 border-2 border-transparent hover:border-[#00a884] cursor-pointer transition-colors shadow">
                         <img src="https://ui-avatars.com/api/?name=EU&background=6b7c85&color=fff" alt="User" />
                     </div>
-                    <div className="flex gap-2 text-[#aebac1]">
-                        <button title="Conversas Abertas" onClick={() => setActiveTab('OPEN')} className={`p-1 transition-colors ${activeTab === 'OPEN' ? 'text-white' : 'hover:text-white'}`}>
+                    <div className="flex gap-2 text-muted-foreground">
+                        <button title="Conversas Abertas" onClick={() => setActiveTab('OPEN')} className={`p-1 transition-colors ${activeTab === 'OPEN' ? 'text-foreground' : 'hover:text-foreground'}`}>
                             <MessageCircle className="w-[20px] h-[20px]" />
                         </button>
-                        <button title="Excluídas / Arquivadas" onClick={() => setActiveTab('ARCHIVED')} className={`p-1 transition-colors ${activeTab === 'ARCHIVED' ? 'text-white' : 'hover:text-white'}`}>
+                        <button title="Excluídas / Arquivadas" onClick={() => setActiveTab('ARCHIVED')} className={`p-1 transition-colors ${activeTab === 'ARCHIVED' ? 'text-foreground' : 'hover:text-foreground'}`}>
                             <Archive className="w-[20px] h-[20px]" />
                         </button>
-                        <button title="Configurar Etiquetas" onClick={() => { setEditingTags(customTags); setIsSettingsOpen(true); }} className="p-1 hover:text-white transition-colors">
+                        <button title="Configurar Etiquetas" onClick={() => { setEditingTags(customTags); setIsSettingsOpen(true); }} className="p-1 hover:text-foreground transition-colors">
                             <Settings className="w-[20px] h-[20px]" />
                         </button>
                     </div>
                 </div>
 
                 {/* Search Bar */}
-                <div className="p-[10px] border-b border-[#202c33] bg-[#111b21]">
-                    <div className="relative flex items-center bg-[#202c33] rounded-[8px] h-[35px] px-3">
-                        <Search className="w-4 h-4 text-[#aebac1] shrink-0" />
+                <div className="p-[10px] border-b border-border bg-background">
+                    <div className="relative flex items-center bg-card rounded-[8px] h-[35px] px-3">
+                        <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                         <input
                             type="text"
                             placeholder="Pesquisar ou começar uma nova conversa"
-                            className="bg-transparent border-none outline-none text-[14px] ml-4 w-full placeholder:text-[#8696a0] text-[#e9edef] font-normal"
+                            className="bg-transparent border-none outline-none text-[14px] ml-4 w-full placeholder:text-muted-foreground text-foreground font-normal"
                         />
                     </div>
                 </div>
 
                 {/* Filters Row */}
-                <div className="flex px-3 py-2.5 gap-[7px] border-b border-[#202c33] overflow-x-auto scrollbar-none">
-                    <button onClick={() => setActiveTagFilter(null)} className={`px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap ${!activeTagFilter ? 'bg-[#00a884]/20 text-[#00a884] hover:bg-[#00a884]/30' : 'bg-[#202c33] hover:bg-[#2a3942] text-[#aebac1]'}`}>
+                <div className="flex px-3 py-2.5 gap-[7px] border-b border-border overflow-x-auto scrollbar-none">
+                    <button onClick={() => setActiveTagFilter(null)} className={`px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap ${!activeTagFilter ? 'bg-[#00a884]/20 text-[#00a884] hover:bg-[#00a884]/30' : 'bg-card hover:bg-accent text-muted-foreground'}`}>
                         Todas do {activeTab === 'OPEN' ? 'Inbox' : 'Lixo'}
                     </button>
                     {customTags.map(tag => (
@@ -442,7 +446,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                 color: activeTagFilter === tag.name ? tag.color : '#aebac1',
                                 border: `1px solid ${activeTagFilter === tag.name ? tag.color + '55' : 'transparent'}`
                             }}
-                            className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors whitespace-nowrap overflow-hidden flex items-center gap-1.5 ${activeTagFilter !== tag.name && 'hover:bg-[#2a3942]'}`}>
+                            className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors whitespace-nowrap overflow-hidden flex items-center gap-1.5 ${activeTagFilter !== tag.name && 'hover:bg-accent'}`}>
                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }}></span>
                             {tag.name}
                         </button>
@@ -455,21 +459,25 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                         <div
                             key={chat.id}
                             onClick={() => setActiveChatId(chat.id)}
-                            className={`flex items-center gap-[14px] pl-[13px] pr-4 cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-[#2a3942]' : 'hover:bg-[#202c33]'}`}
+                            className={`flex items-center gap-[14px] pl-[13px] pr-4 cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-accent' : 'hover:bg-card'}`}
                         >
                             <div className="relative shrink-0 py-[11px]">
-                                <div className="w-[49px] h-[49px] rounded-full bg-[#dfe5e7] flex items-center justify-center text-[#111b21] font-semibold text-xl overflow-hidden shadow-sm">
-                                    {chat.name.substring(0, 2).toUpperCase()}
+                                <div className="w-[49px] h-[49px] rounded-full bg-muted border border-border flex items-center justify-center text-primary-foreground font-semibold text-xl overflow-hidden shadow-sm shrink-0">
+                                    {chat.profilePictureUrl ? (
+                                        <img src={chat.profilePictureUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        chat.name.substring(0, 2).toUpperCase()
+                                    )}
                                 </div>
                                 {chat.isBotHandling && (
-                                    <div className="absolute bottom-2.5 -right-0.5 bg-[#111b21] rounded-full p-0.5 shadow-sm border border-[#111b21]">
+                                    <div className="absolute bottom-2.5 -right-0.5 bg-background rounded-full p-0.5 shadow-sm border border-[#111b21]">
                                         <Bot className="w-[14px] h-[14px] text-[#00a884]" />
                                     </div>
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0 border-b border-[#202c33] py-[13px] h-full flex flex-col justify-center">
+                            <div className="flex-1 min-w-0 border-b border-border py-[13px] h-full flex flex-col justify-center">
                                 <div className="flex justify-between items-center mb-[3px]">
-                                    <h3 className="text-[17px] leading-[21px] truncate text-[#e9edef] -mt-1 font-normal flex items-center gap-2">
+                                    <h3 className="text-[17px] leading-[21px] truncate text-foreground -mt-1 font-normal flex items-center gap-2">
                                         {chat.name}
                                         {chat.tags && chat.tags.length > 0 && (
                                             <div className="flex gap-1 overflow-hidden">
@@ -480,16 +488,16 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                             </div>
                                         )}
                                     </h3>
-                                    <span className={`text-[12px] whitespace-nowrap ml-2 leading-[14px] -mt-1 ${chat.unread > 0 ? 'text-[#00a884] font-medium' : 'text-[#8696a0]'}`}>
+                                    <span className={`text-[12px] whitespace-nowrap ml-2 leading-[14px] -mt-1 ${chat.unread > 0 ? 'text-[#00a884] font-medium' : 'text-muted-foreground'}`}>
                                         {chat.time}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <p className="text-[14px] leading-[20px] truncate text-[#8696a0] font-normal tracking-wide">
+                                    <p className="text-[14px] leading-[20px] truncate text-muted-foreground font-normal tracking-wide">
                                         {chat.lastMessage}
                                     </p>
                                     {chat.unread > 0 && (
-                                        <div className="w-[18px] h-[18px] rounded-full bg-[#00a884] flex items-center justify-center text-[#111b21] text-[11px] font-bold shrink-0 ml-2">
+                                        <div className="w-[18px] h-[18px] rounded-full bg-[#00a884] flex items-center justify-center text-primary-foreground text-[11px] font-bold shrink-0 ml-2">
                                             {chat.unread}
                                         </div>
                                     )}
@@ -498,7 +506,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                         </div>
                     ))}
                     {filteredChats.length === 0 && (
-                        <div className="text-center p-6 mt-10 text-[#8696a0] text-sm">
+                        <div className="text-center p-6 mt-10 text-muted-foreground text-sm">
                             Nenhuma conversa encontrada.
                         </div>
                     )}
@@ -507,24 +515,28 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
 
             {/* 2. Chat Area Principal (Direita) */}
             {activeChat ? (
-                <div className={`flex-1 flex flex-col bg-[#0b141a] relative ${!activeChatId && 'hidden lg:flex'}`}>
+                <div className={`flex-1 flex flex-col bg-muted relative ${!activeChatId && 'hidden lg:flex'}`}>
 
                     {/* Background Pattern WPP Overlay dark default WPP Doodles */}
                     <div className="absolute inset-0 opacity-[0.06] pointer-events-none z-0 mix-blend-screen" style={{ backgroundImage: 'url("https://static.whatsapp.net/rsrc.php/v3/yl/r/r_QxIsuT8R4.png")', backgroundRepeat: 'repeat', backgroundSize: '400px' }}></div>
 
                     {/* Chat Header */}
-                    <div className="h-[59px] flex items-center justify-between px-4 bg-[#202c33] z-10 shrink-0 shadow-sm border-l border-transparent">
+                    <div className="h-[59px] flex items-center justify-between px-4 bg-card z-10 shrink-0 shadow-sm border-l border-transparent">
                         <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveChatId('')}>
                             {/* Botão de voltar (mobile) */}
-                            <button className="lg:hidden text-[#aebac1] hover:text-white" title="Voltar para a lista">
+                            <button className="lg:hidden text-muted-foreground hover:text-foreground" title="Voltar para a lista">
                                 <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" className="fill-current"><path d="M12 4l1.4 1.4L7.8 11H20v2H7.8l5.6 5.6L12 20l-8-8 8-8z"></path></svg>
                             </button>
-                            <div className="w-10 h-10 rounded-full bg-[#dfe5e7] flex items-center justify-center font-bold text-[#111b21] text-lg shrink-0 overflow-hidden shadow">
-                                {activeChat.name.substring(0, 2).toUpperCase()}
+                            <div className="w-10 h-10 rounded-full bg-muted border border-border flex items-center justify-center font-bold text-primary-foreground text-lg shrink-0 overflow-hidden shadow">
+                                {activeChat.profilePictureUrl ? (
+                                    <img src={activeChat.profilePictureUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                    activeChat.name.substring(0, 2).toUpperCase()
+                                )}
                             </div>
                             <div className="flex flex-col flex-1 min-w-0 pr-2">
-                                <h2 className="text-[16px] text-[#e9edef] font-normal truncate">{activeChat.name}</h2>
-                                <p className="text-[13px] text-[#8696a0] truncate mt-[1px]">
+                                <h2 className="text-[16px] text-foreground font-normal truncate">{activeChat.name}</h2>
+                                <p className="text-[13px] text-muted-foreground truncate mt-[1px]">
                                     {activeChat.isBotHandling ? (
                                         <span className="flex items-center gap-1.5 font-medium text-[#00a884]">
                                             <Bot className="w-3.5 h-3.5" /> robô auto-piloto
@@ -534,23 +546,23 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-[22px] text-[#aebac1]">
+                        <div className="flex items-center gap-[22px] text-muted-foreground">
 
                             {/* Modal de CRM Oculto no ícone de Sidebar (Listra) */}
                             <Dialog open={isAddDealOpen} onOpenChange={setIsAddDealOpen}>
                                 <DialogTrigger asChild>
-                                    <button title="Gestão de Negócios / Painel Comercial" className="hover:text-white transition-colors">
+                                    <button title="Gestão de Negócios / Painel Comercial" className="hover:text-foreground transition-colors">
                                         <Briefcase className="w-[22px] h-[22px]" />
                                     </button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px] bg-[#202c33] border border-white/10 text-[#e9edef] shadow-2xl">
+                                <DialogContent className="sm:max-w-[425px] bg-card border border-border text-foreground shadow-2xl">
                                     <DialogHeader>
-                                        <DialogTitle className="text-white text-lg font-medium">Perfil Comercial</DialogTitle>
-                                        <DialogDescription className="text-[#8696a0] text-sm mt-1">{activeChat.name} • {activeChat.phone}</DialogDescription>
+                                        <DialogTitle className="text-foreground text-lg font-medium">Perfil Comercial</DialogTitle>
+                                        <DialogDescription className="text-muted-foreground text-sm mt-1">{activeChat.name} • {activeChat.phone}</DialogDescription>
                                     </DialogHeader>
                                     <div className="py-2 flex flex-col gap-4">
-                                        <div className="bg-[#111b21] p-3.5 rounded-lg flex items-center justify-between border border-transparent">
-                                            <span className="text-sm font-semibold tracking-wide text-[#e9edef]">LGPD: Assinatura de Conversa</span>
+                                        <div className="bg-background p-3.5 rounded-lg flex items-center justify-between border border-transparent">
+                                            <span className="text-sm font-semibold tracking-wide text-foreground">LGPD: Assinatura de Conversa</span>
                                             <ShieldAlert className={`w-[18px] h-[18px] ${activeChat.lgpdConsent ? 'text-[#00a884]' : 'text-orange-500'}`} />
                                         </div>
 
@@ -558,32 +570,32 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                             <h4 className="text-[12px] font-bold uppercase tracking-widest text-[#00a884] mb-2 px-1">Negócios no Kanban:</h4>
                                             <div className="flex flex-col gap-2">
                                                 {activeChat.deals?.map(deal => (
-                                                    <div key={deal.id} className="bg-[#111b21] p-3.5 rounded-lg flex justify-between items-center cursor-pointer border border-[#202c33] hover:border-[#00a884]/40 transition-all shadow-sm" onClick={() => handleEditDealValue(deal.id, deal.value)}>
+                                                    <div key={deal.id} className="bg-background p-3.5 rounded-lg flex justify-between items-center cursor-pointer border border-border hover:border-[#00a884]/40 transition-all shadow-sm" onClick={() => handleEditDealValue(deal.id, deal.value)}>
                                                         <div>
-                                                            <p className="font-medium text-[15px] text-[#e9edef]">{deal.title}</p>
+                                                            <p className="font-medium text-[15px] text-foreground">{deal.title}</p>
                                                             <p className="text-[#00a884] text-[11px] font-bold uppercase mt-1 tracking-wider bg-[#00a884]/10 rounded px-1.5 py-0.5 inline-block">{deal.stageName}</p>
                                                         </div>
-                                                        <span className="font-bold text-[16px] text-white">
+                                                        <span className="font-bold text-[16px] text-foreground">
                                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.value)}
                                                         </span>
                                                     </div>
                                                 ))}
 
                                                 {(!activeChat.deals || activeChat.deals.length === 0) && (
-                                                    <div className="text-center p-5 bg-[#111b21] rounded-lg border border-[#202c33]">
-                                                        <p className="text-[13px] text-[#8696a0] font-medium">Você ainda não converteu negócios com este contato.</p>
+                                                    <div className="text-center p-5 bg-background rounded-lg border border-border">
+                                                        <p className="text-[13px] text-muted-foreground font-medium">Você ainda não converteu negócios com este contato.</p>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
 
-                                        <div className="bg-[#111b21] p-3 rounded-lg border border-[#202c33] mt-2">
-                                            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#aebac1] mb-2">Criar Oportunidade</h4>
+                                        <div className="bg-background p-3 rounded-lg border border-border mt-2">
+                                            <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Criar Oportunidade</h4>
                                             <div className="grid grid-cols-2 gap-2 mb-2">
-                                                <Input placeholder="Título Comercial" value={newDeal.title} onChange={e => setNewDeal({ ...newDeal, title: e.target.value })} className="bg-[#202c33] border-none text-[13px] h-[34px] text-white placeholder:text-[#8696a0]" />
-                                                <MoneyInput value={newDeal.value} onValueChange={val => setNewDeal({ ...newDeal, value: val })} className="bg-[#202c33] border-none text-[13px] h-[34px] text-white placeholder:text-[#8696a0]" />
+                                                <Input placeholder="Título Comercial" value={newDeal.title} onChange={e => setNewDeal({ ...newDeal, title: e.target.value })} className="bg-card border-none text-[13px] h-[34px] text-foreground placeholder:text-muted-foreground" />
+                                                <MoneyInput value={newDeal.value} onValueChange={val => setNewDeal({ ...newDeal, value: val })} className="bg-card border-none text-[13px] h-[34px] text-foreground placeholder:text-muted-foreground" />
                                             </div>
-                                            <Button type="button" className="bg-[#00a884] hover:bg-[#00bfa5] text-[#111b21] font-bold h-9 w-full shadow border-none transition-colors" onClick={async () => {
+                                            <Button type="button" className="bg-[#00a884] hover:bg-[#00bfa5] text-primary-foreground font-bold h-9 w-full shadow border-none transition-colors" onClick={async () => {
                                                 if (!newDeal.title) return toast.error("Por favor dê um nome a Oportunidade Kanban.");
                                                 setIsSending(true)
                                                 try {
@@ -601,18 +613,18 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                 </DialogContent>
                             </Dialog>
 
-                            <Search className="w-5 h-5 cursor-pointer hover:text-white transition-colors" />
+                            <Search className="w-5 h-5 cursor-pointer hover:text-foreground transition-colors" />
 
                             <button
                                 onClick={handleToggleBot}
-                                className={`px-[10px] py-[4px] text-[11.5px] font-bold rounded flex items-center gap-1.5 uppercase tracking-wide transition-colors ${activeChat.isBotHandling ? 'text-[#8696a0] bg-[#111b21] border border-white/10 hover:bg-white/5' : 'bg-[#00a884] text-[#111b21] hover:bg-[#00bfa5] shadow'}`}
+                                className={`px-[10px] py-[4px] text-[11.5px] font-bold rounded flex items-center gap-1.5 uppercase tracking-wide transition-colors ${activeChat.isBotHandling ? 'text-muted-foreground bg-background border border-border hover:bg-accent' : 'bg-[#00a884] text-primary-foreground hover:bg-[#00bfa5] shadow'}`}
                             >
                                 {activeChat.isBotHandling ? "Assumir" : <><Bot className="w-3.5 h-3.5" /> Automático</>}
                             </button>
                             {/* TAGS Selector In-Chat */}
                             <Dialog>
                                 <DialogTrigger asChild>
-                                    <button title="Adicionar Etiqueta ao Cliente" className="px-2.5 py-1 bg-[#202c33] border border-white/10 rounded hover:bg-white/5 text-[12.5px] font-medium flex items-center gap-1.5 text-[#e9edef]">
+                                    <button title="Adicionar Etiqueta ao Cliente" className="px-2.5 py-1 bg-card border border-border rounded hover:bg-accent text-[12.5px] font-medium flex items-center gap-1.5 text-foreground">
                                         {activeChat.tags && activeChat.tags.length > 0 ? (
                                             <>
                                                 <div className="flex gap-0.5">
@@ -625,31 +637,31 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                         ) : "+ Tags"}
                                     </button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px] bg-[#202c33] border border-white/10 text-[#e9edef] shadow-2xl">
+                                <DialogContent className="sm:max-w-[425px] bg-card border border-border text-foreground shadow-2xl">
                                     <DialogHeader>
-                                        <DialogTitle className="text-white text-lg font-medium">Classificar Cliente ({activeChat.name})</DialogTitle>
+                                        <DialogTitle className="text-foreground text-lg font-medium">Classificar Cliente ({activeChat.name})</DialogTitle>
                                     </DialogHeader>
                                     <div className="flex flex-col gap-2 py-4">
                                         {customTags.map(tag => {
                                             const isActive = activeChat.tags?.includes(tag.name)
                                             return (
                                                 <button key={tag.id} onClick={() => handleToggleTag(tag.name)}
-                                                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${isActive ? 'bg-[#111b21]' : 'bg-[#111b21]/50 hover:bg-[#111b21]'}`}
+                                                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${isActive ? 'bg-background' : 'bg-background/50 hover:bg-background'}`}
                                                     style={{ borderColor: isActive ? tag.color : '#30424d' }}>
                                                     <div className="flex items-center gap-2">
                                                         <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: tag.color }}></span>
                                                         <span className="font-medium text-[14px]" style={{ color: isActive ? tag.color : '#e9edef' }}>{tag.name}</span>
                                                     </div>
-                                                    {isActive && <span className="text-[12px] text-white/50 bg-[#2a3942] px-2 py-0.5 rounded">Aplicada</span>}
+                                                    {isActive && <span className="text-[12px] text-foreground/50 bg-accent px-2 py-0.5 rounded">Aplicada</span>}
                                                 </button>
                                             )
                                         })}
-                                        {customTags.length === 0 && <p className="text-center text-[#8696a0] text-sm">Nenhuma etiqueta cadastrada na Organização. Acesse as Configurações ⚙️</p>}
+                                        {customTags.length === 0 && <p className="text-center text-muted-foreground text-sm">Nenhuma etiqueta cadastrada na Organização. Acesse as Configurações ⚙️</p>}
                                     </div>
                                 </DialogContent>
                             </Dialog>
 
-                            <button onClick={() => handleArchive(activeChat.id, activeChat.status !== 'ARCHIVED')} title={activeChat.status === 'ARCHIVED' ? "Restaurar Cliente" : "Excluir/Arquivar"} className="hover:text-red-400 text-[#aebac1] transition-colors bg-transparent border-0 p-1">
+                            <button onClick={() => handleArchive(activeChat.id, activeChat.status !== 'ARCHIVED')} title={activeChat.status === 'ARCHIVED' ? "Restaurar Cliente" : "Excluir/Arquivar"} className="hover:text-red-400 text-muted-foreground transition-colors bg-transparent border-0 p-1">
                                 {activeChat.status === 'ARCHIVED' ? <MessageCircle className="w-[20px] h-[20px] text-[#00a884]"/> : <Trash2 className="w-[20px] h-[20px]" />}
                             </button>
                         </div>
@@ -658,7 +670,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                     {/* Messages Window Layers */}
                     <div className="flex-1 overflow-y-auto px-[5%] lg:px-[9%] py-[15px] z-20 flex flex-col gap-[2px] scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                         <div className="text-center mb-5 mt-2">
-                            <span className="bg-[#182229] text-[#8696a0] text-[12.5px] px-3 py-1.5 rounded-lg shadow-sm tracking-wide uppercase font-medium inline-block">Hoje</span>
+                            <span className="bg-card border border-border text-muted-foreground text-[12.5px] px-3 py-1.5 rounded-lg shadow-sm tracking-wide uppercase font-medium inline-block">Hoje</span>
                         </div>
 
                         {activeChat.messages.map((message, index) => {
@@ -686,12 +698,12 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             }
 
                             // WPP Web Balões
-                            let bubbleClass = "relative px-2.5 py-1.5 text-[14.2px] leading-[19px] max-w-[85%] lg:max-w-[70%] min-w-[90px] text-[#e9edef] shadow-sm "
+                            let bubbleClass = "relative px-2.5 py-1.5 text-[14.2px] leading-[19px] max-w-[85%] lg:max-w-[70%] min-w-[90px] text-foreground shadow-sm "
                             if (isMe || isBot) {
-                                bubbleClass += "bg-[#005c4b] ml-auto "
+                                bubbleClass += "bg-primary text-primary-foreground ml-auto "
                                 bubbleClass += isFirstInGroup ? "rounded-l-[7.5px] rounded-bl-[7.5px] rounded-br-[7.5px] rounded-tr-none " : "rounded-[7.5px] "
                             } else {
-                                bubbleClass += "bg-[#202c33] mr-auto "
+                                bubbleClass += "bg-card mr-auto "
                                 bubbleClass += isFirstInGroup ? "rounded-r-[7.5px] rounded-br-[7.5px] rounded-bl-[7.5px] rounded-tl-none " : "rounded-[7.5px] "
                             }
 
@@ -717,7 +729,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
 
                                         <div className="whitespace-pre-wrap relative pb-[12px]">
                                             {isMedia && (
-                                                <span className="flex items-center gap-2 mb-1.5 opacity-80 text-[12px] font-bold text-white/60">
+                                                <span className="flex items-center gap-2 mb-1.5 opacity-80 text-[12px] font-bold text-foreground/60">
                                                     {msgType === 'DOCUMENT' && <FileText className="w-4 h-4" />}
                                                     {msgType === 'IMAGE' && <ImageIcon className="w-4 h-4" />}
                                                     {msgType === 'AUDIO' && <FileAudio className="w-4 h-4" />}
@@ -733,10 +745,10 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                             msgType === 'IMAGE' ? (
                                                 <img src={`/api/whatsapp/media/${mediaId}`} className="max-w-full rounded-[5px] mt-1 mb-3 object-cover object-center max-h-[300px]" alt="Mídia Recebida" />
                                             ) : msgType === 'AUDIO' ? (
-                                                <div className="flex flex-col gap-2 w-full mt-1 mb-3 bg-[#111b21]/20 p-2 rounded-lg">
+                                                <div className="flex flex-col gap-2 w-full mt-1 mb-3 bg-background/20 p-2 rounded-lg">
                                                     <audio src={`/api/whatsapp/media/${mediaId}`} controls className="w-full h-10 grayscale invert hue-rotate-180 brightness-150" />
                                                     {message.transcription && (
-                                                        <div className="bg-black/20 p-2 rounded-[5px] border border-transparent text-[13px] italic text-[#e9edef] mt-1">
+                                                        <div className="bg-black/20 p-2 rounded-[5px] border border-transparent text-[13px] italic text-foreground mt-1">
                                                             <Mic className="w-3 h-3 inline mr-1 opacity-70" />
                                                             {message.transcription}
                                                         </div>
@@ -745,13 +757,23 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                             ) : msgType === 'VIDEO' ? (
                                                 <video src={`/api/whatsapp/media/${mediaId}`} controls className="w-full rounded-[5px] mt-1 mb-3 max-h-[250px]" />
                                             ) : (
-                                                <a href={`/api/whatsapp/media/${mediaId}`} target="_blank" rel="noreferrer" className="mt-1 mb-3 text-[13.5px] flex items-center justify-center gap-2 bg-[#111b21]/30 hover:bg-[#111b21]/50 w-full px-4 py-3 rounded-[5px] transition-colors font-semibold text-[#e9edef] border border-white/5">
-                                                    <Download className="w-4 h-4" /> Download Arquivo
-                                                </a>
+                                                <div className="flex flex-col gap-0 w-[220px] mt-1 mb-3 bg-background/20 rounded-[5px] border border-border overflow-hidden shadow-sm">
+                                                    <div className="h-[90px] bg-accent/30 flex items-center justify-center">
+                                                        <FileText className="w-10 h-10 opacity-70 text-foreground" />
+                                                    </div>
+                                                    <div className="flex bg-card divide-x divide-border w-full">
+                                                        <a href={`/api/whatsapp/media/${mediaId}`} target="_blank" rel="noreferrer" className="flex-1 py-2 text-[11.5px] font-bold hover:bg-accent transition-colors flex items-center justify-center gap-1.5 text-foreground">
+                                                            <Globe className="w-3.5 h-3.5" /> Abrir no Browser
+                                                        </a>
+                                                        <a href={`/api/whatsapp/media/${mediaId}?download=1`} download className="flex-1 py-2 text-[11.5px] font-bold hover:bg-accent transition-colors flex items-center justify-center gap-1.5 text-foreground">
+                                                            <Download className="w-3.5 h-3.5" /> Baixar Mídia
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             )
                                         )}
 
-                                        <div className={`absolute right-1.5 bottom-1 text-[11px] flex items-center flex-row-reverse gap-1 leading-none ${isMe || isBot ? 'text-[#87bcab]' : 'text-[#8696a0]'}`}>
+                                        <div className={`absolute right-1.5 bottom-1 text-[11px] flex items-center flex-row-reverse gap-1 leading-none ${isMe || isBot ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                                             {isMe && message.status === 'read' && <span className="text-[#53bdeb] text-[13px] -ml-[2px] tracking-tighter mix-blend-screen brightness-125">✓✓</span>}
                                             {isMe && message.status === 'delivered' && <span className="text-[13px] -ml-[2px] tracking-tighter opacity-80">✓✓</span>}
                                             {isMe && message.status === 'sent' && <span className="text-[13px] -ml-[2px] tracking-tighter opacity-50">✓</span>}
@@ -765,9 +787,9 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                     </div>
 
                     {/* Input Area (Bottom Bar) */}
-                    <div className="min-h-[62px] flex-shrink-0 bg-[#202c33] px-3 py-[10px] flex items-end gap-2.5 z-30 w-full relative border-t border-transparent">
+                    <div className="min-h-[62px] flex-shrink-0 bg-card px-3 py-[10px] flex items-end gap-2.5 z-30 w-full relative border-t border-transparent">
                         {showEmojiPicker && (
-                            <div className="absolute bottom-[70px] left-4 z-50 shadow-2xl rounded-lg overflow-hidden border border-white/5">
+                            <div className="absolute bottom-[70px] left-4 z-50 shadow-2xl rounded-lg overflow-hidden border border-border/50">
                                 <EmojiPicker
                                     theme={Theme.DARK}
                                     onEmojiClick={(e: EmojiClickData) => setMessageInput(prev => prev + e.emoji)}
@@ -778,12 +800,12 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
 
                         <div className="flex gap-[6px] items-center h-[42px] shrink-0 pl-1">
                             <button
-                                className={`p-1.5 transition-colors rounded-full ${showEmojiPicker ? 'text-[#00a884] bg-[#2a3942]' : 'text-[#aebac1] hover:text-[#d1d7db]'}`}
+                                className={`p-1.5 transition-colors rounded-full ${showEmojiPicker ? 'text-[#00a884] bg-accent' : 'text-muted-foreground hover:text-[#d1d7db]'}`}
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                             >
                                 <Smile className="w-[26px] h-[26px]" />
                             </button>
-                            <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-[#aebac1] hover:text-[#d1d7db] transition-colors rounded-full" title="Anexar">
+                            <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-muted-foreground hover:text-[#d1d7db] transition-colors rounded-full" title="Anexar">
                                 <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" className="fill-current"><path d="M1.816 15.556v.002c0 1.502.584 2.912 1.646 3.972s2.472 1.647 3.974 1.647a5.58 5.58 0 0 0 3.972-1.645l9.547-9.548c.769-.768 1.147-1.767 1.058-2.817-.079-.968-.548-1.927-1.319-2.698-1.594-1.592-4.068-1.711-5.517-.262l-7.916 7.915c-.881.881-.792 2.25.214 3.261.959.958 2.423 1.053 3.263.215l5.511-5.512c.28-.28.267-.722.053-.936l-.244-.244c-.191-.191-.567-.349-.957.04l-5.506 5.506c-.18.18-.635.127-.976-.214-.098-.097-.576-.613-.213-.973l7.915-7.917c.818-.817 2.267-.699 3.23.262.5.501.802 1.1.849 1.685.051.573-.156 1.111-.589 1.543l-9.547 9.549a3.97 3.97 0 0 1-2.829 1.171 3.975 3.975 0 0 1-2.83-1.173 3.973 3.973 0 0 1-1.172-2.828c0-1.071.415-2.076 1.172-2.83l7.209-7.211c.157-.157.264-.579.028-.814L11.5 4.36a.57.57 0 0 0-.834.018l-7.205 7.207a5.577 5.577 0 0 0-1.645 3.971z"></path></svg>
                             </button>
                             <button
@@ -796,11 +818,11 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             </button>
                         </div>
 
-                        <div className="flex-1 bg-[#2a3942] rounded-[8px] min-h-[42px] flex items-center px-4 overflow-hidden mb-1 mx-1 border border-transparent focus-within:border-[#8696a0]/20 transition-colors">
+                        <div className="flex-1 bg-accent rounded-[8px] min-h-[42px] flex items-center px-4 overflow-hidden mb-1 mx-1 border border-transparent focus-within:border-[#8696a0]/20 transition-colors">
                             <input
                                 type="text"
                                 placeholder={activeChat?.isBotHandling ? "Robô online. Digite para invadir e pausá-lo..." : "Mensagem"}
-                                className="w-full bg-transparent text-[15px] outline-none placeholder:text-[#8696a0] text-[#e9edef] py-2.5 h-full"
+                                className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground text-foreground py-2.5 h-full"
                                 value={messageInput}
                                 onChange={(e) => setMessageInput(e.target.value)}
                                 onKeyDown={(e) => {
@@ -818,12 +840,12 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                     onClick={handleSendMessage}
                                     disabled={isSending}
                                     title="Enviar mensagem"
-                                    className="p-2 text-[#aebac1] hover:text-[#00a884] transition-colors rounded-full disabled:opacity-50"
+                                    className="p-2 text-muted-foreground hover:text-[#00a884] transition-colors rounded-full disabled:opacity-50"
                                 >
                                     <Send className="w-[24px] h-[24px] ml-0.5" />
                                 </button>
                             ) : (
-                                <button className="p-2 text-[#aebac1] hover:text-[#d1d7db] transition-colors rounded-full" title="Mensagem de voz">
+                                <button className="p-2 text-muted-foreground hover:text-[#d1d7db] transition-colors rounded-full" title="Mensagem de voz">
                                     <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" className="fill-current"><path d="M11.999 14.942c2.001 0 3.531-1.53 3.531-3.531V4.35c0-2.001-1.53-3.531-3.531-3.531S8.469 2.35 8.469 4.35v7.061c0 2.001 1.53 3.531 3.53 3.531zm6.238-3.53c0 3.531-2.942 6.002-6.237 6.002s-6.237-2.471-6.237-6.002H3.761c0 4.001 3.178 7.297 7.061 7.885v3.884h2.354v-3.884c3.884-.588 7.061-3.884 7.061-7.885h-2.002z"></path></svg>
                                 </button>
                             )}
@@ -833,20 +855,20 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             ) : (
                 <div className="hidden lg:flex flex-1 bg-[#222e35] items-center justify-center flex-col text-center relative z-10 w-full">
                     {/* WPP Img Cover Home Default */}
-                    <div className="w-full max-w-lg mb-8 bg-[#202c33] rounded-full p-1 border-4 border-transparent flex items-center justify-center h-64 overflow-hidden text-zinc-700 font-bold opacity-30 shadow-inner">
+                    <div className="w-full max-w-lg mb-8 bg-card rounded-full p-1 border-4 border-transparent flex items-center justify-center h-64 overflow-hidden text-zinc-700 font-bold opacity-30 shadow-inner">
                         <img src="https://static.whatsapp.net/rsrc.php/v3/y6/r/wa669aeJeom.png" alt="WhatsApp Immersive" className="object-cover w-full h-full scale-110" />
                     </div>
 
-                    <h2 className="text-[32px] font-extralight text-[#e9edef] tracking-tight mb-4 mt-2">
+                    <h2 className="text-[32px] font-extralight text-foreground tracking-tight mb-4 mt-2">
                         WhatsApp Desktop Clone
                     </h2>
-                    <p className="text-[#8696a0] text-[14px] leading-[20px] max-w-[440px]">
+                    <p className="text-muted-foreground text-[14px] leading-[20px] max-w-[440px]">
                         Envie e receba mensagens sem precisar manter o celular conectado.
                         <br />
                         A força e potência do Pipeline CRM integrados na interface mais familiar do mundo.
                     </p>
 
-                    <div className="absolute xl:bottom-12 bottom-8 flex flex-col items-center justify-center text-[12.5px] text-[#8696a0]">
+                    <div className="absolute xl:bottom-12 bottom-8 flex flex-col items-center justify-center text-[12.5px] text-muted-foreground">
                         <div className="flex items-center gap-1.5 opacity-90 mb-1">
                             <ShieldAlert className="w-[14px] h-[14px]" /> Protegido com Criptografia e Consentimento LGPD Activo
                         </div>

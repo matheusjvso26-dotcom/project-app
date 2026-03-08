@@ -38,7 +38,7 @@ export function AnimatedSidebar() {
     return (
         <aside
             className={cn(
-                "group relative h-screen bg-[#151515] transition-all duration-300 ease-in-out flex flex-col z-20",
+                "group relative h-screen bg-background transition-all duration-300 ease-in-out flex flex-col z-20",
                 isHovered ? "w-[240px]" : "w-[5.5rem]"
             )}
             onMouseEnter={() => setIsHovered(true)}
