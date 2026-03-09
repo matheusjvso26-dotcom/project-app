@@ -507,7 +507,7 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             where: { id: conversationId },
             data: {
                 updatedAt: new Date(),
-                status: 'BOT_HANDLING'
+                status: state.currentBlock === 'BLOCO_90' ? 'OPEN' : 'BOT_HANDLING'
             }
         })
     }

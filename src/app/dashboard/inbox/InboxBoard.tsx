@@ -137,7 +137,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                         } catch (e) { }
                     }
 
-                    return mergedChats
+                    // FILTRO DEFINITIVO: Impede que conversas excluídas/arquivadas retornem para a tela
+                    return mergedChats.filter(c => c.status === activeTab || (activeTab === 'OPEN' && c.status === 'BOT_HANDLING'))
                 })
             } catch (error) {
                 console.error("[Polling] Erro ao sincronizar as conversas:", error)
@@ -146,7 +147,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
 
         const intervalId = setInterval(fetchMessages, 1500)
         return () => clearInterval(intervalId)
-    }, [isSending])
+    }, [isSending, activeTab])
 
     const [isAddDealOpen, setIsAddDealOpen] = useState(false)
     const [newDeal, setNewDeal] = useState({ title: '', value: 0 })
@@ -830,7 +831,6 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                         handleSendMessage()
                                     }
                                 }}
-                                disabled={isSending}
                             />
                         </div>
 
