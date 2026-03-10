@@ -58,7 +58,11 @@ interface InboxBoardProps {
 export function InboxBoard({ initialConversations }: InboxBoardProps) {
     // Carrega tudo (Abertas e Arquivadas). O filtro real visual acontece na renderização (`baseChats`).
     const [chats, setChats] = useState<Chat[]>(initialConversations)
-    const [activeChatId, setActiveChatId] = useState<string>(chats.length > 0 ? chats[0].id : '')
+    
+    // Bugfix: Evitar que o F5 abra uma conversa recém-arquivada (que foi pro topo do DB por ter o updatedAt recente)
+    const initialOpenChatId = initialConversations.find(c => c.status !== 'ARCHIVED')?.id || ''
+    const [activeChatId, setActiveChatId] = useState<string>(initialOpenChatId)
+
     const [messageInput, setMessageInput] = useState('')
     const [isSending, setIsSending] = useState(false)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
