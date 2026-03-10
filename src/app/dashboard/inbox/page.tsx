@@ -3,6 +3,9 @@ import { getConversations } from "./actions"
 
 import fs from 'fs'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function InboxPage() {
     let initialConversations: any[] = []
     try {

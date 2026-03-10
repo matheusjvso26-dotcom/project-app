@@ -56,7 +56,8 @@ interface InboxBoardProps {
 }
 
 export function InboxBoard({ initialConversations }: InboxBoardProps) {
-    const [chats, setChats] = useState<Chat[]>(initialConversations)
+    // APLICANDO O FILTRO NA PRIMEIRA RENDERIZAÇÃO: Impede o F5 de trazer os Lixos para a tela principal
+    const [chats, setChats] = useState<Chat[]>(initialConversations.filter(c => c.status === 'OPEN' || c.status === 'BOT_HANDLING'))
     const [activeChatId, setActiveChatId] = useState<string>(chats.length > 0 ? chats[0].id : '')
     const [messageInput, setMessageInput] = useState('')
     const [isSending, setIsSending] = useState(false)
