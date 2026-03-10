@@ -190,7 +190,7 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
     }
 
     const handleSendMessage = async () => {
-        if (!messageInput.trim() || !activeChatId || isSending) return
+        if (!messageInput.trim() || !activeChatId) return
 
         const tempText = messageInput.trim()
         setMessageInput('') // Clear UI instantly
@@ -848,9 +848,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             {messageInput.trim() || isSending ? (
                                 <button
                                     onClick={handleSendMessage}
-                                    disabled={isSending}
                                     title="Enviar mensagem"
-                                    className="p-2 text-muted-foreground hover:text-[#00a884] transition-colors rounded-full disabled:opacity-50"
+                                    className="p-2 text-[#00a884] hover:text-[#008f6f] transition-colors rounded-full"
                                 >
                                     <Send className="w-[24px] h-[24px] ml-0.5" />
                                 </button>
