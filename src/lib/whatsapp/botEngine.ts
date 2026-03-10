@@ -426,21 +426,12 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
             case 'BLOCO_60':
                 if (incomingText.length > 5 && !isMedia) {
                     state.vars.dadosIniciais = incomingText; 
-                    responseText = script.BLOCO_61_TEXT;
-                    state.currentBlock = 'BLOCO_61';
+                    responseText = script.BLOCO_62_TEXT;
+                    state.currentBlock = 'BLOCO_62';
                 } else {
                     responseText = script.BLOCO_60_TEXT; 
                 }
                 break;
-            case 'BLOCO_61':
-               if (isMedia) {
-                    state.vars.docStatus = "recebido";
-                    responseText = script.BLOCO_62_TEXT;
-                    state.currentBlock = 'BLOCO_62';
-               } else {
-                    responseText = "Envie foto nítida do seu Holerite por aqui para continuarmos. 😊";
-               }
-               break;
 
             // --- PÓS-FINALIZAÇÃO ---
             case 'BLOCO_12': case 'BLOCO_22': case 'BLOCO_32': case 'BLOCO_42': case 'BLOCO_52': case 'BLOCO_62':

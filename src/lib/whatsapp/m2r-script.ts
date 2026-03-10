@@ -207,12 +207,7 @@ export const BLOCO_60_TEXT = `Perfeito! Para eu verificar o Crédito CLT, me env
 
 (Pode mandar tudo em uma mensagem.)`;
 
-// BLOCO 61 — Documentos (CLT)
-export const BLOCO_61_TEXT = `Agora preciso para validar e simular corretamente:
-📄 Último holerite/contracheque (foto ou PDF)
-📄 Se tiver, CTPS Digital (print do contrato) ou comprovante do vínculo
-
-✅ Envie por aqui mesmo.`;
+// (BLOCO_61 removido pelo usuário - pular direto para BLOCO_62)
 
 // BLOCO 62 — Confirmar + aguardar
 export const BLOCO_62_TEXT = `Perfeito ✅ Vou analisar e te retorno com as opções disponíveis.
