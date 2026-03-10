@@ -485,7 +485,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             <div className="flex-1 min-w-0 border-b border-border py-[13px] h-full flex flex-col justify-center">
                                 <div className="flex justify-between items-center mb-[3px]">
                                     <h3 className="text-[17px] leading-[21px] truncate text-foreground -mt-1 font-normal flex items-center gap-2">
-                                        {chat.name}
+                                        <span className="truncate">{chat.name}</span>
+                                        <span className="text-[12px] text-muted-foreground shrink-0">{chat.phone}</span>
                                         {chat.tags && chat.tags.length > 0 && (
                                             <div className="flex gap-1 overflow-hidden">
                                                 {chat.tags.slice(0, 2).map(tagStr => {
@@ -542,7 +543,10 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                                 )}
                             </div>
                             <div className="flex flex-col flex-1 min-w-0 pr-2">
-                                <h2 className="text-[16px] text-foreground font-normal truncate">{activeChat.name}</h2>
+                                <h2 className="text-[16px] text-foreground font-normal truncate flex items-center gap-2">
+                                    <span className="truncate">{activeChat.name}</span>
+                                    <span className="text-[13px] text-muted-foreground shrink-0">{activeChat.phone}</span>
+                                </h2>
                                 <p className="text-[13px] text-muted-foreground truncate mt-[1px]">
                                     {activeChat.isBotHandling ? (
                                         <span className="flex items-center gap-1.5 font-medium text-[#00a884]">
