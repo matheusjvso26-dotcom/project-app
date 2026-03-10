@@ -41,9 +41,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         }
 
         // Criar resposta proxy mantendo os headers originais de MimeType (PDF, Images, etc)
-        const contentType = mediaRes.headers.get('content-type') || 'application/octet-stream'
+        // A API Graph da Meta no segundo GET do CDN costuma falhar o header e enviar application/octet-stream. O correto está no json.
+        const contentType = urlData.mime_type || mediaRes.headers.get('content-type') || 'application/octet-stream'
 
-        const disposition = contentType.startsWith('image/') || contentType.startsWith('audio/') || contentType.startsWith('video/') || contentType === 'application/pdf'
+        // Parametro manual para forçar download se o componente UI pedir ?download=1
+        const forceDownload = request.url.includes('download=1')
+
+        const disposition = (!forceDownload && (contentType.startsWith('image/') || contentType.startsWith('audio/') || contentType.startsWith('video/') || contentType === 'application/pdf'))
             ? 'inline'
             : 'attachment'
 
@@ -52,14 +56,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         else if (contentType.includes('jpeg') || contentType.includes('jpg')) extension = '.jpg'
         else if (contentType.includes('png')) extension = '.png'
         else if (contentType.includes('mp4')) extension = '.mp4'
-        else if (contentType.includes('ogg')) extension = '.ogg'
-        else if (contentType.includes('msword')) extension = '.doc'
-        else if (contentType.includes('officedocument.wordprocessingml')) extension = '.docx'
+        else if (contentType.includes('ogg') || contentType.includes('audio/')) extension = '.ogg'
+        else if (contentType.includes('msword') || contentType.includes('officedocument.wordprocessingml')) extension = '.docx'
+        else if (contentType.includes('text/plain')) extension = '.txt'
+        else extension = '.bin' // Fallback seguro
 
         return new NextResponse(mediaRes.body, {
             headers: {
                 'Content-Type': contentType,
-                'Content-Disposition': `${disposition}; filename="whatsapp-media-${mediaId}${extension}"`,
+                'Content-Disposition': `${disposition}; filename="documento-whatsapp-${mediaId}${extension}"`,
                 'Cache-Control': 'public, max-age=86400' // Cache na cloudflare/browser por 1 dia
             }
         })

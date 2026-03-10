@@ -407,26 +407,26 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             {/* 1. Sidebar (Esquerda, Lista de Chats) */}
             <div className={`flex-shrink-0 flex flex-col border-r border-border transition-all duration-300 ${activeChatId ? 'hidden lg:flex w-full lg:w-[32%]' : 'w-full lg:w-[32%]'}`}>
                 {/* Header Sidebar */}
-                <div className="h-[59px] flex items-center justify-between px-4 bg-card shrink-0 border-b border-border">
+                <div className="h-[59px] flex items-center justify-between px-4 bg-[#f0f2f5] shrink-0 border-b border-border">
                     <div className="w-10 h-10 rounded-full bg-[#6b7c85] text-foreground flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 border-2 border-transparent hover:border-[#00a884] cursor-pointer transition-colors shadow">
                         <img src="https://ui-avatars.com/api/?name=EU&background=6b7c85&color=fff" alt="User" />
                     </div>
-                    <div className="flex gap-2 text-muted-foreground">
-                        <button title="Conversas Abertas" onClick={() => setActiveTab('OPEN')} className={`p-1 transition-colors ${activeTab === 'OPEN' ? 'text-foreground' : 'hover:text-foreground'}`}>
+                    <div className="flex gap-2 text-[#54656f]">
+                        <button title="Conversas Abertas" onClick={() => setActiveTab('OPEN')} className={`p-1 transition-colors ${activeTab === 'OPEN' ? 'text-[#111b21]' : 'hover:text-[#111b21]'}`}>
                             <MessageCircle className="w-[20px] h-[20px]" />
                         </button>
-                        <button title="Excluídas / Arquivadas" onClick={() => setActiveTab('ARCHIVED')} className={`p-1 transition-colors ${activeTab === 'ARCHIVED' ? 'text-foreground' : 'hover:text-foreground'}`}>
+                        <button title="Excluídas / Arquivadas" onClick={() => setActiveTab('ARCHIVED')} className={`p-1 transition-colors ${activeTab === 'ARCHIVED' ? 'text-[#111b21]' : 'hover:text-[#111b21]'}`}>
                             <Archive className="w-[20px] h-[20px]" />
                         </button>
-                        <button title="Configurar Etiquetas" onClick={() => { setEditingTags(customTags); setIsSettingsOpen(true); }} className="p-1 hover:text-foreground transition-colors">
+                        <button title="Configurar Etiquetas" onClick={() => { setEditingTags(customTags); setIsSettingsOpen(true); }} className="p-1 hover:text-[#111b21] transition-colors">
                             <Settings className="w-[20px] h-[20px]" />
                         </button>
                     </div>
                 </div>
 
                 {/* Search Bar */}
-                <div className="p-[10px] border-b border-border bg-background">
-                    <div className="relative flex items-center bg-card rounded-[8px] h-[35px] px-3">
+                <div className="p-[10px] border-b border-border bg-[#ffffff]">
+                    <div className="relative flex items-center bg-[#f0f2f5] rounded-[8px] h-[35px] px-3">
                         <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                         <input
                             type="text"
@@ -437,8 +437,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                 </div>
 
                 {/* Filters Row */}
-                <div className="flex px-3 py-2.5 gap-[7px] border-b border-border overflow-x-auto scrollbar-none">
-                    <button onClick={() => setActiveTagFilter(null)} className={`px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap ${!activeTagFilter ? 'bg-[#00a884]/20 text-[#00a884] hover:bg-[#00a884]/30' : 'bg-card hover:bg-accent text-muted-foreground'}`}>
+                <div className="flex px-3 py-2.5 gap-[7px] border-b border-border overflow-x-auto scrollbar-none bg-[#ffffff]">
+                    <button onClick={() => setActiveTagFilter(null)} className={`px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap ${!activeTagFilter ? 'bg-[#00a884]/20 text-[#00a884] hover:bg-[#00a884]/30' : 'bg-[#f0f2f5] hover:bg-[#e1e4e8] text-[#54656f]'}`}>
                         Todas do {activeTab === 'OPEN' ? 'Inbox' : 'Lixo'}
                     </button>
                     {customTags.map(tag => (
@@ -456,12 +456,12 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                 </div>
 
                 {/* Chat List */}
-                <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#202c33] scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#cccccc] scrollbar-track-transparent bg-[#ffffff]">
                     {filteredChats.map(chat => (
                         <div
                             key={chat.id}
                             onClick={() => setActiveChatId(chat.id)}
-                            className={`flex items-center gap-[14px] pl-[13px] pr-4 cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-accent' : 'hover:bg-card'}`}
+                            className={`flex items-center gap-[14px] pl-[13px] pr-4 cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-[#f0f2f5]' : 'bg-[#ffffff] hover:bg-[#f5f6f6]'}`}
                         >
                             <div className="relative shrink-0 py-[11px]">
                                 <div className="w-[49px] h-[49px] rounded-full bg-muted border border-border flex items-center justify-center text-primary-foreground font-semibold text-xl overflow-hidden shadow-sm shrink-0">
@@ -517,13 +517,13 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
 
             {/* 2. Chat Area Principal (Direita) */}
             {activeChat ? (
-                <div className={`flex-1 flex flex-col bg-muted relative ${!activeChatId && 'hidden lg:flex'}`}>
+                <div className={`flex-1 flex flex-col bg-[#efeae2] relative ${!activeChatId && 'hidden lg:flex'}`}>
 
-                    {/* Background Pattern WPP Overlay dark default WPP Doodles */}
-                    <div className="absolute inset-0 opacity-[0.06] pointer-events-none z-0 mix-blend-screen" style={{ backgroundImage: 'url("https://static.whatsapp.net/rsrc.php/v3/yl/r/r_QxIsuT8R4.png")', backgroundRepeat: 'repeat', backgroundSize: '400px' }}></div>
+                    {/* Background Pattern WPP Overlay */}
+                    <div className="absolute inset-0 opacity-[0.4] pointer-events-none z-0" style={{ backgroundImage: 'url("https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg")', backgroundRepeat: 'repeat', backgroundSize: '400px' }}></div>
 
                     {/* Chat Header */}
-                    <div className="h-[59px] flex items-center justify-between px-4 bg-card z-10 shrink-0 shadow-sm border-l border-transparent">
+                    <div className="h-[59px] flex items-center justify-between px-4 bg-[#f0f2f5] z-10 shrink-0 shadow-sm border-l border-transparent">
                         <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveChatId('')}>
                             {/* Botão de voltar (mobile) */}
                             <button className="lg:hidden text-muted-foreground hover:text-foreground" title="Voltar para a lista">
@@ -700,12 +700,12 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             }
 
                             // WPP Web Balões
-                            let bubbleClass = "relative px-2.5 py-1.5 text-[14.2px] leading-[19px] max-w-[85%] lg:max-w-[70%] min-w-[90px] text-foreground shadow-sm "
+                            let bubbleClass = "relative px-2.5 py-1.5 text-[14.2px] leading-[19px] max-w-[85%] lg:max-w-[70%] min-w-[90px] shadow-sm "
                             if (isMe || isBot) {
-                                bubbleClass += "bg-primary text-primary-foreground ml-auto "
+                                bubbleClass += "bg-[#dcf8c6] text-[#111b21] ml-auto "
                                 bubbleClass += isFirstInGroup ? "rounded-l-[7.5px] rounded-bl-[7.5px] rounded-br-[7.5px] rounded-tr-none " : "rounded-[7.5px] "
                             } else {
-                                bubbleClass += "bg-card mr-auto "
+                                bubbleClass += "bg-[#ffffff] text-[#111b21] mr-auto "
                                 bubbleClass += isFirstInGroup ? "rounded-r-[7.5px] rounded-br-[7.5px] rounded-bl-[7.5px] rounded-tl-none " : "rounded-[7.5px] "
                             }
 
@@ -789,11 +789,11 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                     </div>
 
                     {/* Input Area (Bottom Bar) */}
-                    <div className="min-h-[62px] flex-shrink-0 bg-card px-3 py-[10px] flex items-end gap-2.5 z-30 w-full relative border-t border-transparent">
+                    <div className="min-h-[62px] flex-shrink-0 bg-[#f0f2f5] px-3 py-[10px] flex items-end gap-2.5 z-30 w-full relative border-t border-transparent">
                         {showEmojiPicker && (
                             <div className="absolute bottom-[70px] left-4 z-50 shadow-2xl rounded-lg overflow-hidden border border-border/50">
                                 <EmojiPicker
-                                    theme={Theme.DARK}
+                                    theme={Theme.LIGHT}
                                     onEmojiClick={(e: EmojiClickData) => setMessageInput(prev => prev + e.emoji)}
                                 />
                             </div>
@@ -820,11 +820,11 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                             </button>
                         </div>
 
-                        <div className="flex-1 bg-accent rounded-[8px] min-h-[42px] flex items-center px-4 overflow-hidden mb-1 mx-1 border border-transparent focus-within:border-[#8696a0]/20 transition-colors">
+                        <div className="flex-1 bg-[#ffffff] rounded-[8px] min-h-[42px] flex items-center px-4 overflow-hidden mb-1 mx-1 border border-[#ffffff] focus-within:border-[#8696a0]/20 transition-colors">
                             <input
                                 type="text"
                                 placeholder={activeChat?.isBotHandling ? "Robô online. Digite para invadir e pausá-lo..." : "Mensagem"}
-                                className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted-foreground text-foreground py-2.5 h-full"
+                                className="w-full bg-transparent text-[15px] outline-none placeholder:text-[#54656f] text-[#111b21] py-2.5 h-full"
                                 value={messageInput}
                                 onChange={(e) => setMessageInput(e.target.value)}
                                 onKeyDown={(e) => {
@@ -854,22 +854,22 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                     </div>
                 </div>
             ) : (
-                <div className="hidden lg:flex flex-1 bg-[#222e35] items-center justify-center flex-col text-center relative z-10 w-full">
+                <div className="hidden lg:flex flex-1 bg-[#f0f2f5] items-center justify-center flex-col text-center relative z-10 w-full">
                     {/* WPP Img Cover Home Default */}
-                    <div className="w-full max-w-lg mb-8 bg-card rounded-full p-1 border-4 border-transparent flex items-center justify-center h-64 overflow-hidden text-zinc-700 font-bold opacity-30 shadow-inner">
+                    <div className="w-full max-w-lg mb-8 bg-[#ffffff] rounded-full p-1 border-4 border-transparent flex items-center justify-center h-64 overflow-hidden text-zinc-700 font-bold opacity-30 shadow-inner">
                         <img src="https://static.whatsapp.net/rsrc.php/v3/y6/r/wa669aeJeom.png" alt="WhatsApp Immersive" className="object-cover w-full h-full scale-110" />
                     </div>
 
-                    <h2 className="text-[32px] font-extralight text-foreground tracking-tight mb-4 mt-2">
+                    <h2 className="text-[32px] font-extralight text-[#41525d] tracking-tight mb-4 mt-2">
                         WhatsApp Desktop Clone
                     </h2>
-                    <p className="text-muted-foreground text-[14px] leading-[20px] max-w-[440px]">
+                    <p className="text-[#667781] text-[14px] leading-[20px] max-w-[440px]">
                         Envie e receba mensagens sem precisar manter o celular conectado.
                         <br />
                         A força e potência do Pipeline CRM integrados na interface mais familiar do mundo.
                     </p>
 
-                    <div className="absolute xl:bottom-12 bottom-8 flex flex-col items-center justify-center text-[12.5px] text-muted-foreground">
+                    <div className="absolute xl:bottom-12 bottom-8 flex flex-col items-center justify-center text-[12.5px] text-[#8696a0]">
                         <div className="flex items-center gap-1.5 opacity-90 mb-1">
                             <ShieldAlert className="w-[14px] h-[14px]" /> Protegido com Criptografia e Consentimento LGPD Activo
                         </div>

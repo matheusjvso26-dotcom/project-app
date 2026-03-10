@@ -477,6 +477,7 @@ export async function updateTagsConfig(tags: Array<{ id: string, name: string, c
  * Arquiva / "Exclui" uma conversa (Move para Lixeira/Arquivados)
  */
 export async function archiveConversation(conversationId: string, archive: boolean = true) {
+    noStore()
     const user = await requireUser()
     
     const conversation = await prisma.conversation.findUnique({
