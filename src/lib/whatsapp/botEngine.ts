@@ -503,11 +503,14 @@ export async function processBotFlow({ conversationId, leadPhone, incomingText, 
         })
 
         // Atualizar status da conversa
+        const terminalBlocks = ['BLOCO_12', 'BLOCO_22', 'BLOCO_32', 'BLOCO_42', 'BLOCO_52', 'BLOCO_62', 'BLOCO_90'];
+        const shouldHandOffToHuman = terminalBlocks.includes(state.currentBlock);
+
         await prisma.conversation.update({
             where: { id: conversationId },
             data: {
                 updatedAt: new Date(),
-                status: state.currentBlock === 'BLOCO_90' ? 'OPEN' : 'BOT_HANDLING'
+                status: shouldHandOffToHuman ? 'OPEN' : 'BOT_HANDLING'
             }
         })
     }

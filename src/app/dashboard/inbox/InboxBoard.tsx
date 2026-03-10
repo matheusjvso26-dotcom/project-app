@@ -310,7 +310,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
             await toggleBotStatus(activeChatId, newStatus)
             toast.success(newStatus ? "Robô reativado para esta conversa." : "Atendimento assumido pelo Humano.")
         } catch (error: any) {
-            toast.error("Falha ao alterar controle do bot.")
+            console.error("Error from toggleBotStatus:", error)
+            toast.error(`Falha ao alterar controle do bot: ${error.message || 'Erro Desconhecido'}`)
             setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, isBotHandling: !newStatus } : c))
         } finally {
             setIsSending(false)
