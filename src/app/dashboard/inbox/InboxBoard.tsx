@@ -56,8 +56,8 @@ interface InboxBoardProps {
 }
 
 export function InboxBoard({ initialConversations }: InboxBoardProps) {
-    // APLICANDO O FILTRO NA PRIMEIRA RENDERIZAÇÃO: Impede o F5 de trazer os Lixos para a tela principal
-    const [chats, setChats] = useState<Chat[]>(initialConversations.filter(c => c.status === 'OPEN' || c.status === 'BOT_HANDLING'))
+    // Carrega tudo (Abertas e Arquivadas). O filtro real visual acontece na renderização (`baseChats`).
+    const [chats, setChats] = useState<Chat[]>(initialConversations)
     const [activeChatId, setActiveChatId] = useState<string>(chats.length > 0 ? chats[0].id : '')
     const [messageInput, setMessageInput] = useState('')
     const [isSending, setIsSending] = useState(false)
@@ -138,8 +138,8 @@ export function InboxBoard({ initialConversations }: InboxBoardProps) {
                         } catch (e) { }
                     }
 
-                    // FILTRO DEFINITIVO: Impede que conversas excluídas/arquivadas retornem para a tela
-                    return mergedChats.filter(c => c.status === activeTab || (activeTab === 'OPEN' && c.status === 'BOT_HANDLING'))
+                    // A UI já filtra por `baseChats`. Apenas retorne todas as conversas fresquinhas do Banco para o state:
+                    return mergedChats
                 })
             } catch (error) {
                 console.error("[Polling] Erro ao sincronizar as conversas:", error)

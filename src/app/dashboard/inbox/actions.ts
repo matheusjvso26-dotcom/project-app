@@ -50,6 +50,7 @@ export async function getConversations(cacheBuster?: number) {
             phone: c.lead?.phone || '',
             status: c.status,
             tags: c.tags || [],
+            profilePictureUrl: c.lead?.profilePictureUrl || null,
             lgpdConsent: c.lead?.lgpdConsent || false,
             deals: cDeals.map(d => ({
                 id: d.id,
